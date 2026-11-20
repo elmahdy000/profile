@@ -1,0 +1,2144 @@
+{
+  "unit_id": 1,
+  "unit_title": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+  "lesson_id": "1_4",
+  "lesson_title": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+  "total_questions": 60,
+  "questions": [
+    {
+      "id": 50140,
+      "question_number": 1,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المقصود بمصطلح «التحيز الخوارزمي» في أنظمة الذكاء الاصطناعي، وما أبرز أشكاله أو أمثلته؟",
+      "model_answer": "التحيز الخوارزمي هو نمط في نتائج الذكاء الاصطناعي قد يسبب أحكامًا غير عادلة أو تمييزًا.\nوقد ينشأ بسبب بيانات تدريب غير ممثلة أو متحيزة، أو بسبب تصميم النظام أو طريقة استخدامه.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "التحيز الخوارزمي هو نمط في نتائج الذكاء الاصطناعي قد يسبب أحكامًا غير عادلة أو تمييزًا.",
+        "وقد ينشأ بسبب بيانات تدريب غير ممثلة أو متحيزة، أو بسبب تصميم النظام أو طريقة استخدامه."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50140,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-052",
+        "pdf_page": 23,
+        "match_score": 96.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.468,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50141,
+      "question_number": 2,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "وضح الأسباب الرئيسية لنشوء التحيز الخوارزمي في أنظمة الذكاء الاصطناعي.",
+      "model_answer": "1. بيانات تدريب متحيزة أو غير ممثلة لفئات مختلفة.\n2. استخدام متغيرات أو خصائص غير مناسبة في تصميم النموذج.\n3. طريقة استخدام النظام والسياق البشري والاجتماعي الذي تُفسَّر فيه نتائجه.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. بيانات تدريب متحيزة أو غير ممثلة لفئات مختلفة.",
+        "2. استخدام متغيرات أو خصائص غير مناسبة في تصميم النموذج.",
+        "3. طريقة استخدام النظام والسياق البشري والاجتماعي الذي تُفسَّر فيه نتائجه."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50141,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-053",
+        "pdf_page": 23,
+        "match_score": 98.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.294,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50142,
+      "question_number": 3,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اشرح كيف أدى تطور تقنية الذكاء الاصطناعي إلى ظهور قضايا جديدة تتعلق بالخصوصية والمراقبة في الأماكن العامة.",
+      "model_answer": "تستطيع تقنيات التعرف على الوجه تمييز الأشخاص في الأماكن العامة وقد تُستخدم في تتبعهم.\nكما تجمع بعض الخدمات بيانات عن سلوك المستخدمين، مما يثير مخاوف بشأن التحكم في البيانات الشخصية والخصوصية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تستطيع تقنيات التعرف على الوجه تمييز الأشخاص في الأماكن العامة وقد تُستخدم في تتبعهم.",
+        "كما تجمع بعض الخدمات بيانات عن سلوك المستخدمين، مما يثير مخاوف بشأن التحكم في البيانات الشخصية والخصوصية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50142,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-054",
+        "pdf_page": 23,
+        "match_score": 98.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.324,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50143,
+      "question_number": 4,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المقصود بمصطلح «بيانات التدريب» في أنظمة الذكاء الاصطناعي، وكيف يؤثر نقص تمثيلها على المخرجات؟",
+      "model_answer": "بيانات التدريب هي الأمثلة والمعلومات التي يتعلم النظام منها الأنماط.\nإذا كانت غير كافية أو لا تمثل فئات معينة، فقد يتعلم النموذج أنماطًا غير دقيقة أو متحيزة ويصدر أحكامًا غير عادلة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "بيانات التدريب هي الأمثلة والمعلومات التي يتعلم النظام منها الأنماط.",
+        "إذا كانت غير كافية أو لا تمثل فئات معينة، فقد يتعلم النموذج أنماطًا غير دقيقة أو متحيزة ويصدر أحكامًا غير عادلة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50143,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-055",
+        "pdf_page": 23,
+        "match_score": 86.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.327,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50144,
+      "question_number": 5,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المقصود بمصطلح «الذكاء الاصطناعي القابل للتفسير (XAI)»، ولماذا يُعد أسلوبًا أساسيًا للتغلب على مشكلة الصندوق الأسود؟",
+      "model_answer": "الذكاء الاصطناعي القابل للتفسير (XAI) أساليب تساعد البشر على فهم العوامل المؤثرة في قرارات النظام.\nوتفيد في التعامل مع مشكلة الصندوق الأسود، لأن معرفة أسباب النتيجة تسهّل تقييمها واكتشاف أخطائها أو تحيزاتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الذكاء الاصطناعي القابل للتفسير (XAI) أساليب تساعد البشر على فهم العوامل المؤثرة في قرارات النظام.",
+        "وتفيد في التعامل مع مشكلة الصندوق الأسود، لأن معرفة أسباب النتيجة تسهّل تقييمها واكتشاف أخطائها أو تحيزاتها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50144,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-056",
+        "pdf_page": 24,
+        "match_score": 84.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.407,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50145,
+      "question_number": 6,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "قارن بإيجاز بين مفهوم «المسؤولية» ومفهوم «المساءلة» في سياق أنظمة الذكاء الاصطناعي.",
+      "model_answer": "المسؤولية: تحديد واجبات المطور والمشغل والمستخدم المرتبطة ببناء النظام وتشغيله واستخدامه.\nالمساءلة: إمكان محاسبة الجهات المعنية عن نتائج النظام وآثاره، وطلب تبرير القرارات والأخطاء.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المسؤولية: تحديد واجبات المطور والمشغل والمستخدم المرتبطة ببناء النظام وتشغيله واستخدامه.",
+        "المساءلة: إمكان محاسبة الجهات المعنية عن نتائج النظام وآثاره، وطلب تبرير القرارات والأخطاء."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50145,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-057",
+        "pdf_page": 24,
+        "match_score": 99.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.302,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50146,
+      "question_number": 7,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اذكر المبادئ الأربعة الأساسية لأخلاقيات الذكاء الاصطناعي مع شرح مبدأ «العدالة» باختصار.",
+      "model_answer": "المبادئ الأربعة: العدالة، والشفافية، وحماية الخصوصية، والمساءلة.\nالعدالة تعني تجنب التمييز غير العادل ضد الأشخاص أو الفئات عند تطوير أنظمة الذكاء الاصطناعي واستخدامها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "المبادئ الأربعة: العدالة، والشفافية، وحماية الخصوصية، والمساءلة.",
+        "العدالة تعني تجنب التمييز غير العادل ضد الأشخاص أو الفئات عند تطوير أنظمة الذكاء الاصطناعي واستخدامها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50146,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-058",
+        "pdf_page": 25,
+        "match_score": 93.3,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.358,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50147,
+      "question_number": 8,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "وضح المقصود بكل من مبدأ «الشفافية» ومبدأ «حماية الخصوصية» في إطار الاستخدام المسؤول للذكاء الاصطناعي.",
+      "model_answer": "الشفافية: توضيح كيفية عمل النظام وحدوده والمعلومات المناسبة عن قراراته.\nحماية الخصوصية: التعامل مع البيانات الشخصية بأمان واحترام حق الفرد في التحكم في بياناته.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الشفافية: توضيح كيفية عمل النظام وحدوده والمعلومات المناسبة عن قراراته.",
+        "حماية الخصوصية: التعامل مع البيانات الشخصية بأمان واحترام حق الفرد في التحكم في بياناته."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50147,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-059",
+        "pdf_page": 25,
+        "match_score": 97.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.388,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50148,
+      "question_number": 9,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اشرح ماهية «التحيز الخوارزمي» في أنظمة الذكاء الاصطناعي مبينًا كيف ينشأ من بيانات التدريب أو تصميم النظام وطريقة استخدامه مع ذكر أمثلة.",
+      "model_answer": "التحيز الخوارزمي نتائج غير عادلة قد تنتج عن بيانات تدريب متحيزة أو قليلة التمثيل، أو عن اختيار متغيرات غير مناسبة في تصميم النموذج.\nوقد تتكرر أنماط التمييز السابقة إذا تعلمها النظام من البيانات أو تأثر بها استخدامه.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التحيز الخوارزمي نتائج غير عادلة قد تنتج عن بيانات تدريب متحيزة أو قليلة التمثيل، أو عن اختيار متغيرات غير مناسبة في تصميم النموذج.",
+        "وقد تتكرر أنماط التمييز السابقة إذا تعلمها النظام من البيانات أو تأثر بها استخدامه."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50148,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-060",
+        "pdf_page": 26,
+        "match_score": 99.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.391,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50149,
+      "question_number": 10,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تكلم بالتفصيل عن «الذكاء الاصطناعي القابل للتفسير (XAI)» ومشكلة «الصندوق الأسود» وكيف يساهم في تقييم النظام واكتشاف الأخطاء.",
+      "model_answer": "مشكلة الصندوق الأسود هي عدم وضوح كيفية وصول النموذج إلى الحكم.\nيساعد الذكاء الاصطناعي القابل للتفسير (XAI) على توضيح العوامل المؤثرة في القرار، فيسهّل تقييمه واكتشاف الأخطاء والتحيز.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "مشكلة الصندوق الأسود هي عدم وضوح كيفية وصول النموذج إلى الحكم.",
+        "يساعد الذكاء الاصطناعي القابل للتفسير (XAI) على توضيح العوامل المؤثرة في القرار، فيسهّل تقييمه واكتشاف الأخطاء والتحيز."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50149,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-061",
+        "pdf_page": 26,
+        "match_score": 92.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.273,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50150,
+      "question_number": 11,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "قارن بدقة بين مفهوم «المسؤولية» ومفهوم «المساءلة» موضحًا سبب اختلاف توزيع المسؤولية باختلاف السياقات والأطراف (المطور، المشغل، المستخدم).",
+      "model_answer": "المسؤولية: توزيع الواجبات بين المطور الذي يبني النموذج، والجهة التي تشغله، والمستخدم الذي يستعين به.\nالمساءلة: إمكانية محاسبة الأطراف المناسبة عن الأخطاء والنتائج غير العادلة وفق دور كل طرف وسياق الاستخدام.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "المسؤولية: توزيع الواجبات بين المطور الذي يبني النموذج، والجهة التي تشغله، والمستخدم الذي يستعين به.",
+        "المساءلة: إمكانية محاسبة الأطراف المناسبة عن الأخطاء والنتائج غير العادلة وفق دور كل طرف وسياق الاستخدام."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50150,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-062",
+        "pdf_page": 26,
+        "match_score": 98.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.237,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50151,
+      "question_number": 12,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اذكر المبادئ الأربعة الأساسية لأخلاقيات الذكاء الاصطناعي واشرح باختصار المقصود بكل من «العدالة»، «الشفافية»، «حماية الخصوصية»، و«المساءلة».",
+      "model_answer": "1. العدالة: تجنب التمييز الظالم.\n2. الشفافية: إتاحة معلومات واضحة عن عمل النظام وقراراته وحدوده.\n3. حماية الخصوصية: تأمين البيانات الشخصية واحترام حقوق أصحابها.\n4. المساءلة: تحديد الأطراف التي يمكن محاسبتها عن النتائج والآثار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. العدالة: تجنب التمييز الظالم.",
+        "2. الشفافية: إتاحة معلومات واضحة عن عمل النظام وقراراته وحدوده.",
+        "3. حماية الخصوصية: تأمين البيانات الشخصية واحترام حقوق أصحابها.",
+        "4. المساءلة: تحديد الأطراف التي يمكن محاسبتها عن النتائج والآثار."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50151,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-063",
+        "pdf_page": 26,
+        "match_score": 95.7,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.39,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50152,
+      "question_number": 13,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "وضح كيف يمكن أن تؤدي بيانات التدريب غير الممثلة أو المتحيزة (مثل انعكاس نزعات تمييزية سابقة) إلى تكرار الذكاء الاصطناعي لهذا التحيز في أحكامه.",
+      "model_answer": "يتعلم النظام الأنماط من بيانات التدريب. فإذا كانت البيانات لا تمثل بعض الفئات بشكل كافٍ أو تعكس تمييزًا سابقًا، فقد يتعلم النظام هذه الأنماط المتحيزة ويكررها في أحكامه؛ مما يؤدي إلى نتائج غير عادلة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يتعلم النظام الأنماط من بيانات التدريب. فإذا كانت البيانات لا تمثل بعض الفئات بشكل كافٍ أو تعكس تمييزًا سابقًا، فقد يتعلم النظام هذه الأنماط المتحيزة ويكررها في أحكامه؛ مما يؤدي إلى نتائج غير عادلة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50152,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-064",
+        "pdf_page": 27,
+        "match_score": 97.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.325,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50153,
+      "question_number": 14,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اشرح مشكلة «الصندوق الأسود» في خوارزميات الذكاء الاصطناعي المعقدة ولماذا يجعل تقييم الآلية واكتشاف الأخطاء أمرًا صعبًا دون استخدام تقنيات التفسير.",
+      "model_answer": "هي عدم وضوح كيفية وصول النظام إلى مخرجه أو حكمه. وعندما لا تكون العوامل المؤثرة في القرار مفهومة، يصعب تقييم النتيجة واكتشاف الخطأ أو التحيز. وتساعد تقنيات الذكاء الاصطناعي القابل للتفسير (XAI) على فهم تلك العوامل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "هي عدم وضوح كيفية وصول النظام إلى مخرجه أو حكمه. وعندما لا تكون العوامل المؤثرة في القرار مفهومة، يصعب تقييم النتيجة واكتشاف الخطأ أو التحيز. وتساعد تقنيات الذكاء الاصطناعي القابل للتفسير (XAI) على فهم تلك العوامل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50153,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-065",
+        "pdf_page": 27,
+        "match_score": 97.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.353,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50154,
+      "question_number": 15,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اذكر قضايا الخصوصية المرتبطة بانتشار تقنيات التعرف على الوجه في الأماكن العامة والجمع الجماعي للبيانات والسلوك عبر الإنترنت.",
+      "model_answer": "1. التعرف على الوجه قد يؤدي إلى التعرف على أشخاص وتتبعهم في أماكن عامة دون علمهم الكافي.\n2. جمع البيانات الواسع عن سلوك الأفراد قد يمس قدرتهم على التحكم في معلوماتهم الشخصية.\nلذلك تُراعى الموافقة والخصوصية وحماية المعلومات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. التعرف على الوجه قد يؤدي إلى التعرف على أشخاص وتتبعهم في أماكن عامة دون علمهم الكافي.",
+        "2. جمع البيانات الواسع عن سلوك الأفراد قد يمس قدرتهم على التحكم في معلوماتهم الشخصية.",
+        "لذلك تُراعى الموافقة والخصوصية وحماية المعلومات."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50154,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-066",
+        "pdf_page": 27,
+        "match_score": 95.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.301,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50155,
+      "question_number": 16,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اشرح بالتفصيل المبادئ الأربعة الأساسية لأخلاقيات الذكاء الاصطناعي وكيف يوجه كل منها الاستخدام المسؤول لهذه التقنيات في المجتمع.",
+      "model_answer": "1. العدالة: منع التمييز الظالم.\n2. الشفافية: توضيح عمل النظام وحدوده وتفسير قراراته.\n3. حماية الخصوصية: الحفاظ على البيانات الشخصية ومنع إساءة استخدامها.\n4. المساءلة: إمكان تحديد ومحاسبة المسؤولين عن المخرجات وآثارها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. العدالة: منع التمييز الظالم.",
+        "2. الشفافية: توضيح عمل النظام وحدوده وتفسير قراراته.",
+        "3. حماية الخصوصية: الحفاظ على البيانات الشخصية ومنع إساءة استخدامها.",
+        "4. المساءلة: إمكان تحديد ومحاسبة المسؤولين عن المخرجات وآثارها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50155,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-067",
+        "pdf_page": 27,
+        "match_score": 96.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.294,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50156,
+      "question_number": 17,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ناقش أسباب التحيز الخوارزمي وكيف يمكن أن ينشأ من الاختيار غير المناسب للمتغيرات، أو استخدام متغير بديل يمثل بشكل غير مباشر سمة محمية.",
+      "model_answer": "قد ينشأ التحيز من بيانات تدريب غير ممثلة أو تعكس تمييزًا سابقًا، أو من اختيار متغير يؤثر ظلمًا في الحكم.\nوالمتغير البديل قد يشير بصورة غير مباشرة إلى صفة حساسة؛ فيؤدي استعماله إلى تمييز حتى لو لم تستخدم الصفة مباشرة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "قد ينشأ التحيز من بيانات تدريب غير ممثلة أو تعكس تمييزًا سابقًا، أو من اختيار متغير يؤثر ظلمًا في الحكم.",
+        "والمتغير البديل قد يشير بصورة غير مباشرة إلى صفة حساسة؛ فيؤدي استعماله إلى تمييز حتى لو لم تستخدم الصفة مباشرة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50156,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-068",
+        "pdf_page": 28,
+        "match_score": 97.3,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.302,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50157,
+      "question_number": 18,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "بيّن أهمية «الذكاء الاصطناعي القابل للتفسير (XAI)» في معالجة صعوبة تقييم آلية الوصول إلى النتيجة عندما تكون غير واضحة للعين البشرية.",
+      "model_answer": "يساعد XAI البشر على فهم العوامل التي أسهمت في وصول النظام إلى النتيجة. وعندما تكون آلية القرار غير واضحة، يتيح هذا الفهم تقييم المخرج والبحث عن الأخطاء أو التحيز، بدلًا من الاعتماد على نتيجة لا تُعرف أسبابها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يساعد XAI البشر على فهم العوامل التي أسهمت في وصول النظام إلى النتيجة. وعندما تكون آلية القرار غير واضحة، يتيح هذا الفهم تقييم المخرج والبحث عن الأخطاء أو التحيز، بدلًا من الاعتماد على نتيجة لا تُعرف أسبابها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50157,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-069",
+        "pdf_page": 28,
+        "match_score": 86.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.36,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50158,
+      "question_number": 19,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "وضح الأبعاد المختلفة لمسؤولية الأطراف المتعددة (المطور، الشركة المشغلة، المستخدم) عند اتخاذ نظام الذكاء الاصطناعي حكمًا خاطئًا أو غير عادل.",
+      "model_answer": "تُحدد المسؤولية وفق أدوار وواجبات الأطراف: المطور المرتبط ببناء النظام، والشركة المشغلة المرتبطة بتشغيله، والمستخدم المرتبط باستخدامه. وتحدد المساءلة من يمكن محاسبته عن القرار وآثاره. ولا توجد جهة ثابتة تتحمل المسؤولية في كل حالة\nإذ تختلف باختلاف السياق والقواعد المعمول بها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تُحدد المسؤولية وفق أدوار وواجبات الأطراف: المطور المرتبط ببناء النظام، والشركة المشغلة المرتبطة بتشغيله، والمستخدم المرتبط باستخدامه. وتحدد المساءلة من يمكن محاسبته عن القرار وآثاره. ولا توجد جهة ثابتة تتحمل المسؤولية في كل حالة",
+        "إذ تختلف باختلاف السياق والقواعد المعمول بها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50158,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-070",
+        "pdf_page": 28,
+        "match_score": 96.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.295,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50159,
+      "question_number": 20,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اشرح كيف تتكامل المبادئ الأربعة لأخلاقيات الذكاء الاصطناعي (العدالة، الشفافية، حماية الخصوصية، المساءلة) لتشكيل إطار متكامل للاستخدام المسؤول.",
+      "model_answer": "تمنع العدالة التمييز الظالم، وتتيح الشفافية فهم النظام وقراراته وحدوده، وتحافظ حماية الخصوصية على المعلومات الشخصية، وتحدد المساءلة الجهات التي يمكن محاسبتها على المخرجات وآثارها. وباجتماعها يمكن التحقق من التحيز وفهم القرارات وحماية البيانات ومعرفة المسؤول عنها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تمنع العدالة التمييز الظالم، وتتيح الشفافية فهم النظام وقراراته وحدوده، وتحافظ حماية الخصوصية على المعلومات الشخصية، وتحدد المساءلة الجهات التي يمكن محاسبتها على المخرجات وآثارها. وباجتماعها يمكن التحقق من التحيز وفهم القرارات وحماية البيانات ومعرفة المسؤول عنها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50159,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-071",
+        "pdf_page": 28,
+        "match_score": 95.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.459,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50160,
+      "question_number": 21,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المقصود بالخصوصية كما ورد في المصطلحات الأساسية؟",
+      "model_answer": "الخصوصية هي التحكم في البيانات الشخصية التي تتم مشاركتها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "الخصوصية هي التحكم في البيانات الشخصية التي تتم مشاركتها."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50160,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.238,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50161,
+      "question_number": 22,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المقصود بمشكلة «الصندوق الأسود» في أنظمة الذكاء الاصطناعي؟",
+      "model_answer": "هي عدم وضوح كيفية توصل الذكاء الاصطناعي إلى حكمه أو قراره.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "هي عدم وضوح كيفية توصل الذكاء الاصطناعي إلى حكمه أو قراره."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50161,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.251,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50162,
+      "question_number": 23,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ماذا يقصد بمبدأ «المساءلة» عند صدور حكم من نظام ذكاء اصطناعي؟",
+      "model_answer": "تحديد الجهات المسؤولة عن النظام وقراراته وآثاره، وإمكان محاسبتها وفق أدوارها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تحديد الجهات المسؤولة عن النظام وقراراته وآثاره، وإمكان محاسبتها وفق أدوارها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50162,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.362,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50163,
+      "question_number": 24,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "نظام للتعرف على الوجه يخطئ مع أفراد مجموعة معينة أكثر من غيرها. حدّد المشكلة الأخلاقية واذكر من قد يتضرر منها.",
+      "model_answer": "المشكلة هي التحيز الخوارزمي؛ لأنه قد يؤدي إلى نتائج غير عادلة. وقد يتضرر أفراد المجموعة التي تقل دقة تعرف النظام عليها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المشكلة هي التحيز الخوارزمي؛ لأنه قد يؤدي إلى نتائج غير عادلة. وقد يتضرر أفراد المجموعة التي تقل دقة تعرف النظام عليها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50163,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.241,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50164,
+      "question_number": 25,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "إذا كان نظام توظيف يفضّل فئة من المتقدمين بصورة غير عادلة، فما نوع المشكلة، وما عاملان قد يؤديان إلى ظهورها؟",
+      "model_answer": "1. المشكلة: التحيز الخوارزمي، إذ يفضل النظام فئة دون سبب عادل.\n2. العامل الأول: بيانات تدريب غير ممثلة أو متحيزة.\n3. العامل الثاني: تصميم النظام أو اختيار متغيرات تؤدي إلى تمييز غير عادل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. المشكلة: التحيز الخوارزمي، إذ يفضل النظام فئة دون سبب عادل.",
+        "2. العامل الأول: بيانات تدريب غير ممثلة أو متحيزة.",
+        "3. العامل الثاني: تصميم النظام أو اختيار متغيرات تؤدي إلى تمييز غير عادل."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50164,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.179,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50165,
+      "question_number": 26,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "كيف يمكن تقليل خطر التحيز الخوارزمي قبل استخدام نظام ذكاء اصطناعي في التوظيف؟",
+      "model_answer": "1. فحص بيانات التدريب للتأكد من تمثيل الفئات المختلفة وعدم تحيزها.\n2. مراجعة تصميم النموذج والمتغيرات المستخدمة، وفحص النتائج لاكتشاف التمييز قبل الاعتماد عليها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. فحص بيانات التدريب للتأكد من تمثيل الفئات المختلفة وعدم تحيزها.",
+        "2. مراجعة تصميم النموذج والمتغيرات المستخدمة، وفحص النتائج لاكتشاف التمييز قبل الاعتماد عليها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50165,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.264,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50166,
+      "question_number": 27,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "لماذا لا تكفي مراجعة بيانات التدريب وحدها عند البحث عن أسباب التحيز الخوارزمي؟",
+      "model_answer": "لأن التحيز لا ينشأ من البيانات فقط؛ فقد ينتج أيضًا عن اختيار متغيرات غير مناسبة أو تصميم النموذج أو طريقة استخدام النظام والسياق البشري والاجتماعي.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن التحيز لا ينشأ من البيانات فقط؛ فقد ينتج أيضًا عن اختيار متغيرات غير مناسبة أو تصميم النموذج أو طريقة استخدام النظام والسياق البشري والاجتماعي."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50166,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.31,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50167,
+      "question_number": 28,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما الفرق بين حماية الخصوصية وحق الفرد في التحكم في بياناته الشخصية؟",
+      "model_answer": "الخصوصية تعني التحكم في البيانات الشخصية التي تتم مشاركتها. أما مبدأ حماية الخصوصية فيقتضي التعامل مع هذه المعلومات بشكل مناسب وحمايتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الخصوصية تعني التحكم في البيانات الشخصية التي تتم مشاركتها. أما مبدأ حماية الخصوصية فيقتضي التعامل مع هذه المعلومات بشكل مناسب وحمايتها."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50167,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 28,
+        "lexical_similarity": 0.247,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50168,
+      "question_number": 29,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "لماذا يثير جمع كميات كبيرة من بيانات السلوك عبر الإنترنت وتحليلها مخاوف أخلاقية؟",
+      "model_answer": "لأنها بيانات ترتبط بسلوك الأفراد، وجمعها وتحليلها على نطاق واسع يثير مخاوف بشأن الخصوصية وكيفية التعامل مع المعلومات الشخصية وحمايتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأنها بيانات ترتبط بسلوك الأفراد، وجمعها وتحليلها على نطاق واسع يثير مخاوف بشأن الخصوصية وكيفية التعامل مع المعلومات الشخصية وحمايتها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50168,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.159,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50169,
+      "question_number": 30,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تُستخدم كاميرات التعرف على الوجه في مكان عام لتحسين الراحة والسلامة. وضح جانب الفائدة وجانب القلق الأخلاقي، وحدد المبدأ المرتبط به.",
+      "model_answer": "قد يحقق التعرف على الوجه راحة وسلامة أكبر، لكنه يسمح أيضًا بالتعرف على الأفراد وتتبعهم في الأماكن العامة. والقلق هو المساس بالخصوصية، والمبدأ المرتبط به هو حماية الخصوصية والتعامل المناسب مع البيانات الشخصية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "قد يحقق التعرف على الوجه راحة وسلامة أكبر، لكنه يسمح أيضًا بالتعرف على الأفراد وتتبعهم في الأماكن العامة. والقلق هو المساس بالخصوصية، والمبدأ المرتبط به هو حماية الخصوصية والتعامل المناسب مع البيانات الشخصية."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50169,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.261,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50170,
+      "question_number": 31,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "رفض نظام ذكاء اصطناعي طلب توظيف شخص دون توضيح السبب. ما المبدأ الأخلاقي الذي لم يتحقق، وما المشكلة المرتبطة بذلك؟",
+      "model_answer": "المبدأ هو الشفافية؛ لأن سبب القرار غير واضح. وترتبط الحالة بمشكلة الصندوق الأسود التي تصعّب فهم آلية القرار وتقييم النتيجة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المبدأ هو الشفافية؛ لأن سبب القرار غير واضح. وترتبط الحالة بمشكلة الصندوق الأسود التي تصعّب فهم آلية القرار وتقييم النتيجة."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50170,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 28,
+        "lexical_similarity": 0.229,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50171,
+      "question_number": 32,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "هل يكفي أن تبدو نتيجة نظام ذكاء اصطناعي صحيحة إذا كانت آلية اتخاذ القرار غير واضحة؟ علّل.",
+      "model_answer": "لا. عدم وضوح آلية القرار يجعل تقييم صحة النتيجة واكتشاف الأخطاء أو التحيز أمرًا صعبًا، حتى لو بدت النتيجة صحيحة. ويساعد XAI على فهم العوامل المؤثرة في القرار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لا. عدم وضوح آلية القرار يجعل تقييم صحة النتيجة واكتشاف الأخطاء أو التحيز أمرًا صعبًا، حتى لو بدت النتيجة صحيحة. ويساعد XAI على فهم العوامل المؤثرة في القرار."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50171,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.235,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50172,
+      "question_number": 33,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اذكر المصطلح الذي يصف التقنيات التي تساعد البشر على فهم أسباب أحكام الذكاء الاصطناعي، واكتب اختصاره.",
+      "model_answer": "الذكاء الاصطناعي القابل للتفسير (Explainable AI)، واختصاره XAI.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "الذكاء الاصطناعي القابل للتفسير (Explainable AI)، واختصاره XAI."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50172,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.327,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50173,
+      "question_number": 34,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تريد مدرسة استخدام التعرف على الوجه لتسجيل الحضور تلقائيًا. حدد فائدة عملية واحدة ومصدر قلق واحدًا يتعلق بالخصوصية.",
+      "model_answer": "الفائدة: المساعدة على تسجيل حضور الطلاب آليًا.\nمصدر القلق: جمع صور وجوه الطلاب أو التعرف عليهم دون ضوابط مناسبة قد يمس خصوصيتهم وحقهم في التحكم في بياناتهم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الفائدة: المساعدة على تسجيل حضور الطلاب آليًا.",
+        "مصدر القلق: جمع صور وجوه الطلاب أو التعرف عليهم دون ضوابط مناسبة قد يمس خصوصيتهم وحقهم في التحكم في بياناتهم."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50173,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.213,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50174,
+      "question_number": 35,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "أخطأت كاميرا التعرف على الوجه في تسجيل حضور طالب. هل يمكن تحديد جهة واحدة مسؤولة دائمًا عن الخطأ؟ وضّح وفق مفهومي المسؤولية والمساءلة.",
+      "model_answer": "لا تُحدد جهة واحدة ثابتة لجميع الحالات. تُراجع أدوار وواجبات الجهات المعنية، مثل المدرسة المشغلة والشركة المطورة، بحسب السياق والقواعد المعمول بها. والمسؤولية تتعلق بالأدوار والواجبات، أما المساءلة فتتعلق بإمكان محاسبة الجهة المعنية عن النتيجة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا تُحدد جهة واحدة ثابتة لجميع الحالات. تُراجع أدوار وواجبات الجهات المعنية، مثل المدرسة المشغلة والشركة المطورة، بحسب السياق والقواعد المعمول بها. والمسؤولية تتعلق بالأدوار والواجبات، أما المساءلة فتتعلق بإمكان محاسبة الجهة المعنية عن النتيجة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50174,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.246,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50175,
+      "question_number": 36,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "صل كل موقف بالمبدأ الأخلاقي الأنسب: تقييم المتقدمين للتوظيف دون تمييز، توضيح أسباب قرار، التعامل المناسب مع بيانات شخصية، تحديد جهة يمكن محاسبتها.",
+      "model_answer": "1. تقييم المتقدمين دون تمييز: العدالة.\n2. توضيح أسباب قرار النظام: الشفافية.\n3. التعامل الآمن مع البيانات الشخصية: حماية الخصوصية.\n4. تحديد الجهة التي يمكن محاسبتها: المساءلة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. تقييم المتقدمين دون تمييز: العدالة.",
+        "2. توضيح أسباب قرار النظام: الشفافية.",
+        "3. التعامل الآمن مع البيانات الشخصية: حماية الخصوصية.",
+        "4. تحديد الجهة التي يمكن محاسبتها: المساءلة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50175,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.173,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50176,
+      "question_number": 37,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ما المفاهيم الثلاثة المناسبة لهذه الأوصاف: نتائج غير عادلة بسبب البيانات أو التصميم، أساليب تفسّر عوامل القرار، تحديد أدوار الأطراف عند صدور حكم خاطئ؟",
+      "model_answer": "1. نتائج غير عادلة بسبب البيانات أو التصميم: التحيز الخوارزمي.\n2. أساليب توضح العوامل التي أدت للقرار: الذكاء الاصطناعي القابل للتفسير (XAI).\n3. تحديد واجبات المطور والمشغل والمستخدم: المسؤولية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. نتائج غير عادلة بسبب البيانات أو التصميم: التحيز الخوارزمي.",
+        "2. أساليب توضح العوامل التي أدت للقرار: الذكاء الاصطناعي القابل للتفسير (XAI).",
+        "3. تحديد واجبات المطور والمشغل والمستخدم: المسؤولية."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50176,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.228,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50177,
+      "question_number": 38,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اقترح قاعدة واحدة تجعل استخدام الذكاء الاصطناعي في التوظيف أكثر عدالة، وبررها باستخدام مبدأين من مبادئ أخلاقيات الذكاء الاصطناعي.",
+      "model_answer": "القاعدة: فحص تمثيل بيانات التدريب واختبار نتائج النظام عبر فئات مختلفة، مع إتاحة معلومات واضحة عن كيفية اتخاذ القرار.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "القاعدة: فحص تمثيل بيانات التدريب واختبار نتائج النظام عبر فئات مختلفة، مع إتاحة معلومات واضحة عن كيفية اتخاذ القرار."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50177,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.319,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50178,
+      "question_number": 39,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "كيف يختلف دور الذكاء الاصطناعي القابل للتفسير (XAI) عن دور مبدأ المساءلة عند صدور قرار غير عادل؟",
+      "model_answer": "يساعد XAI على فهم العوامل التي أدت إلى القرار. أما المساءلة فتحدد الجهات التي يمكن محاسبتها عن القرار وآثاره وفق أدوارها. فهم السبب لا يعني تلقائيًا تحديد المسؤول.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يساعد XAI على فهم العوامل التي أدت إلى القرار. أما المساءلة فتحدد الجهات التي يمكن محاسبتها عن القرار وآثاره وفق أدوارها. فهم السبب لا يعني تلقائيًا تحديد المسؤول."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50178,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.348,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50179,
+      "question_number": 40,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "إذا ظهر تحيز في مخرجات نظام ذكاء اصطناعي، فما العلاقة بين التحقق من البيانات، وفهم أسباب القرارات، وتحديد الأطراف المسؤولة عن النتائج؟",
+      "model_answer": "التحقق من بيانات التدريب وتمثيلها يساعد على كشف أسباب محتملة للتحيز. وفهم أسباب القرارات باستخدام XAI يساعد على تقييم المخرجات واكتشاف الأخطاء. وتحديد أدوار الأطراف والمسؤولين عن القرارات وآثارها يحقق المسؤولية والمساءلة في الاستخدام.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التحقق من بيانات التدريب وتمثيلها يساعد على كشف أسباب محتملة للتحيز. وفهم أسباب القرارات باستخدام XAI يساعد على تقييم المخرجات واكتشاف الأخطاء. وتحديد أدوار الأطراف والمسؤولين عن القرارات وآثارها يحقق المسؤولية والمساءلة في الاستخدام."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50179,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.259,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50241,
+      "question_number": 41,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "نظام توظيف أعطى نتائج غير عادلة رغم سرعة عمله. لماذا لا تفسر السرعة المشكلة، وما مصدران محتملان للتحيز؟",
+      "model_answer": "سرعة المعالجة لا تفسر التحيز؛ قد ينشأ من بيانات تدريب منحازة أو غير ممثلة، أو من تصميم النظام واختيار المتغيرات، أو طريقة استخدامه.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "سرعة المعالجة لا تفسر التحيز؛ قد ينشأ من بيانات تدريب منحازة أو غير ممثلة، أو من تصميم النظام واختيار المتغيرات، أو طريقة استخدامه."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50241,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.257,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50242,
+      "question_number": 42,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تكررت أخطاء التعرف على الوجوه بدرجة أكبر مع مجموعة من الأشخاص. أي مبدأ أخلاقي تأثر، وكيف؟",
+      "model_answer": "مبدأ العدالة؛ لأن التفاوت في الدقة قد يؤدي إلى معاملة غير عادلة أو تمييز ضد مجموعة معينة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "مبدأ العدالة؛ لأن التفاوت في الدقة قد يؤدي إلى معاملة غير عادلة أو تمييز ضد مجموعة معينة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50242,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.176,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50243,
+      "question_number": 43,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تستخدم مدرسة كاميرات تعرف على الوجه لتسجيل الحضور. اذكر فائدة عملية ومصدر قلق ينبغي مناقشته قبل التعميم.",
+      "model_answer": "الفائدة تسجيل الحضور بصورة آلية؛ ومصدر القلق جمع بيانات هوية الطلاب ومراقبتهم وتتبعهم بما قد يمس الخصوصية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الفائدة تسجيل الحضور بصورة آلية؛ ومصدر القلق جمع بيانات هوية الطلاب ومراقبتهم وتتبعهم بما قد يمس الخصوصية."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50243,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.201,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50244,
+      "question_number": 44,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "اعتمد نظام فرز طلبات على سجلات سابقة تتضمن تمييزًا بين مجموعات. كيف ينتقل أثر السجلات إلى النتائج؟",
+      "model_answer": "يتعلم النظام أنماطًا من بيانات التدريب؛ فإذا تضمنت تحيزات سابقة فقد يكررها في أحكامه وتظهر نتائج غير عادلة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يتعلم النظام أنماطًا من بيانات التدريب؛ فإذا تضمنت تحيزات سابقة فقد يكررها في أحكامه وتظهر نتائج غير عادلة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50244,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.185,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50245,
+      "question_number": 45,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "لم تُظهر بيانات التدريب تمييزًا مباشرًا، لكن النظام اعتمد متغيرًا يمثل سمة حساسة بشكل غير مباشر. ماذا يوضح هذا المثال؟",
+      "model_answer": "التحيز قد يدخل من تصميم النظام واختيار متغير بديل يرتبط بسمة محمية، وليس من البيانات المتحيزة الصريحة فقط.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التحيز قد يدخل من تصميم النظام واختيار متغير بديل يرتبط بسمة محمية، وليس من البيانات المتحيزة الصريحة فقط."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50245,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.227,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50246,
+      "question_number": 46,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "أبلغت جهة مستخدميها بوجود نظام ذكاء اصطناعي لكنها لم توضح استخدامه أو حدوده. ما جانب الشفافية الذي ما زال ناقصًا؟",
+      "model_answer": "يلزم توفير معلومات واضحة ومناسبة عن النظام وطريقة استخدامه وعملية اتخاذ القرار وحدوده، لا مجرد الإشارة إلى وجوده.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يلزم توفير معلومات واضحة ومناسبة عن النظام وطريقة استخدامه وعملية اتخاذ القرار وحدوده، لا مجرد الإشارة إلى وجوده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50246,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.246,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50247,
+      "question_number": 47,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "رفض نظام طلب توظيف ولم يعرف المعنيون العوامل المؤثرة في القرار. ما التقنية التي تساعد على فهم الحكم وما حدود وظيفتها؟",
+      "model_answer": "تساعد أساليب الذكاء الاصطناعي القابل للتفسير XAI على توضيح العوامل التي أسهمت في النتيجة، لكنها لا تحدد وحدها الجهة التي تُحاسب على القرار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تساعد أساليب الذكاء الاصطناعي القابل للتفسير XAI على توضيح العوامل التي أسهمت في النتيجة، لكنها لا تحدد وحدها الجهة التي تُحاسب على القرار."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50247,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.346,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50248,
+      "question_number": 48,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "بعد خطأ نظام ذكاء اصطناعي، قال المشغل إن مجرد فهم سبب الخطأ يكفي لتحديد المسؤولية. وضّح الفرق بين تفسير القرار والمساءلة.",
+      "model_answer": "تفسير القرار يعني فهم العوامل المؤثرة في المخرج\nأما المساءلة فتعني تحديد الجهات المسؤولة عن النظام وآثاره وإمكان محاسبتها وفق أدوارها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تفسير القرار يعني فهم العوامل المؤثرة في المخرج",
+        "أما المساءلة فتعني تحديد الجهات المسؤولة عن النظام وآثاره وإمكان محاسبتها وفق أدوارها."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50248,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.331,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50249,
+      "question_number": 49,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "يتنازع مطور وجهة مشغلة ومستخدم حول المسؤولية عن حكم خاطئ. لماذا لا توجد إجابة ثابتة تصلح لكل تطبيق؟",
+      "model_answer": "تختلف أدوار وواجبات المطور والجهة المشغلة والمستخدم حسب النظام وسياق استخدامه والقواعد المعمول بها؛ فلا يوجد توزيع موحد دائمًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تختلف أدوار وواجبات المطور والجهة المشغلة والمستخدم حسب النظام وسياق استخدامه والقواعد المعمول بها؛ فلا يوجد توزيع موحد دائمًا."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50249,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.174,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50250,
+      "question_number": 50,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "يجمع تطبيق كميات كبيرة من بيانات السلوك الشخصي لتحسين الخدمة. كيف توازن الجهة بين الفائدة ومبدأ حماية الخصوصية؟",
+      "model_answer": "يمكن الاستفادة من تحليل البيانات لتقديم الخدمة، لكن يجب التعامل مع المعلومات الشخصية بصورة مناسبة وحماية خصوصية المستخدم والتحكم في مشاركة البيانات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن الاستفادة من تحليل البيانات لتقديم الخدمة، لكن يجب التعامل مع المعلومات الشخصية بصورة مناسبة وحماية خصوصية المستخدم والتحكم في مشاركة البيانات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50250,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.215,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50251,
+      "question_number": 51,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "وعدت مؤسسة بإظهار معلومات واضحة عن قرارات النظام لكنها لم تختبر اختلاف نتائجه بين المجموعات. أي مبدأين يجب الفصل بينهما؟",
+      "model_answer": "الشفافية تتعلق بوضوح المعلومات عن النظام وقراراته؛ والعدالة تتعلق بعدم التمييز ظلمًا، وتحتاج إلى فحص النتائج عبر الفئات المختلفة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الشفافية تتعلق بوضوح المعلومات عن النظام وقراراته؛ والعدالة تتعلق بعدم التمييز ظلمًا، وتحتاج إلى فحص النتائج عبر الفئات المختلفة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50251,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.234,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50252,
+      "question_number": 52,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "قبل تشغيل أداة لتقييم طلبات التوظيف، ما إجراءان مستندان إلى أسباب التحيز يساعدان على تقليل النتائج غير العادلة؟",
+      "model_answer": "فحص مدى تمثيل بيانات التدريب وعدم تحيزها، واختبار نتائج النظام عبر مجموعات مختلفة ومراجعة تصميمه ومتغيراته.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "فحص مدى تمثيل بيانات التدريب وعدم تحيزها، واختبار نتائج النظام عبر مجموعات مختلفة ومراجعة تصميمه ومتغيراته."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50252,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.205,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50253,
+      "question_number": 53,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "قال مسؤول: «إذا كان النظام يقدّم تقييمًا سريعًا فلا داعي لمراجعته بشريًا». ناقش المخاطرة الأخلاقية.",
+      "model_answer": "قد تكون الأحكام غير عادلة أو خاطئة بسبب التحيز وعدم وضوح الأساس؛ في القرارات عالية الأثر يجب مراجعة النتائج وتحديد المسؤولية عنها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قد تكون الأحكام غير عادلة أو خاطئة بسبب التحيز وعدم وضوح الأساس؛ في القرارات عالية الأثر يجب مراجعة النتائج وتحديد المسؤولية عنها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50253,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.19,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50254,
+      "question_number": 54,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "في مشروع تعرف على الوجه، ظهرت دقة أقل لفئة معينة مع جمع بيانات شخصية واسعة. ما المبدآن اللذان يحتاجان إلى معالجة متوازية؟",
+      "model_answer": "العدالة لمعالجة اختلاف الدقة والتمييز المحتمل، وحماية الخصوصية لضبط التعامل مع بيانات الوجوه والمعلومات الشخصية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "العدالة لمعالجة اختلاف الدقة والتمييز المحتمل، وحماية الخصوصية لضبط التعامل مع بيانات الوجوه والمعلومات الشخصية."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50254,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 27,
+        "lexical_similarity": 0.204,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50255,
+      "question_number": 55,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "نجح فريق في شرح سبب رفض النظام لطلب توظيف، ثم أعلن أن النظام أصبح عادلًا بالضرورة. لماذا لا يكفي هذا الدليل؟",
+      "model_answer": "إمكان تفسير الحكم لا يثبت عدالته؛ لا بد أيضًا من فحص البيانات والتصميم والنتائج للكشف عن التحيز وتجنب التمييز غير العادل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "إمكان تفسير الحكم لا يثبت عدالته؛ لا بد أيضًا من فحص البيانات والتصميم والنتائج للكشف عن التحيز وتجنب التمييز غير العادل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50255,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.169,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50256,
+      "question_number": 56,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "ظهر تمييز في نظام توظيف بسبب بيانات قديمة متحيزة، وظهر في نظام آخر بسبب اختيار متغير بديل لسمة محمية. لماذا لا يكفي علاج المشكلة في بيانات التدريب وحدها؟",
+      "model_answer": "التحيز قد ينشأ من بيانات التدريب غير الممثلة أو المتحيزة، وقد يدخل من تصميم النموذج أو اختيار متغير يمثّل سمة محمية بصورة غير مباشرة؛ لذلك ينبغي فحص البيانات والتصميم معًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "التحيز قد ينشأ من بيانات التدريب غير الممثلة أو المتحيزة، وقد يدخل من تصميم النموذج أو اختيار متغير يمثّل سمة محمية بصورة غير مباشرة؛ لذلك ينبغي فحص البيانات والتصميم معًا."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50256,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.263,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50257,
+      "question_number": 57,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "بعد زيادة عدد أمثلة التدريب ظلّ نظام تعرف على الوجه أقل دقة لفئة من الأشخاص. لماذا لا يجوز اعتبار زيادة العدد وحدها دليلًا على تحقيق العدالة؟",
+      "model_answer": "العدالة تتطلب عدم التمييز ظلمًا، ولا يكفي العدد الكلي للأمثلة\nبل يجب فحص مدى تمثيل الفئات المختلفة واختبار النتائج عبرها، مع مراجعة تصميم النظام واستخدامه.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "العدالة تتطلب عدم التمييز ظلمًا، ولا يكفي العدد الكلي للأمثلة",
+        "بل يجب فحص مدى تمثيل الفئات المختلفة واختبار النتائج عبرها، مع مراجعة تصميم النظام واستخدامه."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50257,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 25,
+        "lexical_similarity": 0.174,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50258,
+      "question_number": 58,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "جُمعت بيانات سلوك الطلاب لخدمة محددة، ثم اقترح مسؤول إعادة استخدامها لأي غرض آخر دون مناقشة. أي مبدأ ينبغي مراعاته، وما الإجراء المفهومي المناسب؟",
+      "model_answer": "يجب مراعاة حماية الخصوصية والتعامل المناسب مع المعلومات الشخصية، بما يشمل التحكم في مشاركة البيانات وعدم افتراض جواز استخدام البيانات المجمعة لأي غرض جديد بلا ضوابط.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يجب مراعاة حماية الخصوصية والتعامل المناسب مع المعلومات الشخصية، بما يشمل التحكم في مشاركة البيانات وعدم افتراض جواز استخدام البيانات المجمعة لأي غرض جديد بلا ضوابط."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50258,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.192,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50259,
+      "question_number": 59,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "أظهر نظام للمستخدمين العوامل التي أثرت في رفض طلباتهم، لكنه لم يحدد الجهة التي تتحمل آثار الخطأ. أي مطلبين أخلاقيين تحقّق أحدهما وغاب الآخر؟",
+      "model_answer": "توضيح العوامل المؤثرة يساعد على تفسير القرار باستخدام XAI ويدعم الشفافية\nأما تحديد الجهة المسؤولة وإمكان محاسبتها فهو المساءلة، ولم يتحقق بمجرد تفسير القرار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "توضيح العوامل المؤثرة يساعد على تفسير القرار باستخدام XAI ويدعم الشفافية",
+        "أما تحديد الجهة المسؤولة وإمكان محاسبتها فهو المساءلة، ولم يتحقق بمجرد تفسير القرار."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50259,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 26,
+        "lexical_similarity": 0.249,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50260,
+      "question_number": 60,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "prompt": "تستعد شركة لتشغيل ذكاء اصطناعي في اختيار المتقدمين للعمل. اقترح ثلاث خطوات مترابطة لمواجهة احتمال الظلم وغموض القرارات، مع تحديد من يتابع آثار النظام.",
+      "model_answer": "تراجع الشركة تمثيل بيانات التدريب وخلوها من التحيز قدر الإمكان، وتختبر النتائج بين فئات المتقدمين، وتتيح معلومات مناسبة وتفسيرًا للعوامل المؤثرة في الأحكام\nكما تحدد أدوار الجهة المشغلة والمطور والمستخدم وآلية مساءلتهم بحسب السياق.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تراجع الشركة تمثيل بيانات التدريب وخلوها من التحيز قدر الإمكان، وتختبر النتائج بين فئات المتقدمين، وتتيح معلومات مناسبة وتفسيرًا للعوامل المؤثرة في الأحكام",
+        "كما تحدد أدوار الجهة المشغلة والمطور والمستخدم وآلية مساءلتهم بحسب السياق."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50260,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-4: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_4",
+        "printed_page_range": [
+          24,
+          29
+        ],
+        "best_page_hint": 29,
+        "lexical_similarity": 0.213,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "unit_number": 2,
+  "unit_title_en": "Unit 2: Cybersecurity",
+  "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+  "lesson_number": 7,
+  "lesson_title_en": "Lesson 2-3: Incident Response and Risk Management",
+  "lesson_title_ar": "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
+  "total_definitions": 9,
+  "approved_definitions_count": 9,
+  "definitions": [
+    {
+      "id": "DEF-080",
+      "term_en": "Security incident",
+      "current_definition_en": "A situation in which actual damage occurs due to an information security problem.",
+      "updated_definition_en": "A situation in which actual damage occurs due to an information security problem.",
+      "official_term_en": "Security incident",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 50,
+        "printed_page": 49,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-081",
+      "term_en": "Information leak",
+      "current_definition_en": "Personal information or confidential information is leaked to the outside.",
+      "updated_definition_en": "Personal information or confidential information is leaked to the outside.",
+      "official_term_en": "Information leak",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 50,
+        "printed_page": 49,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-082",
+      "term_en": "Data tampering",
+      "current_definition_en": "Data within a system is altered without authorization.",
+      "updated_definition_en": "Data within a system is altered without authorization.",
+      "official_term_en": "Data tampering",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 50,
+        "printed_page": 49,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-083",
+      "term_en": "Service outage",
+      "current_definition_en": "A service becomes unavailable due to attacks on the server, etc.",
+      "updated_definition_en": "A service becomes unavailable due to attacks on the server, etc.",
+      "official_term_en": "Service outage",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 50,
+        "printed_page": 49,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-084",
+      "term_en": "Incident response",
+      "current_definition_en": "A six-stage process for responding to a security incident: preparation, detection, containment, eradication, recovery, and prevention of recurrence.",
+      "updated_definition_en": "A six-stage process for responding to a security incident: preparation, detection, containment, eradication, recovery, and prevention of recurrence.",
+      "official_term_en": "Incident response",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 50,
+        "printed_page": 49,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-091",
+      "term_en": "Risk",
+      "current_definition_en": "The possibility of an information security problem occurring in the future, and its impact.",
+      "updated_definition_en": "The possibility of an information security problem occurring in the future, and its impact.",
+      "official_term_en": "Risk",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 51,
+        "printed_page": 50,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-092",
+      "term_en": "Impact",
+      "current_definition_en": "How much damage occurs if the risk actually materializes.",
+      "updated_definition_en": "How much damage occurs if the risk actually materializes.",
+      "official_term_en": "Impact",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 51,
+        "printed_page": 50,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-093",
+      "term_en": "Likelihood",
+      "current_definition_en": "How high the probability is that the risk will actually materialize.",
+      "updated_definition_en": "How high the probability is that the risk will actually materialize.",
+      "official_term_en": "Likelihood",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 51,
+        "printed_page": 50,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-096",
+      "term_en": "Risk evaluation matrix",
+      "current_definition_en": "A matrix for evaluating and prioritizing risks based on impact and likelihood. Risks high in both factors are addressed first.",
+      "updated_definition_en": "A matrix for evaluating and prioritizing risks based on impact and likelihood. Risks high in both factors are addressed first.",
+      "official_term_en": "Risk evaluation matrix",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 51,
+        "printed_page": 50,
+        "basis": "figure_explained_concept"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

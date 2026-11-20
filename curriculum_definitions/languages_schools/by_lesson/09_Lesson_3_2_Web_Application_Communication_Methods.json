@@ -1,0 +1,236 @@
+{
+  "unit_number": 3,
+  "unit_title_en": "Unit 3: Web Applications",
+  "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+  "lesson_number": 9,
+  "lesson_title_en": "Lesson 3-2: Web Application Communication Methods",
+  "lesson_title_ar": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+  "total_definitions": 14,
+  "approved_definitions_count": 14,
+  "definitions": [
+    {
+      "id": "DEF-102",
+      "term_en": "Client",
+      "current_definition_en": "The side that requests data or processing from the server. Web browsers and smartphone apps fall into this category.",
+      "updated_definition_en": "The side that requests data or processing from the server. Web browsers and smartphone apps fall into this category.",
+      "official_term_en": "Client",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-103",
+      "term_en": "Server",
+      "current_definition_en": "The side that receives requests from clients, processes them, and returns responses.",
+      "updated_definition_en": "The side that receives requests from clients, processes them, and returns responses.",
+      "official_term_en": "Server",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-104",
+      "term_en": "Client-server communication",
+      "current_definition_en": "A web application operates by the client sending a request and the server returning a response.",
+      "updated_definition_en": "A web application operates by the client sending a request and the server returning a response.",
+      "official_term_en": "Client-server communication",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-105",
+      "term_en": "HTTP (HyperText Transfer Protocol)",
+      "current_definition_en": "A communication protocol for exchanging data between clients (browsers and apps) and servers.",
+      "updated_definition_en": "A communication protocol for exchanging data between clients (browsers and apps) and servers.",
+      "official_term_en": "HTTP (HyperText Transfer Protocol)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-106",
+      "term_en": "HTTPS (HTTP Secure)",
+      "current_definition_en": "A communication protocol that adds TLS encryption to HTTP, reducing the risk of communication content being read by third parties.",
+      "updated_definition_en": "A communication protocol that adds TLS encryption to HTTP, reducing the risk of communication content being read by third parties.",
+      "official_term_en": "HTTPS (HTTP Secure)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-107",
+      "term_en": "HTTP method",
+      "current_definition_en": "Information included in an HTTP request that indicates what kind of operation is desired.",
+      "updated_definition_en": "Information included in an HTTP request that indicates what kind of operation is desired.",
+      "official_term_en": "HTTP method",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 64,
+        "printed_page": 63,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-108",
+      "term_en": "GET",
+      "current_definition_en": "Retrieve data from the server.",
+      "updated_definition_en": "Retrieve data from the server.",
+      "official_term_en": "GET",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-109",
+      "term_en": "POST",
+      "current_definition_en": "Send data to the server.",
+      "updated_definition_en": "Send data to the server.",
+      "official_term_en": "POST",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-112",
+      "term_en": "Status code",
+      "current_definition_en": "A number included in a server response that indicates the result of processing.",
+      "updated_definition_en": "A number included in a server response that indicates the result of processing.",
+      "official_term_en": "Status code",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-113",
+      "term_en": "Status code 200",
+      "current_definition_en": "Success: the request was processed successfully.",
+      "updated_definition_en": "Success: the request was processed successfully.",
+      "official_term_en": "Status code 200",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-114",
+      "term_en": "Status code 404",
+      "current_definition_en": "Page not found: the specified URL does not exist.",
+      "updated_definition_en": "Page not found: the specified URL does not exist.",
+      "official_term_en": "Status code 404",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-115",
+      "term_en": "Status code 500",
+      "current_definition_en": "Server error: a problem occurred on the server side.",
+      "updated_definition_en": "Server error: a problem occurred on the server side.",
+      "official_term_en": "Status code 500",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-116",
+      "term_en": "API (Application Programming Interface)",
+      "current_definition_en": "A system for exchanging data between different pieces of software.",
+      "updated_definition_en": "A system for exchanging data between different pieces of software.",
+      "official_term_en": "API (Application Programming Interface)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-118",
+      "term_en": "JSON (JavaScript Object Notation)",
+      "current_definition_en": "A data format that is easy for humans to read and for computers to process.",
+      "updated_definition_en": "A data format that is easy for humans to read and for computers to process.",
+      "official_term_en": "JSON (JavaScript Object Notation)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 65,
+        "printed_page": 64,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

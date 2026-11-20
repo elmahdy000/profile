@@ -1,0 +1,2630 @@
+{
+  "unit_id": 2,
+  "unit_title": "الوحدة الثانية: الأمن السيبراني والتشفير",
+  "lesson_id": "2_2",
+  "lesson_title": "الدرس الثاني: حماية البيانات والمعلومات",
+  "total_questions": 78,
+  "questions": [
+    {
+      "id": 50322,
+      "question_number": 1,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بجدار الحماية؟ وما وظيفته الأساسية؟",
+      "model_answer": "جدار الحماية نظام أو برنامج يراقب حركة مرور الشبكة، ويسمح بالاتصال أو يمنعه وفق قواعد أمنية محددة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "جدار الحماية نظام أو برنامج يراقب حركة مرور الشبكة، ويسمح بالاتصال أو يمنعه وفق قواعد أمنية محددة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50322,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.294,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50323,
+      "question_number": 2,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "أين يمكن وضع جدار الحماية داخل الشبكة؟",
+      "model_answer": "يمكن وضع جدار الحماية عند حدود الشبكة الخارجية، أو بين أقسام الشبكة المختلفة، أو على جهاز مضيف. وفي كل موضع ينظم مرور البيانات وفق القواعد الأمنية.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن وضع جدار الحماية عند حدود الشبكة الخارجية، أو بين أقسام الشبكة المختلفة، أو على جهاز مضيف. وفي كل موضع ينظم مرور البيانات وفق القواعد الأمنية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50323,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.283,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50324,
+      "question_number": 3,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف يمكن استخدام جدار الحماية لحماية قاعدة بيانات داخلية؟",
+      "model_answer": "يسمح جدار الحماية بالاتصال اللازم بخادم الويب العام، ويمنع الاتصال الخارجي المباشر بقاعدة البيانات الداخلية الحساسة وفق القواعد المحددة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يسمح جدار الحماية بالاتصال اللازم بخادم الويب العام، ويمنع الاتصال الخارجي المباشر بقاعدة البيانات الداخلية الحساسة وفق القواعد المحددة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50324,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.23,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50325,
+      "question_number": 4,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بالشبكة الافتراضية الخاصة (VPN)؟",
+      "model_answer": "اتصال أو شبكة منطقية خاصة عبر شبكة عامة مثل الإنترنت، تستخدم عادةً التشفير وتقنيات النفق لحماية البيانات بين الطرفين.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "اتصال أو شبكة منطقية خاصة عبر شبكة عامة مثل الإنترنت، تستخدم عادةً التشفير وتقنيات النفق لحماية البيانات بين الطرفين."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50325,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.424,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50326,
+      "question_number": 5,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "اذكر استخدامين رئيسيين للشبكة الافتراضية الخاصة (VPN).",
+      "model_answer": "1. تمكين الموظفين من الاتصال الآمن بشبكة مؤسستهم عند العمل عن بُعد.\n2. ربط فروع المؤسسة الموجودة في أماكن مختلفة عبر الإنترنت بصورة آمنة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. تمكين الموظفين من الاتصال الآمن بشبكة مؤسستهم عند العمل عن بُعد.",
+        "2. ربط فروع المؤسسة الموجودة في أماكن مختلفة عبر الإنترنت بصورة آمنة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50326,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.369,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50327,
+      "question_number": 6,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: يُفضل استخدام الشبكة الافتراضية الخاصة عند الاتصال بشبكة Wi-Fi عامة.",
+      "model_answer": "لأنها تستخدم التشفير لحماية محتوى الاتصال، مما يقلل مخاطر التنصت عند استخدام شبكة غير موثوقة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأنها تستخدم التشفير لحماية محتوى الاتصال، مما يقلل مخاطر التنصت عند استخدام شبكة غير موثوقة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50327,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.337,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50328,
+      "question_number": 7,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف تساعد الشبكة الافتراضية الخاصة الموظفين الذين يعملون من المنزل؟",
+      "model_answer": "تتيح لهم الاتصال بأمان بشبكة المؤسسة عبر الإنترنت باستخدام التشفير لحماية البيانات المتبادلة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تتيح لهم الاتصال بأمان بشبكة المؤسسة عبر الإنترنت باستخدام التشفير لحماية البيانات المتبادلة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50328,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.368,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50329,
+      "question_number": 8,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "هل تُستخدم الشبكة الافتراضية الخاصة لإزالة الفيروسات تلقائيًا؟ علل.",
+      "model_answer": "لا، لأن وظيفتها الأساسية حماية الاتصال باستخدام التشفير، بينما تُستخدم برامج مكافحة الفيروسات لحماية الأجهزة الطرفية.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لا، لأن وظيفتها الأساسية حماية الاتصال باستخدام التشفير، بينما تُستخدم برامج مكافحة الفيروسات لحماية الأجهزة الطرفية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50329,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.277,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50330,
+      "question_number": 9,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بالمنطقة المعزولة (DMZ)؟",
+      "model_answer": "منطقة تُوضع فيها الخوادم المعرضة للشبكة الخارجية، مثل خوادم الويب والبريد الإلكتروني، بشكل منفصل عن الشبكة الداخلية.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "منطقة تُوضع فيها الخوادم المعرضة للشبكة الخارجية، مثل خوادم الويب والبريد الإلكتروني، بشكل منفصل عن الشبكة الداخلية."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50330,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.421,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50331,
+      "question_number": 10,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "اذكر مثالين للخوادم التي يمكن وضعها في المنطقة المعزولة (DMZ).",
+      "model_answer": "1. خادم الويب الذي يستقبل اتصالات الجمهور.\n2. خادم البريد الإلكتروني العام.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. خادم الويب الذي يستقبل اتصالات الجمهور.",
+        "2. خادم البريد الإلكتروني العام."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50331,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.294,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50332,
+      "question_number": 11,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: وضع خادم ويب عام في المنطقة المعزولة أكثر أمانًا من وضعه داخل الشبكة الداخلية.",
+      "model_answer": "لأن DMZ تعزل الخادم المواجه للجمهور عن الشبكة الداخلية، مما يقلل احتمال انتقال الهجوم إلى الموارد والبيانات الحساسة إذا اخترق الخادم العام.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن DMZ تعزل الخادم المواجه للجمهور عن الشبكة الداخلية، مما يقلل احتمال انتقال الهجوم إلى الموارد والبيانات الحساسة إذا اخترق الخادم العام."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50332,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-094",
+        "pdf_page": 37,
+        "match_score": 82.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.48,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50333,
+      "question_number": 12,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ماذا يحدث للشبكة الداخلية إذا تعرض أحد الخوادم الموجودة في المنطقة المعزولة لهجوم؟",
+      "model_answer": "يساعد فصل الخوادم في المنطقة المعزولة على تقليل احتمال انتقال الهجوم إلى الشبكة الداخلية، مما يحد من أثر الاختراق.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يساعد فصل الخوادم في المنطقة المعزولة على تقليل احتمال انتقال الهجوم إلى الشبكة الداخلية، مما يحد من أثر الاختراق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50333,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.437,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50334,
+      "question_number": 13,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما الفرق بين المنطقة المعزولة والشبكة الداخلية في تصميم شبكة المؤسسة؟",
+      "model_answer": "المنطقة المعزولة DMZ: مكان للخوادم المتاحة للاتصال الخارجي مثل خادم الويب.\nالشبكة الداخلية: تحتفظ بالأنظمة والبيانات الحساسة مع ضبط الوصول إليها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "المنطقة المعزولة DMZ: مكان للخوادم المتاحة للاتصال الخارجي مثل خادم الويب.",
+        "الشبكة الداخلية: تحتفظ بالأنظمة والبيانات الحساسة مع ضبط الوصول إليها."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50334,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.491,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50335,
+      "question_number": 14,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بالدفاع في العمق؟",
+      "model_answer": "استخدام طبقات متعددة من الضوابط الأمنية، بحيث تساعد الطبقات الأخرى على تقليل الخطر والحد من أثر الاختراق إذا فشلت إحدى الطبقات.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "استخدام طبقات متعددة من الضوابط الأمنية، بحيث تساعد الطبقات الأخرى على تقليل الخطر والحد من أثر الاختراق إذا فشلت إحدى الطبقات."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50335,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.281,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50336,
+      "question_number": 15,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: يُعد الدفاع في العمق أكثر أمانًا من الاعتماد على جدار حماية واحد.",
+      "model_answer": "لأن الدفاع في العمق يطبق أكثر من طبقة حماية؛ فإذا فشل جدار الحماية بقيت وسائل أخرى مثل العزل والتحديثات وحماية الاتصال لتقليل الخطر.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الدفاع في العمق يطبق أكثر من طبقة حماية؛ فإذا فشل جدار الحماية بقيت وسائل أخرى مثل العزل والتحديثات وحماية الاتصال لتقليل الخطر."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50336,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 38,
+        "lexical_similarity": 0.194,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50337,
+      "question_number": 16,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "اذكر طبقات الدفاع في العمق الأربع مع الإجراء الأمني المناسب لكل طبقة.",
+      "model_answer": "1. مدخل الشبكة: جدار حماية لتنظيم الاتصالات ومنع غير المصرح به.\n2. مسار الاتصال: VPN لتشفير الاتصال عبر الشبكات العامة.\n3. موضع الخوادم: DMZ لعزل الخوادم العامة عن الشبكة الداخلية.\n4. الأجهزة الطرفية: مضاد فيروسات وتحديث نظام التشغيل.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. مدخل الشبكة: جدار حماية لتنظيم الاتصالات ومنع غير المصرح به.",
+        "2. مسار الاتصال: VPN لتشفير الاتصال عبر الشبكات العامة.",
+        "3. موضع الخوادم: DMZ لعزل الخوادم العامة عن الشبكة الداخلية.",
+        "4. الأجهزة الطرفية: مضاد فيروسات وتحديث نظام التشغيل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50337,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.282,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50338,
+      "question_number": 17,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بالأجهزة الطرفية؟ وكيف تُحمى ضمن الدفاع في العمق؟",
+      "model_answer": "هي الأجهزة المستخدمة داخل الشبكة، وتُحمى من خلال تثبيت برامج مكافحة الفيروسات والحفاظ على تحديث نظام التشغيل.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "هي الأجهزة المستخدمة داخل الشبكة، وتُحمى من خلال تثبيت برامج مكافحة الفيروسات والحفاظ على تحديث نظام التشغيل."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50338,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.213,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50339,
+      "question_number": 18,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بنهج انعدام الثقة؟",
+      "model_answer": "نهج أمني لا يمنح الثقة تلقائيًا لمستخدم أو جهاز لمجرد وجوده داخل الشبكة أو ملكيته للمؤسسة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "نهج أمني لا يمنح الثقة تلقائيًا لمستخدم أو جهاز لمجرد وجوده داخل الشبكة أو ملكيته للمؤسسة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50339,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.292,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50340,
+      "question_number": 19,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما العناصر التي يفحصها نهج انعدام الثقة عند طلب الوصول إلى موارد المؤسسة؟",
+      "model_answer": "1. التحقق من هوية المستخدم أو الجهاز.\n2. فحص الصلاحيات المطلوبة للوصول.\n3. مراعاة سياق طلب الوصول؛ دون منح ثقة تلقائية لمجرد وجود الجهاز داخل المؤسسة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. التحقق من هوية المستخدم أو الجهاز.",
+        "2. فحص الصلاحيات المطلوبة للوصول.",
+        "3. مراعاة سياق طلب الوصول؛ دون منح ثقة تلقائية لمجرد وجود الجهاز داخل المؤسسة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50340,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.234,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50341,
+      "question_number": 20,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: لا يُعد وجود المستخدم داخل شبكة المؤسسة دليلًا كافيًا لمنحه الثقة تلقائيًا.",
+      "model_answer": "لأن نهج انعدام الثقة يشترط فحص الهوية والصلاحيات والسياق عند طلب الوصول، دون الاعتماد على مكان وجود المستخدم داخل الشبكة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن نهج انعدام الثقة يشترط فحص الهوية والصلاحيات والسياق عند طلب الوصول، دون الاعتماد على مكان وجود المستخدم داخل الشبكة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50341,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.284,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50342,
+      "question_number": 21,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما المقصود بالمحيط الأمني التقليدي؟",
+      "model_answer": "الحدود التقليدية التي تفترض أن داخل شبكة المؤسسة آمن، وأن خارجها خطر.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "الحدود التقليدية التي تفترض أن داخل شبكة المؤسسة آمن، وأن خارجها خطر."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50342,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.196,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50343,
+      "question_number": 22,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين الأمان التقليدي ونهج انعدام الثقة.",
+      "model_answer": "الأمان التقليدي: يركز على حماية محيط الشبكة ويفترض أن الداخل موثوق.\nانعدام الثقة: لا يمنح ثقة تلقائية، ويتحقق من الهوية والصلاحيات والسياق في كل طلب وصول.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "الأمان التقليدي: يركز على حماية محيط الشبكة ويفترض أن الداخل موثوق.",
+        "انعدام الثقة: لا يمنح ثقة تلقائية، ويتحقق من الهوية والصلاحيات والسياق في كل طلب وصول."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50343,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.271,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50344,
+      "question_number": 23,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: أصبحت حماية المحيط الأمني وحدها غير كافية في شبكات المؤسسات الحديثة.",
+      "model_answer": "لأن الخدمات السحابية والعمل عن بُعد يسمحان بالوصول إلى الموارد من أماكن وأجهزة خارج المحيط التقليدي، فلا يكفي التمييز البسيط بين داخل الشبكة وخارجها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الخدمات السحابية والعمل عن بُعد يسمحان بالوصول إلى الموارد من أماكن وأجهزة خارج المحيط التقليدي، فلا يكفي التمييز البسيط بين داخل الشبكة وخارجها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50344,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.173,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50345,
+      "question_number": 24,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما العلاقة بين الدفاع في العمق ونهج انعدام الثقة؟",
+      "model_answer": "الدفاع في العمق: يستخدم طبقات حماية متعددة لتقليل أثر فشل إحداها.\nانعدام الثقة: يتحقق من هوية الطالب أو الجهاز وصلاحياته وسياق الوصول ولا يفترض الثقة تلقائيًا.\nالجمع بينهما يوفر ضوابط متعددة وفحصًا لكل طلب وصول.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "الدفاع في العمق: يستخدم طبقات حماية متعددة لتقليل أثر فشل إحداها.",
+        "انعدام الثقة: يتحقق من هوية الطالب أو الجهاز وصلاحياته وسياق الوصول ولا يفترض الثقة تلقائيًا.",
+        "الجمع بينهما يوفر ضوابط متعددة وفحصًا لكل طلب وصول."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50345,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.239,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50346,
+      "question_number": 25,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين وظيفة جدار الحماية ووظيفة الشبكة الافتراضية الخاصة (VPN).",
+      "model_answer": "جدار الحماية: ينظم حركة البيانات ويسمح بالاتصال أو يمنعه وفق قواعد أمنية.\nVPN: تنشئ اتصالًا منطقيًا خاصًا عبر شبكة عامة، وتحمي بياناته عادة بالتشفير وتقنيات النفق.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "جدار الحماية: ينظم حركة البيانات ويسمح بالاتصال أو يمنعه وفق قواعد أمنية.",
+        "VPN: تنشئ اتصالًا منطقيًا خاصًا عبر شبكة عامة، وتحمي بياناته عادة بالتشفير وتقنيات النفق."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50346,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.406,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50347,
+      "question_number": 26,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين وظيفة الشبكة الافتراضية الخاصة (VPN) ووظيفة المنطقة المعزولة (DMZ).",
+      "model_answer": "VPN تحمي مسار الاتصال عن بُعد أو بين الفروع عبر الإنترنت.\nDMZ تعزل الخوادم العامة عن الشبكة الداخلية لتقليل انتقال أثر الاختراق.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "VPN تحمي مسار الاتصال عن بُعد أو بين الفروع عبر الإنترنت.",
+        "DMZ تعزل الخوادم العامة عن الشبكة الداخلية لتقليل انتقال أثر الاختراق."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50347,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.389,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50348,
+      "question_number": 27,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما الإجراءات الأمنية المناسبة لمؤسسة لديها موقع إلكتروني عام وموظفون يعملون عن بُعد وقاعدة بيانات سرية؟",
+      "model_answer": "1. الموقع العام: وضع خادم الويب في DMZ.\n2. الموظفون عن بُعد: VPN لحماية الاتصال بالشبكة.\n3. قاعدة البيانات السرية: إبقاؤها بالشبكة الداخلية ومنع الاتصال الخارجي المباشر بها باستخدام قواعد جدار الحماية.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الموقع العام: وضع خادم الويب في DMZ.",
+        "2. الموظفون عن بُعد: VPN لحماية الاتصال بالشبكة.",
+        "3. قاعدة البيانات السرية: إبقاؤها بالشبكة الداخلية ومنع الاتصال الخارجي المباشر بها باستخدام قواعد جدار الحماية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50348,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.265,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50349,
+      "question_number": 28,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف تتكامل وسائل الحماية الأربع لتأمين شبكة مؤسسة؟",
+      "model_answer": "1. جدار الحماية: تنظيم الاتصالات عند المدخل وبين الشبكات.\n2. VPN: حماية مسار نقل البيانات عبر الإنترنت.\n3. DMZ: عزل الخوادم العامة عن الأنظمة الحساسة.\n4. حماية الأجهزة الطرفية: مكافحة الفيروسات والتحديثات.\nوتُستخدم معًا ضمن الدفاع في العمق.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. جدار الحماية: تنظيم الاتصالات عند المدخل وبين الشبكات.",
+        "2. VPN: حماية مسار نقل البيانات عبر الإنترنت.",
+        "3. DMZ: عزل الخوادم العامة عن الأنظمة الحساسة.",
+        "4. حماية الأجهزة الطرفية: مكافحة الفيروسات والتحديثات.",
+        "وتُستخدم معًا ضمن الدفاع في العمق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50349,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.244,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50350,
+      "question_number": 29,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "لماذا يُعد نهج انعدام الثقة مهمًا عند استخدام الخدمات السحابية والعمل عن بُعد؟",
+      "model_answer": "لأن الوصول إلى موارد المؤسسة قد يتم من خارجها أو عبر خدمات سحابية؛ فلا يكفي مكان الجهاز لإثبات الثقة، بل يلزم فحص الهوية والصلاحيات وسياق كل طلب.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الوصول إلى موارد المؤسسة قد يتم من خارجها أو عبر خدمات سحابية؛ فلا يكفي مكان الجهاز لإثبات الثقة، بل يلزم فحص الهوية والصلاحيات وسياق كل طلب."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50350,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.299,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50351,
+      "question_number": 30,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "هل يوفر الدفاع في العمق حماية مطلقة لشبكة المؤسسة؟ علل.",
+      "model_answer": "لا؛ فهو يقلل المخاطر بتعدد طبقات الحماية لكنه لا يضمن عدم حدوث اختراق؛ لذا يستمر تطبيق ضوابط أخرى والتحقق من طلبات الوصول.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ فهو يقلل المخاطر بتعدد طبقات الحماية لكنه لا يضمن عدم حدوث اختراق؛ لذا يستمر تطبيق ضوابط أخرى والتحقق من طلبات الوصول."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50351,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 38,
+        "lexical_similarity": 0.184,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50352,
+      "question_number": 31,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: لا يقتصر دور جدار الحماية على منع الاتصالات، بل يشمل السماح ببعضها.",
+      "model_answer": "لأن دوره تنظيم حركة مرور الشبكة؛ فيسمح بالاتصالات المصرح بها، مثل الوصول لخادم الويب، ويمنع الاتصالات المخالفة لقواعد الأمن.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن دوره تنظيم حركة مرور الشبكة؛ فيسمح بالاتصالات المصرح بها، مثل الوصول لخادم الويب، ويمنع الاتصالات المخالفة لقواعد الأمن."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50352,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.218,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50353,
+      "question_number": 32,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف يمكن استخدام جدار الحماية للسماح بالوصول إلى خادم ويب عام مع الحفاظ على حماية قاعدة بيانات داخلية؟",
+      "model_answer": "1. السماح للزوار بالاتصال بخادم الويب العام.\n2. منع الاتصال المباشر من الإنترنت بقاعدة البيانات الداخلية.\n3. تطبيق قواعد فصل وحماية بين الجزء العام والداخلي.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. السماح للزوار بالاتصال بخادم الويب العام.",
+        "2. منع الاتصال المباشر من الإنترنت بقاعدة البيانات الداخلية.",
+        "3. تطبيق قواعد فصل وحماية بين الجزء العام والداخلي."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50353,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.208,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50354,
+      "question_number": 33,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "هل يشترط وضع جدار الحماية عند حدود الشبكة الخارجية فقط؟ وضح إجابتك.",
+      "model_answer": "لا؛ قد يوضع عند حدود الشبكة، أو بين أقسامها الداخلية، أو على جهاز مضيف؛ فهو ينظم الاتصالات أينما طُبقت قواعده.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ قد يوضع عند حدود الشبكة، أو بين أقسامها الداخلية، أو على جهاز مضيف؛ فهو ينظم الاتصالات أينما طُبقت قواعده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50354,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.256,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50355,
+      "question_number": 34,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: يُعد استخدام الشبكة الافتراضية الخاصة (VPN) مناسبًا لحماية اتصال موظف يعمل من منزله.",
+      "model_answer": "لأن VPN تحمي الاتصال عبر شبكة عامة باستخدام نفق وتشفير عادة، مما يقلل خطر تنصت الغير على البيانات أثناء عمل الموظف من منزله.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن VPN تحمي الاتصال عبر شبكة عامة باستخدام نفق وتشفير عادة، مما يقلل خطر تنصت الغير على البيانات أثناء عمل الموظف من منزله."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50355,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.345,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50356,
+      "question_number": 35,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "لماذا تقل مخاطر التنصت عند استخدام VPN عبر شبكة Wi-Fi عامة؟",
+      "model_answer": "لأن VPN تستخدم التشفير لحماية محتوى الاتصال المار عبر الشبكة العامة، فلا يستطيع المتنصت قراءة البيانات بسهولة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن VPN تستخدم التشفير لحماية محتوى الاتصال المار عبر الشبكة العامة، فلا يستطيع المتنصت قراءة البيانات بسهولة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50356,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.197,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50357,
+      "question_number": 36,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين استخدام VPN لربط فروع مؤسسة واستخدامها في العمل عن بُعد.",
+      "model_answer": "ربط الفروع: توصيل شبكات مكاتب المؤسسة الموجودة في مواقع مختلفة بأمان.\nالعمل عن بُعد: تمكين موظف من الاتصال بشبكة مؤسسته من المنزل.\nوفي الحالتين تحمي VPN البيانات عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "ربط الفروع: توصيل شبكات مكاتب المؤسسة الموجودة في مواقع مختلفة بأمان.",
+        "العمل عن بُعد: تمكين موظف من الاتصال بشبكة مؤسسته من المنزل.",
+        "وفي الحالتين تحمي VPN البيانات عبر الإنترنت."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50357,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.148,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50358,
+      "question_number": 37,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قيّم العبارة التالية: «استخدام VPN يجعل تثبيت برامج مكافحة الفيروسات غير ضروري».",
+      "model_answer": "العبارة غير صحيحة؛ VPN تحمي الاتصال عبر الشبكة العامة، لكنها لا تعالج الفيروسات على أجهزة المستخدمين.\nوتبقى مكافحة الفيروسات والتحديثات ضرورية لحماية الأجهزة الطرفية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "العبارة غير صحيحة؛ VPN تحمي الاتصال عبر الشبكة العامة، لكنها لا تعالج الفيروسات على أجهزة المستخدمين.",
+        "وتبقى مكافحة الفيروسات والتحديثات ضرورية لحماية الأجهزة الطرفية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50358,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.111,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50359,
+      "question_number": 38,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "لماذا تُعد المنطقة المعزولة (DMZ) جزءًا مهمًا من تصميم شبكة مؤسسة لديها خوادم عامة؟",
+      "model_answer": "لأن الخوادم العامة تكون معرضة للاتصال من الإنترنت. وفصلها في DMZ يقلل احتمال وصول الهجوم منها إلى الشبكة الداخلية الحساسة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الخوادم العامة تكون معرضة للاتصال من الإنترنت. وفصلها في DMZ يقلل احتمال وصول الهجوم منها إلى الشبكة الداخلية الحساسة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50359,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.32,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50360,
+      "question_number": 39,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين المكان المناسب لخادم الويب العام والمكان المناسب لقاعدة بيانات سرية داخل شبكة المؤسسة.",
+      "model_answer": "خادم الويب العام: في DMZ ليتاح الاتصال به من الخارج مع عزله.\nقاعدة البيانات السرية: في الشبكة الداخلية مع ضبط الوصول إليها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "خادم الويب العام: في DMZ ليتاح الاتصال به من الخارج مع عزله.",
+        "قاعدة البيانات السرية: في الشبكة الداخلية مع ضبط الوصول إليها."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50360,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.296,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50361,
+      "question_number": 40,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما النتيجة الأمنية المتوقعة إذا تعرض خادم ويب موجود في المنطقة المعزولة للاختراق؟",
+      "model_answer": "قد يُخترق الخادم العام نفسه، لكن عزله داخل DMZ يقلل احتمال انتقال الهجوم إلى الشبكة الداخلية، ولا يلغي المخاطر تمامًا.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "قد يُخترق الخادم العام نفسه، لكن عزله داخل DMZ يقلل احتمال انتقال الهجوم إلى الشبكة الداخلية، ولا يلغي المخاطر تمامًا."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50361,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.226,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50362,
+      "question_number": 41,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: لا ينبغي وضع جميع خوادم المؤسسة في المنطقة المعزولة.",
+      "model_answer": "لأن DMZ مخصصة للخوادم العامة المعرضة للاتصال الخارجي؛ أما البيانات والأنظمة الحساسة فتبقى في الشبكة الداخلية منفصلة عنها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن DMZ مخصصة للخوادم العامة المعرضة للاتصال الخارجي؛ أما البيانات والأنظمة الحساسة فتبقى في الشبكة الداخلية منفصلة عنها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50362,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.358,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50363,
+      "question_number": 42,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف تتكامل وظيفة جدار الحماية مع وظيفة المنطقة المعزولة في حماية الشبكة الداخلية؟",
+      "model_answer": "جدار الحماية: يسمح بالاتصالات المصرح بها ويمنع غير المصرح بها.\nDMZ: تضع الخوادم العامة في منطقة منفصلة عن البيانات الداخلية.\nوبذلك ينظم الأول المرور ويساعد الثاني على تقليل امتداد الاختراق.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "جدار الحماية: يسمح بالاتصالات المصرح بها ويمنع غير المصرح بها.",
+        "DMZ: تضع الخوادم العامة في منطقة منفصلة عن البيانات الداخلية.",
+        "وبذلك ينظم الأول المرور ويساعد الثاني على تقليل امتداد الاختراق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50363,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.411,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50364,
+      "question_number": 43,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "فسّر كيف يعمل الدفاع في العمق عند فشل إحدى طبقات الحماية.",
+      "model_answer": "إذا فشلت طبقة مثل جدار الحماية، تبقى طبقات أخرى مثل DMZ وVPN وحماية الأجهزة تعمل لتقليل الضرر؛ لذلك لا ينكشف النظام كله بالضرورة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "إذا فشلت طبقة مثل جدار الحماية، تبقى طبقات أخرى مثل DMZ وVPN وحماية الأجهزة تعمل لتقليل الضرر؛ لذلك لا ينكشف النظام كله بالضرورة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50364,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.183,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50365,
+      "question_number": 44,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "لماذا يُعد الاعتماد على جدار حماية واحد أقل فاعلية من استخدام الدفاع في العمق؟",
+      "model_answer": "لأن جدار الحماية الواحد يمثل نقطة حماية واحدة؛ أما الدفاع في العمق فيضيف ضوابط على مسار الاتصال والخوادم والأجهزة الطرفية لتقليل أثر أي اختراق.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن جدار الحماية الواحد يمثل نقطة حماية واحدة؛ أما الدفاع في العمق فيضيف ضوابط على مسار الاتصال والخوادم والأجهزة الطرفية لتقليل أثر أي اختراق."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50365,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.175,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50366,
+      "question_number": 45,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "وضّح كيف تسهم طبقات الدفاع في العمق الأربع في تأمين شبكة المؤسسة.",
+      "model_answer": "1. مدخل الشبكة: جدار الحماية.\n2. مسار الاتصال: شبكة VPN.\n3. مكان الخوادم: منطقة DMZ.\n4. الأجهزة الطرفية: برامج مكافحة الفيروسات وتحديث أنظمة التشغيل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. مدخل الشبكة: جدار الحماية.",
+        "2. مسار الاتصال: شبكة VPN.",
+        "3. مكان الخوادم: منطقة DMZ.",
+        "4. الأجهزة الطرفية: برامج مكافحة الفيروسات وتحديث أنظمة التشغيل."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50366,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.286,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50367,
+      "question_number": 46,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين الطبقة الأولى والطبقة الثانية من الدفاع في العمق من حيث الهدف والإجراء الأمني.",
+      "model_answer": "الطبقة الأولى (مدخل الشبكة): تستخدم جدار الحماية لضبط الاتصالات ومنع غير المصرح به.\nالطبقة الثانية (مسار الاتصال): تستخدم VPN لحماية البيانات أثناء انتقالها عبر شبكة عامة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الطبقة الأولى (مدخل الشبكة): تستخدم جدار الحماية لضبط الاتصالات ومنع غير المصرح به.",
+        "الطبقة الثانية (مسار الاتصال): تستخدم VPN لحماية البيانات أثناء انتقالها عبر شبكة عامة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50367,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.218,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50368,
+      "question_number": 47,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما الفرق بين الطبقة الثالثة والطبقة الرابعة من الدفاع في العمق؟",
+      "model_answer": "الطبقة الثالثة (موضع الخوادم): تعزل الخوادم العامة باستخدام DMZ.\nالطبقة الرابعة (الأجهزة الطرفية): تحمي أجهزة المستخدمين بمكافحة الفيروسات وتحديثات النظام.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الطبقة الثالثة (موضع الخوادم): تعزل الخوادم العامة باستخدام DMZ.",
+        "الطبقة الرابعة (الأجهزة الطرفية): تحمي أجهزة المستخدمين بمكافحة الفيروسات وتحديثات النظام."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50368,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.221,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50369,
+      "question_number": 48,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: لا تكفي حماية مدخل الشبكة وحدها لضمان حماية الأجهزة الطرفية.",
+      "model_answer": "لأن جدار الحماية عند المدخل لا يغني عن حماية الأجهزة التي قد تتعرض للبرمجيات الخبيثة؛ لذا تحتاج الأجهزة إلى برامج مكافحة الفيروسات والتحديثات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن جدار الحماية عند المدخل لا يغني عن حماية الأجهزة التي قد تتعرض للبرمجيات الخبيثة؛ لذا تحتاج الأجهزة إلى برامج مكافحة الفيروسات والتحديثات."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50369,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.284,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50370,
+      "question_number": 49,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ما الذي يميز نهج انعدام الثقة عن الاعتماد على موقع المستخدم داخل الشبكة؟",
+      "model_answer": "لا يمنح انعدام الثقة المستخدم أو الجهاز صلاحية تلقائية بسبب وجوده داخل الشبكة؛ بل يتحقق من الهوية والصلاحيات والسياق.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا يمنح انعدام الثقة المستخدم أو الجهاز صلاحية تلقائية بسبب وجوده داخل الشبكة؛ بل يتحقق من الهوية والصلاحيات والسياق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50370,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.329,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50371,
+      "question_number": 50,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "لماذا لا يُعد امتلاك المستخدم جهازًا تابعًا للمؤسسة سببًا كافيًا لمنحه الثقة تلقائيًا؟",
+      "model_answer": "ملكية المؤسسة للجهاز لا تثبت أن كل طلب وصول آمن أو مسموح به؛ لذلك يراجع انعدام الثقة الهوية والصلاحيات وسياق كل طلب.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "ملكية المؤسسة للجهاز لا تثبت أن كل طلب وصول آمن أو مسموح به؛ لذلك يراجع انعدام الثقة الهوية والصلاحيات وسياق كل طلب."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50371,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.186,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50372,
+      "question_number": 51,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين الأمان التقليدي ونهج انعدام الثقة في التعامل مع طلبات الوصول.",
+      "model_answer": "الأمان التقليدي: يفترض غالبًا أن داخل حدود الشبكة موثوق.\nانعدام الثقة: لا يمنح ثقة تلقائية، ويتحقق من الهوية والصلاحيات والسياق عند كل وصول.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الأمان التقليدي: يفترض غالبًا أن داخل حدود الشبكة موثوق.",
+        "انعدام الثقة: لا يمنح ثقة تلقائية، ويتحقق من الهوية والصلاحيات والسياق عند كل وصول."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50372,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.271,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50373,
+      "question_number": 52,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "كيف أثّر انتشار الخدمات السحابية والعمل عن بُعد في فاعلية المحيط الأمني التقليدي؟",
+      "model_answer": "لأن الخدمات السحابية والعمل عن بُعد يجعلان بيانات المؤسسة مستخدمة خارج حدود الشبكة التقليدية؛ لذلك يصبح الاعتماد على المحيط وحده غير كاف.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الخدمات السحابية والعمل عن بُعد يجعلان بيانات المؤسسة مستخدمة خارج حدود الشبكة التقليدية؛ لذلك يصبح الاعتماد على المحيط وحده غير كاف."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50373,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.271,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50374,
+      "question_number": 53,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "علل: يُعد الجمع بين الدفاع في العمق ونهج انعدام الثقة أكثر فاعلية من الاعتماد على المحيط الأمني وحده.",
+      "model_answer": "الدفاع في العمق يضيف طبقات حماية متعددة، وانعدام الثقة يتحقق من كل وصول وفق الهوية والصلاحيات والسياق.\nالجمع بينهما يقلل الاعتماد على افتراض أن داخل الشبكة آمن.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الدفاع في العمق يضيف طبقات حماية متعددة، وانعدام الثقة يتحقق من كل وصول وفق الهوية والصلاحيات والسياق.",
+        "الجمع بينهما يقلل الاعتماد على افتراض أن داخل الشبكة آمن."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50374,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 41,
+        "lexical_similarity": 0.244,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50375,
+      "question_number": 54,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "مؤسسة لديها موقع إلكتروني عام وموظفون يعملون من المنزل وقاعدة بيانات سرية. حدد وسيلة الحماية الأنسب لكل مورد، مع التعليل.",
+      "model_answer": "1. الموقع الإلكتروني العام: DMZ لعزل الخادم.\n2. الموظفون من المنزل: VPN لحماية الاتصال.\n3. قاعدة البيانات السرية: إبقاؤها في الشبكة الداخلية مع ضبط الوصول بجدار الحماية وانعدام الثقة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الموقع الإلكتروني العام: DMZ لعزل الخادم.",
+        "2. الموظفون من المنزل: VPN لحماية الاتصال.",
+        "3. قاعدة البيانات السرية: إبقاؤها في الشبكة الداخلية مع ضبط الوصول بجدار الحماية وانعدام الثقة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50375,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.332,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50376,
+      "question_number": 55,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "في مؤسسة تعتمد على الدفاع في العمق، ماذا يحدث إذا تمكن مهاجم من تجاوز جدار الحماية؟ ولماذا لا يعني ذلك كشف الشبكة بالكامل؟",
+      "model_answer": "تجاوز جدار الحماية يعني فشل طبقة واحدة، لكن طبقات أخرى مثل DMZ والتحديثات وبرامج مكافحة الفيروسات قد تستمر في تقليل انتشار الهجوم وأثره.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تجاوز جدار الحماية يعني فشل طبقة واحدة، لكن طبقات أخرى مثل DMZ والتحديثات وبرامج مكافحة الفيروسات قد تستمر في تقليل انتشار الهجوم وأثره."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50376,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.21,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50377,
+      "question_number": 56,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "مستشفى ينقل سجلات المرضى إلى خدمة سحابية، ويسمح للأطباء بالوصول إليها من المنزل. ما إجراءان أمنيان مناسبـان، وما الخطر الذي قد يظل قائمًا؟",
+      "model_answer": "1. VPN لحماية اتصال الأطباء عبر الإنترنت.\n2. نهج انعدام الثقة للتحقق من هوية الطبيب وصلاحياته قبل الوصول للسجلات.\nالخطر المتبقي: قد تتعرض أجهزة غير محدثة أو خدمات أخرى للاختراق، لذلك تلزم حماية متعددة الطبقات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. VPN لحماية اتصال الأطباء عبر الإنترنت.",
+        "2. نهج انعدام الثقة للتحقق من هوية الطبيب وصلاحياته قبل الوصول للسجلات.",
+        "الخطر المتبقي: قد تتعرض أجهزة غير محدثة أو خدمات أخرى للاختراق، لذلك تلزم حماية متعددة الطبقات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50377,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.198,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50378,
+      "question_number": 57,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "موظف يتصل من منزله بشبكة المؤسسة باستخدام VPN. هل يكفي ذلك لمنحه صلاحية الوصول إلى جميع الموارد الداخلية؟ علل.",
+      "model_answer": "لا؛ VPN تحمي مسار الاتصال لكنها لا تمنح صلاحيات الوصول لكل الموارد تلقائيًا.\nويجب التحقق من هوية الموظف وصلاحياته وسياق كل طلب وفق نهج انعدام الثقة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ VPN تحمي مسار الاتصال لكنها لا تمنح صلاحيات الوصول لكل الموارد تلقائيًا.",
+        "ويجب التحقق من هوية الموظف وصلاحياته وسياق كل طلب وفق نهج انعدام الثقة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50378,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.25,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50379,
+      "question_number": 58,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "قارن بين تصميم أمني يعتمد على جدار الحماية وحده وتصميم يستخدم جدار الحماية وVPN وDMZ وحماية الأجهزة الطرفية ونهج انعدام الثقة.",
+      "model_answer": "التصميم الأول: يعتمد على جدار حماية واحد؛ فيضعف إذا فشل.\nالتصميم الثاني: يستخدم جدار الحماية للمرور، وVPN للاتصال، وDMZ لعزل الخوادم، والتحديثات لحماية الأجهزة، وانعدام الثقة لفحص الوصول؛ لذلك يوفر حماية متكاملة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التصميم الأول: يعتمد على جدار حماية واحد؛ فيضعف إذا فشل.",
+        "التصميم الثاني: يستخدم جدار الحماية للمرور، وVPN للاتصال، وDMZ لعزل الخوادم، والتحديثات لحماية الأجهزة، وانعدام الثقة لفحص الوصول؛ لذلك يوفر حماية متكاملة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50379,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 38,
+        "lexical_similarity": 0.256,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50440,
+      "question_number": 59,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تريد مؤسسة إتاحة خادم ويب للجمهور ومنع الوصول المباشر إلى قاعدة بياناتها. ما دور جدار الحماية في هذا التصميم؟",
+      "model_answer": "يراقب جدار الحماية حركة الشبكة ويسمح بالاتصالات أو يمنعها وفق قواعد أمنية؛ يمكنه السماح بالوصول إلى خادم الويب ومنع الاتصال الخارجي المباشر بقاعدة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يراقب جدار الحماية حركة الشبكة ويسمح بالاتصالات أو يمنعها وفق قواعد أمنية؛ يمكنه السماح بالوصول إلى خادم الويب ومنع الاتصال الخارجي المباشر بقاعدة البيانات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50440,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.326,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50441,
+      "question_number": 60,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تعتمد شركة على جدار حماية واحد وتعد نفسها محمية حتى لو فشل. أي مبدأ تصميمي يغيب عن هذا القرار؟",
+      "model_answer": "يغيب الدفاع في العمق؛ فهو يعتمد على طبقات أمنية متعددة بحيث تسهم طبقات أخرى في تقليل الخطر والحد من أثر الاختراق عند فشل إحداها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يغيب الدفاع في العمق؛ فهو يعتمد على طبقات أمنية متعددة بحيث تسهم طبقات أخرى في تقليل الخطر والحد من أثر الاختراق عند فشل إحداها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50441,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.182,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50442,
+      "question_number": 61,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "يريد موظف الاتصال بشبكة مؤسسته أثناء العمل من المنزل عبر الإنترنت. ما التقنية الأنسب وما وظيفة الحماية التي تقدمها؟",
+      "model_answer": "الشبكة الافتراضية الخاصة VPN؛ توفّر اتصالًا منطقيًا خاصًا عبر شبكة عامة، وتستخدم عادة التشفير والنفق لحماية البيانات بين الطرفين.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الشبكة الافتراضية الخاصة VPN؛ توفّر اتصالًا منطقيًا خاصًا عبر شبكة عامة، وتستخدم عادة التشفير والنفق لحماية البيانات بين الطرفين."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50442,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.379,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50443,
+      "question_number": 62,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تحتاج مؤسسة إلى ربط مكتبين في موقعين مختلفين مع تقليل خطر التنصت أثناء انتقال البيانات. فسّر اختيار VPN.",
+      "model_answer": "يمكن استخدام VPN لربط الفروع عبر الإنترنت بوسائل نفق وتشفير تحمي محتوى الاتصال وتقلل خطر التنصت أثناء نقله عبر شبكة غير موثوقة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن استخدام VPN لربط الفروع عبر الإنترنت بوسائل نفق وتشفير تحمي محتوى الاتصال وتقلل خطر التنصت أثناء نقله عبر شبكة غير موثوقة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50443,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.168,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50444,
+      "question_number": 63,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "يقترح مدير وضع خادم موقع المؤسسة العام بجانب قاعدة بيانات داخلية حساسة في الجزء نفسه من الشبكة. ما التعديل الأنسب ولماذا؟",
+      "model_answer": "وضع خادم الويب المواجه للجمهور في منطقة DMZ منفصلة عن الشبكة الداخلية؛ يقلل ذلك احتمال امتداد الهجوم إلى البيانات الداخلية إذا اختُرق الخادم العام.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "وضع خادم الويب المواجه للجمهور في منطقة DMZ منفصلة عن الشبكة الداخلية؛ يقلل ذلك احتمال امتداد الهجوم إلى البيانات الداخلية إذا اختُرق الخادم العام."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50444,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.363,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50445,
+      "question_number": 64,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "بعد نقل خادم البريد العام إلى DMZ، أعلن فريق أن الشبكة الداخلية لا تحتاج أي ضوابط أخرى. قيّم القرار.",
+      "model_answer": "العزل يقلل احتمال انتشار الهجوم من الخوادم العامة إلى الشبكة الداخلية، لكنه ليس حماية مطلقة؛ يلزم دعم التصميم بضوابط أخرى ضمن الدفاع في العمق.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "العزل يقلل احتمال انتشار الهجوم من الخوادم العامة إلى الشبكة الداخلية، لكنه ليس حماية مطلقة؛ يلزم دعم التصميم بضوابط أخرى ضمن الدفاع في العمق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50445,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.348,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50446,
+      "question_number": 65,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تستخدم مدرسة جدار حماية وVPN لكن أجهزة الموظفين لا تُحدّث. ما طبقة الحماية الناقصة من نموذج الدفاع في العمق؟",
+      "model_answer": "ضوابط الأجهزة الطرفية؛ ومنها تثبيت برنامج مكافحة الفيروسات والحفاظ على تحديث نظام التشغيل لتقليل المخاطر على الأجهزة نفسها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "ضوابط الأجهزة الطرفية؛ ومنها تثبيت برنامج مكافحة الفيروسات والحفاظ على تحديث نظام التشغيل لتقليل المخاطر على الأجهزة نفسها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50446,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.226,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50447,
+      "question_number": 66,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "صممت مؤسسة الضوابط التالية: جدار حماية عند المدخل، VPN للاتصال البعيد، DMZ لخوادمها العامة، وتحديثات للأجهزة. فسّر كيف يؤدي اختلاف مواقعها إلى حماية أقوى.",
+      "model_answer": "كل ضبط يعالج جانبًا مختلفًا: المدخل، ومسار الاتصال، ووضع الخوادم، والأجهزة الطرفية؛ فتقل احتمالات الاختراق وأثر فشل طبقة واحدة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "كل ضبط يعالج جانبًا مختلفًا: المدخل، ومسار الاتصال، ووضع الخوادم، والأجهزة الطرفية؛ فتقل احتمالات الاختراق وأثر فشل طبقة واحدة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50447,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.238,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50448,
+      "question_number": 67,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "يقول موظف إنه لا يحتاج التحقق من هويته عند فتح ملفات المؤسسة لأنه موجود داخل مبناها. كيف يرد نهج انعدام الثقة؟",
+      "model_answer": "وجود الشخص داخل الشبكة لا يمنحه الثقة تلقائيًا؛ يُتحقق من الهوية والصلاحيات والسياق عند طلب الوصول وفق سياسة المؤسسة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "وجود الشخص داخل الشبكة لا يمنحه الثقة تلقائيًا؛ يُتحقق من الهوية والصلاحيات والسياق عند طلب الوصول وفق سياسة المؤسسة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50448,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.274,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50449,
+      "question_number": 68,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تنقل مستشفى سجلات المرضى إلى خدمة سحابية وتسمح بالوصول من المنزل. لماذا يصبح الاعتماد على حدود الشبكة التقليدية وحدها غير كاف؟",
+      "model_answer": "لأن الخدمات السحابية والعمل عن بعد تجعل موقع المستخدم داخل الشبكة أقل دلالة على الثقة؛ يجب التحقق المناسب من كل طلب وصول إلى الموارد.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الخدمات السحابية والعمل عن بعد تجعل موقع المستخدم داخل الشبكة أقل دلالة على الثقة؛ يجب التحقق المناسب من كل طلب وصول إلى الموارد."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50449,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.356,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50450,
+      "question_number": 69,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تغيّر أسلوب عمل المؤسسة من شبكة داخلية مغلقة إلى خدمات سحابية. ما الافتراض التقليدي الذي ينبغي مراجعته؟",
+      "model_answer": "افتراض أن «الداخل آمن» لمجرد وجود المستخدم داخل محيط الشبكة؛ فلا تُمنح الثقة تلقائيًا وفق الموقع وحده.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "افتراض أن «الداخل آمن» لمجرد وجود المستخدم داخل محيط الشبكة؛ فلا تُمنح الثقة تلقائيًا وفق الموقع وحده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50450,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.284,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50451,
+      "question_number": 70,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "يرى طالب أن استخدام VPN يعني أن كل مستخدم اتصل بها أصبح موثوقًا دون فحص صلاحياته. صحح فهمه.",
+      "model_answer": "VPN تحمي مسار الاتصال عادة بالتشفير والنفق، أما انعدام الثقة فيتطلب التحقق من الهوية والصلاحيات والسياق عند الوصول؛ تشفير الاتصال لا يمنح صلاحية تلقائية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "VPN تحمي مسار الاتصال عادة بالتشفير والنفق، أما انعدام الثقة فيتطلب التحقق من الهوية والصلاحيات والسياق عند الوصول؛ تشفير الاتصال لا يمنح صلاحية تلقائية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50451,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.187,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50452,
+      "question_number": 71,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "في رسم شبكة توجد منطقة عامة للخوادم وأخرى داخلية لبيانات المؤسسة. أين توضع عادة خدمة الويب العامة وقاعدة البيانات الحساسة؟",
+      "model_answer": "يوضع خادم الويب المواجه للجمهور في DMZ، وتبقى قاعدة البيانات الحساسة داخل الشبكة الداخلية مع ضبط الوصول بين المناطق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يوضع خادم الويب المواجه للجمهور في DMZ، وتبقى قاعدة البيانات الحساسة داخل الشبكة الداخلية مع ضبط الوصول بين المناطق."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50452,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.317,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50453,
+      "question_number": 72,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تعرّض مستخدم على شبكة Wi-Fi عامة لاحتمال التنصت، بينما يخشى مدير انتقال اختراق خادم موقع إلى الأجهزة الداخلية. أي إجراء يعالج كل خطر بصورة أخص؟",
+      "model_answer": "VPN تقلل خطر التنصت على الاتصال عبر الشبكة العامة؛ وDMZ تفصل الخادم العام عن الشبكة الداخلية فتقلل احتمال امتداد الاختراق إليها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "VPN تقلل خطر التنصت على الاتصال عبر الشبكة العامة؛ وDMZ تفصل الخادم العام عن الشبكة الداخلية فتقلل احتمال امتداد الاختراق إليها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50453,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.298,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50454,
+      "question_number": 73,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "اختر ثلاث ضوابط من جدار الحماية وVPN وDMZ والأجهزة الطرفية وانعدام الثقة لمستشفى ذي سجلات حساسة وأطباء يعملون من المنزل، ووضح وظيفة كل ضبط باختصار.",
+      "model_answer": "يمكن استخدام VPN لحماية الاتصال من المنزل، وانعدام الثقة للتحقق من الهوية والصلاحيات عند كل وصول، وجدار الحماية لتنظيم الاتصالات حسب القواعد\nويمكن إضافة تحديثات الأجهزة وDMZ للخوادم العامة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن استخدام VPN لحماية الاتصال من المنزل، وانعدام الثقة للتحقق من الهوية والصلاحيات عند كل وصول، وجدار الحماية لتنظيم الاتصالات حسب القواعد",
+        "ويمكن إضافة تحديثات الأجهزة وDMZ للخوادم العامة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50454,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.278,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50455,
+      "question_number": 74,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "ظن فريق أن جدار الحماية لا يوضع إلا عند باب المؤسسة الخارجي. ما موضعان آخران يمكن أن يؤدي فيهما الدور نفسه وفق النموذج؟",
+      "model_answer": "يمكن وضع جدار الحماية عند حدود الشبكة، أو بين أجزاء الشبكة المختلفة، أو على جهاز مضيف؛ وفي كل موضع يراقب الحركة ويسمح بها أو يمنعها وفق القواعد المحددة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن وضع جدار الحماية عند حدود الشبكة، أو بين أجزاء الشبكة المختلفة، أو على جهاز مضيف؛ وفي كل موضع يراقب الحركة ويسمح بها أو يمنعها وفق القواعد المحددة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50455,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 39,
+        "lexical_similarity": 0.314,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50456,
+      "question_number": 75,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "اتصل طبيب بشبكة مستشفى عبر VPN، ثم طلب الوصول إلى سجل مريض. هل يبرر نجاح الاتصال تجاوز التحقق من هوية الطبيب وصلاحياته؟",
+      "model_answer": "لا؛ VPN تحمي مسار الاتصال عادة بالتشفير والنفق، لكن نهج انعدام الثقة لا يمنح صلاحيات تلقائيًا، ويقتضي فحص الهوية والصلاحيات والسياق عند طلب الوصول إلى الموارد.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ VPN تحمي مسار الاتصال عادة بالتشفير والنفق، لكن نهج انعدام الثقة لا يمنح صلاحيات تلقائيًا، ويقتضي فحص الهوية والصلاحيات والسياق عند طلب الوصول إلى الموارد."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50456,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 43,
+        "lexical_similarity": 0.221,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50457,
+      "question_number": 76,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تعمل خدمة ويب عامة داخل المؤسسة، ويدّعي مسؤول أن إتاحة الخدمة للجمهور تستلزم وضع ملفات العملاء الحساسة في المنطقة العامة نفسها. ما التعديل الأفضل؟",
+      "model_answer": "يوضع خادم الويب المواجه للجمهور في المنطقة المعزولة DMZ منفصلًا عن الشبكة الداخلية، وتبقى البيانات الحساسة في الجزء الداخلي مع التحكم في الاتصال بين المناطق لتقليل امتداد الاختراق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يوضع خادم الويب المواجه للجمهور في المنطقة المعزولة DMZ منفصلًا عن الشبكة الداخلية، وتبقى البيانات الحساسة في الجزء الداخلي مع التحكم في الاتصال بين المناطق لتقليل امتداد الاختراق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50457,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 40,
+        "lexical_similarity": 0.352,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50458,
+      "question_number": 77,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "فشل أحد ضوابط مدخل الشبكة، لكن أجهزة الموظفين محدثة والخوادم العامة معزولة. كيف تفسر قدرة الضوابط الباقية على تقليل الخطر؟",
+      "model_answer": "هذا مثال للدفاع في العمق؛ فكل طبقة تعالج جانبًا مختلفًا، مثل عزل الخوادم العامة باستخدام DMZ أو حماية الأجهزة بالتحديثات ومكافحة الفيروسات؛ لذلك لا يعني فشل ضابط واحد سقوط الحماية كلها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "هذا مثال للدفاع في العمق؛ فكل طبقة تعالج جانبًا مختلفًا، مثل عزل الخوادم العامة باستخدام DMZ أو حماية الأجهزة بالتحديثات ومكافحة الفيروسات؛ لذلك لا يعني فشل ضابط واحد سقوط الحماية كلها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50458,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.272,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50459,
+      "question_number": 78,
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "prompt": "تستخدم جهة شبكة Wi-Fi عامة للاتصال البعيد، وتملك أجهزة بعض الموظفين أنظمة غير محدثة. لماذا لا تكفي معالجة مشكلة التنصت وحدها؟",
+      "model_answer": "يمكن أن تقلل VPN التنصت على حركة الاتصال عبر شبكة غير موثوقة، لكنها لا تغني عن ضوابط الأجهزة الطرفية، ومنها تحديث أنظمة التشغيل وبرامج مكافحة الفيروسات؛ فالدفاع في العمق يعالج أخطارًا متعددة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يمكن أن تقلل VPN التنصت على حركة الاتصال عبر شبكة غير موثوقة، لكنها لا تغني عن ضوابط الأجهزة الطرفية، ومنها تحديث أنظمة التشغيل وبرامج مكافحة الفيروسات؛ فالدفاع في العمق يعالج أخطارًا متعددة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50459,
+      "official_unit_title": "الوحدة الثانية: الأمن السيبراني",
+      "official_lesson_title": "الدرس 2-2: تصميم أمن الشبكات",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "2_2",
+        "printed_page_range": [
+          38,
+          43
+        ],
+        "best_page_hint": 42,
+        "lexical_similarity": 0.202,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    }
+  ]
+}

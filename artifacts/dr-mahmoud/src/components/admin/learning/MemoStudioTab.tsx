@@ -154,9 +154,12 @@ const DEFAULT_SETTINGS: MemoSettings = {
   showAnswerSummary: false,
 };
 
-// Global sanitizer to purge any "أكاديمية" or legacy titles from strings
+// Global sanitizer to purge any "أكاديمية", "[ للمعلم]", or legacy titles from strings
 export const sanitizeMemoText = (txt: string) => {
   return (txt || "")
+    .replace(/(\s*\[\s*(نموذج الإجابة للمعلم|نموذج الإجابة|نسخة المعلم|نسخة الطالب|للمعلم|للطالب|معلم|طالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
+    .replace(/(\s*\(\s*(نموذج الإجابة للمعلم|نموذج الإجابة|نسخة المعلم|نسخة الطالب|للمعلم|للطالب|معلم|طالب|Model Answer|Teacher Copy|Student Copy)\s*\))+/gi, "")
+    .replace(/(\s*(نموذج الإجابة للمعلم|نسخة المعلم|نسخة الطالب|\[\s*للمعلم\s*\]|\(\s*للمعلم\s*\)|للمعلم|للطالب))+/gi, "")
     .replace(/أكاديمية\s*/g, "")
     .replace(/خبير وموجه[^•|]+/g, "")
     .trim();
@@ -1733,16 +1736,35 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               </span>
             </div>
             {/* Direct Editable Document Title */}
-            <div className="flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap sm:flex-nowrap">
               <span className="text-[10px] font-bold text-slate-400 shrink-0">عنوان الورقة:</span>
-              <input
-                type="text"
-                value={settings.headerText}
-                onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
-                placeholder="اكتب عنوان ورقة الامتحان / المذكرة بحرية هنا..."
-                className="h-6 px-2 text-xs font-black rounded border border-slate-700 bg-slate-900/90 text-amber-300 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 w-full min-w-[180px] max-w-xs sm:max-w-md transition-all"
-                title="اكتب أو عدل اسم المستند بحرية تامة"
-              />
+              <div className="relative flex-1 min-w-[200px] max-w-xs sm:max-w-md">
+                <input
+                  type="text"
+                  value={settings.headerText}
+                  onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
+                  placeholder="اكتب عنوان ورقة الامتحان / المذكرة بحرية هنا..."
+                  className="h-6.5 pr-2 pl-6 text-xs font-black rounded border border-slate-700 bg-slate-900/90 text-amber-300 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 w-full transition-all"
+                  title="اكتب أو عدل اسم المستند بحرية تامة"
+                />
+                {settings.headerText && (
+                  <button
+                    type="button"
+                    onClick={() => setSettings((s) => ({ ...s, headerText: "" }))}
+                    className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-400 text-xs font-bold cursor-pointer px-1"
+                    title="تفريغ العنوان لكتابته بنفسك بحرية"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSettings((s) => ({ ...s, headerText: "" }))}
+                className="text-[10px] text-amber-300/80 hover:text-amber-200 hover:underline font-bold shrink-0 cursor-pointer bg-slate-800 px-2 py-0.5 rounded border border-slate-700"
+              >
+                مسح وكتابة عنواني ✍️
+              </button>
             </div>
           </div>
         </div>
@@ -2251,9 +2273,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               return;
                             }
                             const mapped = qz.questions.map(normalizeQuestion);
+                            const cleanQuizTitle = sanitizeMemoText(qz.title);
                             setQuestions(mapped);
-                            setSettings((s) => ({ ...s, headerText: qz.title }));
-                            toast({ title: `تم تحميل ${mapped.length} سؤال من اختبار (${qz.title})` });
+                            setSettings((s) => ({
+                              ...s,
+                              headerText: s.headerText && s.headerText !== DEFAULT_SETTINGS.headerText ? s.headerText : cleanQuizTitle,
+                            }));
+                            toast({ title: `تم تحميل ${mapped.length} سؤال من اختبار (${cleanQuizTitle})` });
                             setActiveStep("step4_questions");
                           }}
                           className="h-7 text-xs font-bold cursor-pointer"
@@ -2632,6 +2658,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   />
                   <div className="flex flex-wrap gap-1 mt-1.5 items-center">
                     <span className="text-[10px] text-muted-foreground font-medium">اقتراحات سريعة:</span>
+                    <button
+                      type="button"
+                      onClick={() => setSettings((s) => ({ ...s, headerText: "" }))}
+                      className="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 border border-rose-300 font-bold cursor-pointer hover:bg-rose-500 hover:text-white transition shadow-2xs"
+                    >
+                      مسح العنوان وكتابته بنفسي ✍️
+                    </button>
                     {[
                       "واجب منزلي",
                       "اختبار تقييمي دوري",
@@ -3289,11 +3322,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               <div
                                 contentEditable
                                 suppressContentEditableWarning
-                                onBlur={(e) => {
-                                  const text = e.currentTarget.textContent || "";
-                                  setSettings((s) => ({ ...s, headerText: text }));
+                                onFocus={(e) => {
+                                  if (e.currentTarget.textContent?.includes("انقر هنا لكتابة عنوان الورقة")) {
+                                    e.currentTarget.textContent = "";
+                                  }
                                 }}
-                                title="انقر هنا للكتابة وتعديل العنوان مباشرة على الورقة"
+                                onBlur={(e) => {
+                                  const text = (e.currentTarget.textContent || "").trim();
+                                  if (!text || text.includes("انقر هنا لكتابة عنوان الورقة")) {
+                                    setSettings((s) => ({ ...s, headerText: "" }));
+                                  } else {
+                                    setSettings((s) => ({ ...s, headerText: sanitizeMemoText(text) }));
+                                  }
+                                }}
+                                title="انقر هنا للكتابة وتعديل العنوان بحرية تامة مباشرة على الورقة"
                                 style={{
                                   fontSize: "11pt",
                                   fontWeight: 900,
@@ -3302,26 +3344,37 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   overflowWrap: "anywhere",
                                   cursor: "text",
                                   outline: "none",
+                                  minHeight: "18px",
+                                  color: sanitizeMemoText(settings.headerText) ? "#0f172a" : "#94a3b8",
+                                  fontStyle: sanitizeMemoText(settings.headerText) ? "normal" : "italic",
                                 }}
                                 className="hover:bg-amber-500/10 focus:bg-amber-500/10 rounded px-1 -mx-1 transition-colors"
                               >
-                                {sanitizeMemoText(settings.headerText)}
+                                {sanitizeMemoText(settings.headerText) || "انقر هنا لكتابة عنوان الورقة بنفسك بحرية... ✍️"}
                               </div>
-                              {settings.subHeaderText && (
-                                <div
-                                  style={{
-                                    fontSize: "7.8pt",
-                                    fontWeight: 600,
-                                    marginTop: "1.2mm",
-                                    color: "#475569",
-                                    lineHeight: 1.4,
-                                    wordBreak: "normal",
-                                    overflowWrap: "anywhere",
-                                  }}
-                                >
-                                  {sanitizeMemoText(settings.subHeaderText)}
-                                </div>
-                              )}
+                              <div
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const text = e.currentTarget.textContent || "";
+                                  setSettings((s) => ({ ...s, subHeaderText: text }));
+                                }}
+                                title="انقر هنا لتعديل العنوان الفرعي / المرحلة مباشرة على الورقة"
+                                style={{
+                                  fontSize: "7.8pt",
+                                  fontWeight: 600,
+                                  marginTop: "1.2mm",
+                                  color: "#475569",
+                                  lineHeight: 1.4,
+                                  wordBreak: "normal",
+                                  overflowWrap: "anywhere",
+                                  cursor: "text",
+                                  outline: "none",
+                                }}
+                                className="hover:bg-amber-500/10 focus:bg-amber-500/10 rounded px-1 -mx-1 transition-colors"
+                              >
+                                {sanitizeMemoText(settings.subHeaderText) || "انقر هنا لكتابة العنوان الفرعي / تفاصيل المذكرة"}
+                              </div>
                             </div>
                           </div>
                         )}

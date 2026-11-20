@@ -1,0 +1,172 @@
+{
+  "unit_number": 1,
+  "unit_title_en": "Unit 1: Information Technology and Society",
+  "unit_title_ar": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+  "lesson_number": 4,
+  "lesson_title_en": "Lesson 1-4: Ethical Issues with AI",
+  "lesson_title_ar": "الدرس الرابع: القضايا الأخلاقية للذكاء الاصطناعي",
+  "total_definitions": 10,
+  "approved_definitions_count": 10,
+  "definitions": [
+    {
+      "id": "DEF-037",
+      "term_en": "Algorithmic bias",
+      "current_definition_en": "Bias in AI judgments caused by bias in the training data.",
+      "updated_definition_en": "Bias in AI judgments caused by bias in the training data.",
+      "official_term_en": "Algorithmic bias",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 28,
+        "printed_page": 27,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-038",
+      "term_en": "Training data",
+      "current_definition_en": "The examples from which an AI system learns its patterns before use.",
+      "updated_definition_en": "The examples from which an AI system learns its patterns before use.",
+      "official_term_en": "Training data",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 24,
+        "printed_page": 24,
+        "basis": "assessment_supported_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-041",
+      "term_en": "Privacy",
+      "current_definition_en": "Control over which personal data is shared.",
+      "updated_definition_en": "Control over which personal data is shared.",
+      "official_term_en": "Privacy",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-042",
+      "term_en": "Explainable AI (XAI)",
+      "current_definition_en": "Technology that makes it possible for humans to understand why an AI made a particular judgment.",
+      "updated_definition_en": "Technology that makes it possible for humans to understand why an AI made a particular judgment.",
+      "official_term_en": "Explainable AI (XAI)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-044",
+      "term_en": "Responsibility",
+      "current_definition_en": "The question of who is responsible when an AI makes an incorrect judgment.",
+      "updated_definition_en": "The question of who is responsible when an AI makes an incorrect judgment.",
+      "official_term_en": "Responsibility",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-045",
+      "term_en": "Fairness",
+      "current_definition_en": "Not unjustly discriminating against any particular person or group.",
+      "updated_definition_en": "Not unjustly discriminating against any particular person or group.",
+      "official_term_en": "Fairness",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "principle_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-046",
+      "term_en": "Transparency",
+      "current_definition_en": "Showing the AI's decision-making process and inner workings clearly.",
+      "updated_definition_en": "Showing the AI's decision-making process and inner workings clearly.",
+      "official_term_en": "Transparency",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "principle_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-047",
+      "term_en": "Privacy protection",
+      "current_definition_en": "Handling personal information appropriately and protecting privacy.",
+      "updated_definition_en": "Handling personal information appropriately and protecting privacy.",
+      "official_term_en": "Privacy protection",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "principle_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-048",
+      "term_en": "Accountability",
+      "current_definition_en": "Being answerable for the AI's decisions.",
+      "updated_definition_en": "Being answerable for the AI's decisions.",
+      "official_term_en": "Accountability",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 29,
+        "printed_page": 28,
+        "basis": "principle_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-049",
+      "term_en": "Proxy variable",
+      "current_definition_en": "A variable that indirectly stands in for a protected attribute.",
+      "updated_definition_en": "A variable that indirectly stands in for a protected attribute.",
+      "official_term_en": "Proxy variable",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 28,
+        "printed_page": 27,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

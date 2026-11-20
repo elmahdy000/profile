@@ -1,0 +1,40 @@
+{
+  "unit_number": 4,
+  "unit_title_en": "Unit 4: Web and Media Design",
+  "unit_title_ar": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 11,
+  "lesson_title_en": "Lesson 4-1: Types and Characteristics of Media",
+  "lesson_title_ar": "الدرس الأول: أنواع الوسائط وخصائصها",
+  "total_definitions": 2,
+  "approved_definitions_count": 2,
+  "definitions": [
+    {
+      "id": "DEF-138",
+      "term_en": "One-way interaction",
+      "current_definition_en": "Communication from sender to receiver only.",
+      "updated_definition_en": "Communication from sender to receiver only.",
+      "official_term_en": "One-way interaction",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 77,
+        "printed_page": 76,
+        "basis": "key_term"
+      }
+    },
+    {
+      "id": "DEF-139",
+      "term_en": "Two-way interaction",
+      "current_definition_en": "Communication in which users can respond and share.",
+      "updated_definition_en": "Communication in which users can respond and share.",
+      "official_term_en": "Two-way interaction",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 77,
+        "printed_page": 76,
+        "basis": "key_term"
+      }
+    }
+  ]
+}

@@ -1,0 +1,2124 @@
+{
+  "unit_id": 3,
+  "unit_title": "الوحدة الثالثة: تطبيقات الويب",
+  "lesson_id": "3_1",
+  "lesson_title": "الدرس الأول: البنية العامة لتطبيقات الويب",
+  "total_questions": 60,
+  "questions": [
+    {
+      "id": 50480,
+      "question_number": 1,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "عرّف تطبيق الويب.",
+      "model_answer": "تطبيق يُستخدم عادةً من خلال متصفح الويب، وقد يكون بعضه قابلًا للتثبيت على الجهاز؛ مثل خدمات الفيديو والتسوق والبريد والخرائط على الويب.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تطبيق يُستخدم عادةً من خلال متصفح الويب، وقد يكون بعضه قابلًا للتثبيت على الجهاز؛ مثل خدمات الفيديو والتسوق والبريد والخرائط على الويب."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50480,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-131",
+        "pdf_page": 48,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.405,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50481,
+      "question_number": 2,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "عدّد الطبقات الرئيسة التي يتكوّن منها تطبيق الويب.",
+      "model_answer": "1. الواجهة الأمامية (Frontend): العرض والتفاعل مع المستخدم.\n2. الواجهة الخلفية (Backend): معالجة الطلبات وتنفيذ منطق التطبيق.\n3. طبقة البيانات: حفظ السجلات وإتاحتها عند الحاجة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الواجهة الأمامية (Frontend): العرض والتفاعل مع المستخدم.",
+        "2. الواجهة الخلفية (Backend): معالجة الطلبات وتنفيذ منطق التطبيق.",
+        "3. طبقة البيانات: حفظ السجلات وإتاحتها عند الحاجة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50481,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-132",
+        "pdf_page": 48,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.315,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50482,
+      "question_number": 3,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "قارن بين دور الواجهة الأمامية ودور الواجهة الخلفية في تطبيق شبكة التواصل الاجتماعي.",
+      "model_answer": "الواجهة الأمامية: تعرض الخط الزمني وشاشة النشر وتستقبل ما يدخله المستخدم.\nالواجهة الخلفية: تحدد جمهور المنشورات وتنفذ قواعد التطبيق وتتحكم في الإشعارات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية: تعرض الخط الزمني وشاشة النشر وتستقبل ما يدخله المستخدم.",
+        "الواجهة الخلفية: تحدد جمهور المنشورات وتنفذ قواعد التطبيق وتتحكم في الإشعارات."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50482,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-133",
+        "pdf_page": 48,
+        "match_score": 97.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.391,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50483,
+      "question_number": 4,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "كيف تتعامل الواجهة الخلفية مع البيانات الواردة من الواجهة الأمامية والبيانات المخزنة في قاعدة البيانات في موقع للتجارة الإلكترونية؟",
+      "model_answer": "تستقبل الواجهة الخلفية الطلبات القادمة من الواجهة الأمامية وتطبّق قواعد التطبيق؛ مثل التحقق من المخزون، وإرسال طلبات الدفع والتعامل مع نتائجها. وتطلب من طبقة البيانات المعلومات اللازمة عن المنتجات والطلبات والعملاء، ثم تعيد النتائج إلى الواجهة الأمامية لعرضها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تستقبل الواجهة الخلفية الطلبات القادمة من الواجهة الأمامية وتطبّق قواعد التطبيق؛ مثل التحقق من المخزون، وإرسال طلبات الدفع والتعامل مع نتائجها. وتطلب من طبقة البيانات المعلومات اللازمة عن المنتجات والطلبات والعملاء، ثم تعيد النتائج إلى الواجهة الأمامية لعرضها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50483,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-134",
+        "pdf_page": 48,
+        "match_score": 98.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.48,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50484,
+      "question_number": 5,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "صمّم مخططًا هيكليًا يوضح كيف تتعاون الطبقات الثلاث لتنفيذ إجراءات المستخدم.",
+      "model_answer": "المستخدم ← الواجهة الأمامية (إدخال الطلب) ← الواجهة الخلفية (المعالجة) ← طبقة البيانات (استرجاع أو حفظ البيانات).\nثم تعود النتيجة من طبقة البيانات إلى الخلفية فالأمامية لتُعرض للمستخدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المستخدم ← الواجهة الأمامية (إدخال الطلب) ← الواجهة الخلفية (المعالجة) ← طبقة البيانات (استرجاع أو حفظ البيانات).",
+        "ثم تعود النتيجة من طبقة البيانات إلى الخلفية فالأمامية لتُعرض للمستخدم."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50484,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-135",
+        "pdf_page": 49,
+        "match_score": 98.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.304,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50485,
+      "question_number": 6,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ناقش أهمية طبقة قاعدة البيانات في مواقع التجارة الإلكترونية.",
+      "model_answer": "تحفظ بيانات المنتجات ومعلومات العملاء وسجل الطلبات، وتوفرها عند الحاجة. تستعين بها الواجهة الخلفية أثناء معالجة طلبات المستخدم، مثل البحث عن المنتجات والتحقق من البيانات المتعلقة بالطلبات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تحفظ بيانات المنتجات ومعلومات العملاء وسجل الطلبات، وتوفرها عند الحاجة. تستعين بها الواجهة الخلفية أثناء معالجة طلبات المستخدم، مثل البحث عن المنتجات والتحقق من البيانات المتعلقة بالطلبات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50485,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-136",
+        "pdf_page": 49,
+        "match_score": 96.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.339,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50486,
+      "question_number": 7,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "اشرح البنية العامة لتطبيقات الويب والطبقات الثلاث.",
+      "model_answer": "يوضح النموذج التعليمي المبسط ثلاث طبقات متعاونة: واجهة أمامية تعرض المحتوى وتستقبل مدخلات المستخدم، وواجهة خلفية تعمل على الخادم وتعالج الطلبات وتطبق قواعد التطبيق، وطبقة بيانات تحفظ البيانات وتوفرها. وقد تختلف البنية الفعلية من تطبيق إلى آخر.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يوضح النموذج التعليمي المبسط ثلاث طبقات متعاونة: واجهة أمامية تعرض المحتوى وتستقبل مدخلات المستخدم، وواجهة خلفية تعمل على الخادم وتعالج الطلبات وتطبق قواعد التطبيق، وطبقة بيانات تحفظ البيانات وتوفرها. وقد تختلف البنية الفعلية من تطبيق إلى آخر."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50486,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-137",
+        "pdf_page": 49,
+        "match_score": 98.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.479,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50487,
+      "question_number": 8,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "وضّح كيف تتكامل الطبقات الثلاث في تقديم خدمة مشاركة الفيديو، مع ذكر مثال لوظيفة كل طبقة.",
+      "model_answer": "1. الواجهة الأمامية: تعرض الفيديو ومربع البحث وتستقبل النقرات.\n2. الواجهة الخلفية: تختار الفيديوهات الموصى بها وتحسب المشاهدات.\n3. طبقة البيانات: تحفظ معلومات المستخدمين وسجل المشاهدة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الواجهة الأمامية: تعرض الفيديو ومربع البحث وتستقبل النقرات.",
+        "2. الواجهة الخلفية: تختار الفيديوهات الموصى بها وتحسب المشاهدات.",
+        "3. طبقة البيانات: تحفظ معلومات المستخدمين وسجل المشاهدة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50487,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-138",
+        "pdf_page": 49,
+        "match_score": 88.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.281,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50488,
+      "question_number": 9,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "وضّح الفرق بين الواجهة الأمامية والواجهة الخلفية في تطبيقات الويب، مع ذكر مثال لكل منهما.",
+      "model_answer": "الواجهة الأمامية هي الجزء الذي يراه المستخدم في المتصفح ويتفاعل معه\nمثل شاشة البحث. الواجهة الخلفية تعمل على الخادم لمعالجة الطلبات وتطبيق قواعد التطبيق\nمثل البحث عن منتجات مطابقة لكلمات البحث أو التحقق من تسجيل الدخول.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية هي الجزء الذي يراه المستخدم في المتصفح ويتفاعل معه",
+        "مثل شاشة البحث. الواجهة الخلفية تعمل على الخادم لمعالجة الطلبات وتطبيق قواعد التطبيق",
+        "مثل البحث عن منتجات مطابقة لكلمات البحث أو التحقق من تسجيل الدخول."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50488,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-139",
+        "pdf_page": 50,
+        "match_score": 94.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.482,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50489,
+      "question_number": 10,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "اشرح دور قاعدة البيانات في تطبيق ويب وكيف تتعاون مع الواجهة الخلفية لإظهار النتائج للمستخدم.",
+      "model_answer": "تحفظ طبقة البيانات المعلومات وتوفرها عند الحاجة. تطلب الواجهة الخلفية البيانات المطلوبة وتتلقى النتائج، ثم تُجهّزها لإرسالها إلى الواجهة الأمامية التي تعرضها للمستخدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تحفظ طبقة البيانات المعلومات وتوفرها عند الحاجة. تطلب الواجهة الخلفية البيانات المطلوبة وتتلقى النتائج، ثم تُجهّزها لإرسالها إلى الواجهة الأمامية التي تعرضها للمستخدم."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50489,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-140",
+        "pdf_page": 50,
+        "match_score": 98.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.445,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50490,
+      "question_number": 11,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تتبّع خطوات تدفق طلب البحث عن منتج في متجر إلكتروني عبر الطبقات الثلاث، وبيّن دور كل طبقة.",
+      "model_answer": "1. يكتب المستخدم عبارة البحث في الواجهة الأمامية.\n2. ترسلها الأمامية إلى الخلفية.\n3. تطلب الخلفية المنتجات المطابقة من طبقة البيانات.\n4. تعيد البيانات النتائج للخلفية.\n5. ترسلها الخلفية إلى الأمامية لعرضها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. يكتب المستخدم عبارة البحث في الواجهة الأمامية.",
+        "2. ترسلها الأمامية إلى الخلفية.",
+        "3. تطلب الخلفية المنتجات المطابقة من طبقة البيانات.",
+        "4. تعيد البيانات النتائج للخلفية.",
+        "5. ترسلها الخلفية إلى الأمامية لعرضها."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50490,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-141",
+        "pdf_page": 50,
+        "match_score": 94.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.389,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50491,
+      "question_number": 12,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "صمّم توزيعًا مناسبًا لمسؤوليات تطبيق ويب للتجارة الإلكترونية، وبرّر قراراتك.",
+      "model_answer": "الواجهة الأمامية: تعرض قوائم المنتجات وسلة التسوق وتستقبل عمليات الطلب؛ لأنها مسؤولة عن العرض والتفاعل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية: تعرض قوائم المنتجات وسلة التسوق وتستقبل عمليات الطلب؛ لأنها مسؤولة عن العرض والتفاعل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50491,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.265,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50492,
+      "question_number": 13,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "اشرح مفهوم تطبيق الويب مع ذكر أمثلة من حياتك اليومية.",
+      "model_answer": "تطبيق يُستخدم عادةً عبر متصفح الويب، وقد يكون بعضه قابلًا للتثبيت على الجهاز. ومن أمثلته خدمات مشاهدة الفيديو والتسوق والبريد الإلكتروني والخرائط على الويب.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تطبيق يُستخدم عادةً عبر متصفح الويب، وقد يكون بعضه قابلًا للتثبيت على الجهاز. ومن أمثلته خدمات مشاهدة الفيديو والتسوق والبريد الإلكتروني والخرائط على الويب."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50492,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-142",
+        "pdf_page": 51,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.395,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50493,
+      "question_number": 14,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ناقش أهمية تقسيم تطبيق الويب إلى ثلاث طبقات رئيسة.",
+      "model_answer": "يساعد هذا التقسيم التعليمي على فهم توزيع المهام: الواجهة الأمامية للعرض والتفاعل، والخلفية للمعالجة والتحكم، وطبقة البيانات للحفظ والإتاحة. وتتعاون الطبقات لتنفيذ طلبات المستخدم. ولا يعني ذلك أن جميع التطبيقات لها البنية الفعلية نفسها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يساعد هذا التقسيم التعليمي على فهم توزيع المهام: الواجهة الأمامية للعرض والتفاعل، والخلفية للمعالجة والتحكم، وطبقة البيانات للحفظ والإتاحة. وتتعاون الطبقات لتنفيذ طلبات المستخدم. ولا يعني ذلك أن جميع التطبيقات لها البنية الفعلية نفسها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50493,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-143",
+        "pdf_page": 51,
+        "match_score": 94.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.386,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50494,
+      "question_number": 15,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "بيّن كيف تتعاون الطبقات الثلاث عند استخدام شبكة التواصل الاجتماعي.",
+      "model_answer": "تُظهر الواجهة الأمامية الخط الزمني وشاشات النشر وتستقبل المحتوى. تعالج الواجهة الخلفية مهام تحديد الجمهور المستهدف والتحكم في الإشعارات. وتحفظ طبقة البيانات المنشورات وعلاقات المتابعة والرسائل، فتعمل الطبقات معًا لتقديم الخدمة للمستخدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تُظهر الواجهة الأمامية الخط الزمني وشاشات النشر وتستقبل المحتوى. تعالج الواجهة الخلفية مهام تحديد الجمهور المستهدف والتحكم في الإشعارات. وتحفظ طبقة البيانات المنشورات وعلاقات المتابعة والرسائل، فتعمل الطبقات معًا لتقديم الخدمة للمستخدم."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50494,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-144",
+        "pdf_page": 51,
+        "match_score": 94.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.397,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50495,
+      "question_number": 16,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "حلّل دور الواجهة الخلفية في موقع تجارة إلكترونية.",
+      "model_answer": "تعالج الواجهة الخلفية طلبات المستخدم وتطبق قواعد الموقع؛ ومن أمثلتها التحقق من المخزون، وإرسال طلبات الدفع والتعامل مع نتائجها، والاستفادة من البيانات المتاحة عبر طبقة البيانات. وهي لا تتولى عرض شاشات التسوق للمستخدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تعالج الواجهة الخلفية طلبات المستخدم وتطبق قواعد الموقع؛ ومن أمثلتها التحقق من المخزون، وإرسال طلبات الدفع والتعامل مع نتائجها، والاستفادة من البيانات المتاحة عبر طبقة البيانات. وهي لا تتولى عرض شاشات التسوق للمستخدم."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50495,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-145",
+        "pdf_page": 51,
+        "match_score": 96.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.375,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50496,
+      "question_number": 17,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما دور الواجهة الأمامية في موقع مشاركة فيديو؟",
+      "model_answer": "تعرض شاشات تشغيل الفيديو والبحث، وتستقبل إجراءات المستخدم ومدخلاته.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تعرض شاشات تشغيل الفيديو والبحث، وتستقبل إجراءات المستخدم ومدخلاته."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50496,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-146",
+        "pdf_page": 52,
+        "match_score": 90.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.268,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50497,
+      "question_number": 18,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما دور قاعدة البيانات في شبكة التواصل الاجتماعي؟",
+      "model_answer": "تخزن بيانات المنشورات وعلاقات المتابعة والرسائل، وتتيح هذه المعلومات عند الحاجة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "تخزن بيانات المنشورات وعلاقات المتابعة والرسائل، وتتيح هذه المعلومات عند الحاجة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50497,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-147",
+        "pdf_page": 52,
+        "match_score": 96.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.245,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50498,
+      "question_number": 19,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "حدّد خطوات تعاون الطبقات عند إرسال بريد إلكتروني من تطبيق ويب.",
+      "model_answer": "1. يكتب المستخدم الرسالة ويضغط إرسال في الواجهة الأمامية.\n2. ترسل الأمامية الطلب إلى الخلفية، فتجري عملية المعالجة والإرسال.\n3. تُحفظ البيانات المرتبطة بالرسائل في طبقة البيانات عند الحاجة، وتعرض الأمامية النتيجة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. يكتب المستخدم الرسالة ويضغط إرسال في الواجهة الأمامية.",
+        "2. ترسل الأمامية الطلب إلى الخلفية، فتجري عملية المعالجة والإرسال.",
+        "3. تُحفظ البيانات المرتبطة بالرسائل في طبقة البيانات عند الحاجة، وتعرض الأمامية النتيجة."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50498,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.263,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50499,
+      "question_number": 20,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما أهمية وجود طبقة خلفية قوية في التجارة الإلكترونية؟",
+      "model_answer": "تتولى معالجة الطلبات وتطبيق قواعد التطبيق، مثل التحقق من المخزون وإرسال طلبات الدفع والتعامل مع نتائجها، وتربط بين ما يطلبه المستخدم عبر الواجهة الأمامية والبيانات اللازمة لتنفيذ الطلب.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تتولى معالجة الطلبات وتطبيق قواعد التطبيق، مثل التحقق من المخزون وإرسال طلبات الدفع والتعامل مع نتائجها، وتربط بين ما يطلبه المستخدم عبر الواجهة الأمامية والبيانات اللازمة لتنفيذ الطلب."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50499,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-149",
+        "pdf_page": 52,
+        "match_score": 97.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.306,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50500,
+      "question_number": 21,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "كيف يختلف النموذج التعليمي ذو الطبقات الثلاث عن البنية الفعلية لتطبيقات الويب؟",
+      "model_answer": "النموذج التعليمي يقسّم وظائف تطبيق الويب إلى واجهة أمامية وواجهة خلفية وطبقة بيانات لتوضيح توزيع المهام. أما البنية الفعلية فقد تختلف من تطبيق لآخر، وقد لا تتضمن قاعدة بيانات تقليدية أصلًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "النموذج التعليمي يقسّم وظائف تطبيق الويب إلى واجهة أمامية وواجهة خلفية وطبقة بيانات لتوضيح توزيع المهام. أما البنية الفعلية فقد تختلف من تطبيق لآخر، وقد لا تتضمن قاعدة بيانات تقليدية أصلًا."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50500,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.42,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50501,
+      "question_number": 22,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما الفرق بين عرض المحتوى واستقبال مدخلات المستخدم وبين معالجة الطلبات؟",
+      "model_answer": "عرض المحتوى واستقبال المدخلات من اختصاص الواجهة الأمامية، أما معالجة الطلبات وتطبيق قواعد التطبيق فمن اختصاص الواجهة الخلفية التي تعمل على الخادم.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "عرض المحتوى واستقبال المدخلات من اختصاص الواجهة الأمامية، أما معالجة الطلبات وتطبيق قواعد التطبيق فمن اختصاص الواجهة الخلفية التي تعمل على الخادم."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50501,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.31,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50502,
+      "question_number": 23,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "لماذا يُعد عرض شاشة البحث واستقبال الكلمات التي يكتبها المستخدم من مهام الواجهة الأمامية؟",
+      "model_answer": "لأن الواجهة الأمامية هي الجزء الذي يراه المستخدم ويتعامل معه في المتصفح، وهي تعرض عناصر الصفحة وتستقبل ما يكتبه أو يختاره.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الواجهة الأمامية هي الجزء الذي يراه المستخدم ويتعامل معه في المتصفح، وهي تعرض عناصر الصفحة وتستقبل ما يكتبه أو يختاره."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50502,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.334,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50503,
+      "question_number": 24,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "عند إدخال كلمات للبحث عن منتج، ما الطبقة التي تستقبل الكلمات، وما الطبقة التي تطلب البيانات المطابقة، وما الطبقة التي تعيد النتائج؟",
+      "model_answer": "الواجهة الأمامية تستقبل كلمات البحث، والواجهة الخلفية تطلب المنتجات المطابقة، وطبقة البيانات تعيد النتائج المطلوبة إلى الواجهة الخلفية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية تستقبل كلمات البحث، والواجهة الخلفية تطلب المنتجات المطابقة، وطبقة البيانات تعيد النتائج المطلوبة إلى الواجهة الخلفية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50503,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.511,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50504,
+      "question_number": 25,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "اشرح لماذا لا يكفي أن تعرض الواجهة الأمامية شاشة بحث لكي يحصل المستخدم على المنتجات المطابقة.",
+      "model_answer": "لأن الواجهة الأمامية تجمع كلمات البحث فقط ثم ترسلها للواجهة الخلفية، التي تطلب بيانات المنتجات المطابقة من طبقة البيانات وتعيد النتائج لتعرضها الواجهة الأمامية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الواجهة الأمامية تجمع كلمات البحث فقط ثم ترسلها للواجهة الخلفية، التي تطلب بيانات المنتجات المطابقة من طبقة البيانات وتعيد النتائج لتعرضها الواجهة الأمامية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50504,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.451,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50505,
+      "question_number": 26,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما الفرق بين اختيار الفيديوهات الموصى بها وتخزين سجل المشاهدة في خدمة مشاركة الفيديو؟",
+      "model_answer": "اختيار الفيديوهات الموصى بها من مهام الواجهة الخلفية، بينما تخزين سجل المشاهدة من مهام قاعدة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "اختيار الفيديوهات الموصى بها من مهام الواجهة الخلفية، بينما تخزين سجل المشاهدة من مهام قاعدة البيانات."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50505,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.313,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50506,
+      "question_number": 27,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في موقع مشاركة فيديو، صنّف المهام الآتية بحسب الطبقة: شاشة تشغيل الفيديو، تجميع عدد المشاهدات، حفظ معلومات المستخدم.",
+      "model_answer": "1. شاشة تشغيل الفيديو: الواجهة الأمامية.\n2. تجميع عدد المشاهدات: الواجهة الخلفية.\n3. حفظ سجل المشاهدة: طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. شاشة تشغيل الفيديو: الواجهة الأمامية.",
+        "2. تجميع عدد المشاهدات: الواجهة الخلفية.",
+        "3. حفظ سجل المشاهدة: طبقة البيانات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50506,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.267,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50507,
+      "question_number": 28,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ما الفرق بين تحديد الجمهور المستهدف للمنشورات وحفظ علاقات المتابعة في شبكة التواصل الاجتماعي؟",
+      "model_answer": "تحديد الجمهور المستهدف للمنشورات من مهام الواجهة الخلفية، أما حفظ علاقات المتابعة فمن مهام قاعدة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تحديد الجمهور المستهدف للمنشورات من مهام الواجهة الخلفية، أما حفظ علاقات المتابعة فمن مهام قاعدة البيانات."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50507,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.255,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50508,
+      "question_number": 29,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "صنّف المهام الآتية في شبكة تواصل اجتماعي إلى الطبقات الثلاث: شاشة الخط الزمني، تحديد جمهور المنشور، تخزين بيانات المنشورات، شاشة النشر، معالجة الإشعارات، حفظ علاقات المتابعة.",
+      "model_answer": "1. شاشة الخط الزمني وكتابة المنشور: الواجهة الأمامية.\n2. تحديد من يرى المنشور والتحكم في الإشعارات: الواجهة الخلفية.\n3. حفظ المنشورات والرسائل وعلاقات المتابعة: طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. شاشة الخط الزمني وكتابة المنشور: الواجهة الأمامية.",
+        "2. تحديد من يرى المنشور والتحكم في الإشعارات: الواجهة الخلفية.",
+        "3. حفظ المنشورات والرسائل وعلاقات المتابعة: طبقة البيانات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50508,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.309,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50509,
+      "question_number": 30,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في موقع للتجارة الإلكترونية، إلى أي طبقة تنتمي صفحة عرض المنتجات وشاشة سلة التسوق؟ ولماذا؟",
+      "model_answer": "تنتميان إلى الواجهة الأمامية؛ لأنهما شاشتان يراهما المستخدم ويتفاعل معهما أثناء التسوق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تنتميان إلى الواجهة الأمامية؛ لأنهما شاشتان يراهما المستخدم ويتفاعل معهما أثناء التسوق."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50509,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.235,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50510,
+      "question_number": 31,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في متجر إلكتروني، ميّز بين التحقق من المخزون وتخزين معلومات المنتجات والطلبات.",
+      "model_answer": "التحقق من المخزون مهمة تعالجها الواجهة الخلفية، أما تخزين معلومات المنتجات وسجل الطلبات فهو من مسؤوليات طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "التحقق من المخزون مهمة تعالجها الواجهة الخلفية، أما تخزين معلومات المنتجات وسجل الطلبات فهو من مسؤوليات طبقة البيانات."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50510,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.318,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50511,
+      "question_number": 32,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "صنّف مهام متجر إلكتروني إلى الطبقات الثلاث: صفحة عرض المنتجات، معالجة التحقق من المخزون، حفظ معلومات العملاء، شاشة سلة التسوق، إرسال طلب الدفع والتعامل مع نتيجته، حفظ سجل الطلبات.",
+      "model_answer": "1. عرض المنتجات وسلة التسوق: الواجهة الأمامية.\n2. التحقق من المخزون ومعالجة الطلب والدفع: الواجهة الخلفية.\n3. حفظ بيانات المنتجات والعملاء وسجلات الطلبات: طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. عرض المنتجات وسلة التسوق: الواجهة الأمامية.",
+        "2. التحقق من المخزون ومعالجة الطلب والدفع: الواجهة الخلفية.",
+        "3. حفظ بيانات المنتجات والعملاء وسجلات الطلبات: طبقة البيانات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50511,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.269,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50512,
+      "question_number": 33,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "هل تقتصر طبقة البيانات في تطبيق الويب دائمًا على قاعدة بيانات تقليدية؟ وضّح إجابتك.",
+      "model_answer": "لا. يوضح الكتاب أن طبقة البيانات تحفظ البيانات وتوفرها عند الحاجة، وقد تشمل قواعد بيانات، أو تخزين ملفات وكائنات، أو ذاكرة مخبأة، أو خدمات بيانات خارجية. وقد لا توجد قاعدة بيانات تقليدية في بعض التطبيقات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا. يوضح الكتاب أن طبقة البيانات تحفظ البيانات وتوفرها عند الحاجة، وقد تشمل قواعد بيانات، أو تخزين ملفات وكائنات، أو ذاكرة مخبأة، أو خدمات بيانات خارجية. وقد لا توجد قاعدة بيانات تقليدية في بعض التطبيقات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50512,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.355,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50513,
+      "question_number": 34,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تريد عيادة تصميم تطبيق للحجز يتيح عرض نموذج الحجز والتحقق من المواعيد المتاحة وحفظ الزيارات السابقة. وزّع المهام على الطبقات الثلاث مع السبب.",
+      "model_answer": "1. الواجهة الأمامية: تعرض نموذج الحجز وتستقبل إدخال المريض.\n2. الواجهة الخلفية: تتحقق من المواعيد المتاحة وتعالج الحجز.\n3. طبقة البيانات: تحفظ بيانات الحجز والزيارات وتتيح استرجاعها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الواجهة الأمامية: تعرض نموذج الحجز وتستقبل إدخال المريض.",
+        "2. الواجهة الخلفية: تتحقق من المواعيد المتاحة وتعالج الحجز.",
+        "3. طبقة البيانات: تحفظ بيانات الحجز والزيارات وتتيح استرجاعها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50513,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.305,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50514,
+      "question_number": 35,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في تطبيق لحجز العيادة، تفتح صفحة الحجز لكن لا تظهر المواعيد المتاحة. ما الطبقات التي يمكن فحصها، وما المعلومات اللازمة لتحديد سبب المشكلة؟",
+      "model_answer": "تُفحص الواجهة الأمامية للتأكد من عرض النتائج، والواجهة الخلفية للتأكد من معالجة طلب المواعيد، وطبقة البيانات للتأكد من توافر بيانات المواعيد المطلوبة. وتلزم معرفة ما إذا كان الطلب وصل وعولج، وهل أعادت طبقة البيانات مواعيد متاحة، وهل وصلت النتائج إلى الواجهة الأمامية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تُفحص الواجهة الأمامية للتأكد من عرض النتائج، والواجهة الخلفية للتأكد من معالجة طلب المواعيد، وطبقة البيانات للتأكد من توافر بيانات المواعيد المطلوبة. وتلزم معرفة ما إذا كان الطلب وصل وعولج، وهل أعادت طبقة البيانات مواعيد متاحة، وهل وصلت النتائج إلى الواجهة الأمامية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50514,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.329,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50515,
+      "question_number": 36,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "لماذا يُفضّل تنظيم مسؤوليات العرض والمعالجة والبيانات في طبقات واضحة عند تصميم تطبيق للعيادة؟ اذكر سببين مرتبطين بوظائف الطبقات.",
+      "model_answer": "1. وضوح مسؤوليات كل طبقة: الواجهة الأمامية تعرض نموذج الحجز، والخلفية تتحقق من المواعيد وتعالج الطلب.\n2. تنظيم حفظ المعلومات واسترجاعها: تتولى طبقة البيانات الاحتفاظ بسجلات المرضى والحجوزات وإتاحتها عند الحاجة دون خلطها بمهام العرض والمعالجة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. وضوح مسؤوليات كل طبقة: الواجهة الأمامية تعرض نموذج الحجز، والخلفية تتحقق من المواعيد وتعالج الطلب.",
+        "2. تنظيم حفظ المعلومات واسترجاعها: تتولى طبقة البيانات الاحتفاظ بسجلات المرضى والحجوزات وإتاحتها عند الحاجة دون خلطها بمهام العرض والمعالجة."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50515,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.369,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50516,
+      "question_number": 37,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يتيح تطبيق طقس للمستخدم كتابة اسم المدينة وعرض التوقعات وحفظ التوقعات السابقة. كيف توزّع هذه المسؤوليات بين الطبقات الثلاث؟",
+      "model_answer": "الواجهة الأمامية: تستقبل اسم المدينة وتعرض حالة الطقس.\nالواجهة الخلفية: تعالج الطلب وتبحث عن التوقعات المناسبة.\nطبقة البيانات: تحفظ التوقعات السابقة أو تتيح المعلومات المحفوظة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية: تستقبل اسم المدينة وتعرض حالة الطقس.",
+        "الواجهة الخلفية: تعالج الطلب وتبحث عن التوقعات المناسبة.",
+        "طبقة البيانات: تحفظ التوقعات السابقة أو تتيح المعلومات المحفوظة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50516,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.3,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50517,
+      "question_number": 38,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "أمامك العبارة: «الواجهة الخلفية هي الجزء الذي يراه المستخدم مباشرة، وقاعدة البيانات تعرض شاشات البحث». حدّد الخطأ وصحّحه.",
+      "model_answer": "العبارة خاطئة؛ الذي يراه المستخدم ويتعامل معه هو الواجهة الأمامية، وهي تعرض شاشات البحث. الواجهة الخلفية تعالج الطلبات على الخادم، وطبقة البيانات تحفظ المعلومات وتوفرها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "العبارة خاطئة؛ الذي يراه المستخدم ويتعامل معه هو الواجهة الأمامية، وهي تعرض شاشات البحث. الواجهة الخلفية تعالج الطلبات على الخادم، وطبقة البيانات تحفظ المعلومات وتوفرها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50517,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.46,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50518,
+      "question_number": 39,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في تطبيق ويب، من المسؤول عن التحقق من تسجيل الدخول، ومن المسؤول عن عرض شاشة إدخال البيانات؟",
+      "model_answer": "الواجهة الخلفية مسؤولة عن التحقق من تسجيل الدخول باعتباره جزءًا من معالجة الطلب وتطبيق قواعد التطبيق، بينما الواجهة الأمامية تعرض شاشة الإدخال وتستقبل ما يكتبه المستخدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الخلفية مسؤولة عن التحقق من تسجيل الدخول باعتباره جزءًا من معالجة الطلب وتطبيق قواعد التطبيق، بينما الواجهة الأمامية تعرض شاشة الإدخال وتستقبل ما يكتبه المستخدم."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50518,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.313,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50519,
+      "question_number": 40,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "أي طبقة قد يكون تعطلها أوضح للمستخدم مباشرةً عند حدوث خلل في تطبيق ويب؟ فسّر مع الإشارة إلى أثر تعطل الطبقات الأخرى.",
+      "model_answer": "قد يكون تعطل الواجهة الأمامية أوضح لأنه يراها المستخدم ويتفاعل معها مباشرة، فيلاحظ أخطاء العرض أو إدخال البيانات. لكن تعطل الواجهة الخلفية أو طبقة البيانات قد يظهر أيضًا في صورة نتائج لا تصل أو لا تُعرض كما ينبغي.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قد يكون تعطل الواجهة الأمامية أوضح لأنه يراها المستخدم ويتفاعل معها مباشرة، فيلاحظ أخطاء العرض أو إدخال البيانات. لكن تعطل الواجهة الخلفية أو طبقة البيانات قد يظهر أيضًا في صورة نتائج لا تصل أو لا تُعرض كما ينبغي."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50519,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.268,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50600,
+      "question_number": 41,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يستخدم طالب البريد الإلكتروني من المتصفح، بينما يتوقع آخر أن تطبيق الويب لا بد أن يُثبّت على الجهاز. صحح الفهم.",
+      "model_answer": "تطبيق الويب يُستخدم غالبًا عبر متصفح الويب، وقد تسمح بعض تطبيقات الويب بالتثبيت؛ استخدام المتصفح يكفي لاعتبار خدمة البريد مثالًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تطبيق الويب يُستخدم غالبًا عبر متصفح الويب، وقد تسمح بعض تطبيقات الويب بالتثبيت؛ استخدام المتصفح يكفي لاعتبار خدمة البريد مثالًا."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50600,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.426,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50601,
+      "question_number": 42,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "كتب زائر كلمات في مربع بحث متجر إلكتروني. أي جزء يستقبل ما كتبه ويعرض النتائج له، ولماذا؟",
+      "model_answer": "الواجهة الأمامية؛ فهي الجزء الذي يتعامل معه المستخدم في المتصفح، وتستقبل مدخلاته وتعرض النتائج والمحتوى.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية؛ فهي الجزء الذي يتعامل معه المستخدم في المتصفح، وتستقبل مدخلاته وتعرض النتائج والمحتوى."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50601,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.261,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50602,
+      "question_number": 43,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "ظهر مربع البحث أمام المستخدم لكن العثور على منتجات تطابق كلماته يحتاج معالجة. أي طبقة تتولى هذه المعالجة؟",
+      "model_answer": "الواجهة الخلفية؛ تعالج الطلبات على الخادم وتطبّق قواعد التطبيق وتطلب البيانات المناسبة عند الحاجة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الخلفية؛ تعالج الطلبات على الخادم وتطبّق قواعد التطبيق وتطلب البيانات المناسبة عند الحاجة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50602,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.326,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50603,
+      "question_number": 44,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يحتفظ متجر بسجل الطلبات ومعلومات المنتجات لاستخدامها لاحقًا. أي طبقة تتحمل الوظيفة وما هدفها؟",
+      "model_answer": "طبقة البيانات؛ تحفظ معلومات المنتجات وسجلات الطلبات وتتيح استرجاعها حين تحتاجها بقية أجزاء التطبيق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "طبقة البيانات؛ تحفظ معلومات المنتجات وسجلات الطلبات وتتيح استرجاعها حين تحتاجها بقية أجزاء التطبيق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50603,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.226,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50604,
+      "question_number": 45,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "بدأ طلب البحث في متجر من متصفح المستخدم. تتبع الطريق حتى إرسال الطلب إلى موضع حفظ البيانات.",
+      "model_answer": "تستقبل الواجهة الأمامية كلمات البحث ثم ترسلها إلى الواجهة الخلفية، وتطلب الواجهة الخلفية من طبقة البيانات المنتجات المطابقة لعبارة البحث.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تستقبل الواجهة الأمامية كلمات البحث ثم ترسلها إلى الواجهة الخلفية، وتطلب الواجهة الخلفية من طبقة البيانات المنتجات المطابقة لعبارة البحث."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50604,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.5,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50605,
+      "question_number": 46,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "عادت المنتجات المطابقة من طبقة البيانات. لماذا لا تعرضها طبقة البيانات مباشرة للمستخدم في النموذج المبسط؟",
+      "model_answer": "تعيد طبقة البيانات النتائج إلى الواجهة الخلفية، فتجهزها الخلفية لإرسالها إلى الواجهة الأمامية التي تعرضها للمستخدم.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تعيد طبقة البيانات النتائج إلى الواجهة الخلفية، فتجهزها الخلفية لإرسالها إلى الواجهة الأمامية التي تعرضها للمستخدم."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50605,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.425,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50606,
+      "question_number": 47,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في متجر إلكتروني، أضيف منتج إلى السلة ثم أُجري فحص للمخزون. إلى أي طبقة تنتمي كل عملية عادة؟",
+      "model_answer": "إضافة المنتج عبر السلة تفاعل في الواجهة الأمامية، والتحقق من المخزون ومعالجة الطلبات من وظائف الواجهة الخلفية؛ وتحفظ طبقة البيانات معلومات المنتجات والطلبات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "إضافة المنتج عبر السلة تفاعل في الواجهة الأمامية، والتحقق من المخزون ومعالجة الطلبات من وظائف الواجهة الخلفية؛ وتحفظ طبقة البيانات معلومات المنتجات والطلبات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50606,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.308,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50607,
+      "question_number": 48,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في منصة فيديو، شاهد المستخدم مقطعًا، وحُسب عدد مشاهداته، وحُفظ سجل المشاهدة. وزّع هذه الوظائف على الطبقات الثلاث.",
+      "model_answer": "تشغيل المقطع في الواجهة الأمامية، وتجميع عدد المشاهدات في الواجهة الخلفية، وحفظ سجل المشاهدة في طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تشغيل المقطع في الواجهة الأمامية، وتجميع عدد المشاهدات في الواجهة الخلفية، وحفظ سجل المشاهدة في طبقة البيانات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50607,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.273,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50608,
+      "question_number": 49,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "بعد كتابة منشور، ظهرت تغذية المحتوى للمستخدمين المعنيين وأُرسلت إشعارات. ميّز وظيفة كل طبقة في هذا المشهد.",
+      "model_answer": "كتابة المنشور وعرض المحتوى في الواجهة الأمامية، وتحديد من يرى المنشور وإدارة الإشعارات في الخلفية، وحفظ المنشورات والمتابعات والرسائل في طبقة البيانات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "كتابة المنشور وعرض المحتوى في الواجهة الأمامية، وتحديد من يرى المنشور وإدارة الإشعارات في الخلفية، وحفظ المنشورات والمتابعات والرسائل في طبقة البيانات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50608,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.249,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50609,
+      "question_number": 50,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تُدخل مريضة بيانات حجزها في نموذج، ثم يجري النظام التحقق من توافر الموعد. لماذا لا تؤدي الطبقة نفسها الوظيفتين عادة؟",
+      "model_answer": "النموذج وإدخال المعلومات في الواجهة الأمامية؛ أما فحص توافر الموعد وتطبيق قواعد الحجز ففي الواجهة الخلفية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "النموذج وإدخال المعلومات في الواجهة الأمامية؛ أما فحص توافر الموعد وتطبيق قواعد الحجز ففي الواجهة الخلفية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50609,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.256,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50610,
+      "question_number": 51,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تريد عيادة عرض زيارات مريض السابقة بعد تسجيل دخوله. ما دور طبقة البيانات ولماذا تحتاج الواجهة إلى التعاون مع الطبقات الأخرى؟",
+      "model_answer": "تحفظ طبقة البيانات سجل الزيارات وتسترجعه عند الطلب؛ تتولى الواجهة الخلفية معالجة الطلب وتجهيز النتائج ثم تعرضها الواجهة الأمامية للمستخدم.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تحفظ طبقة البيانات سجل الزيارات وتسترجعه عند الطلب؛ تتولى الواجهة الخلفية معالجة الطلب وتجهيز النتائج ثم تعرضها الواجهة الأمامية للمستخدم."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50610,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.378,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50611,
+      "question_number": 52,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يكتب المستخدم اسم مدينة ليشاهد التوقعات، ويحتفظ التطبيق بالتوقعات السابقة. وزع إدخال المدينة والبحث عن التوقعات والتخزين.",
+      "model_answer": "الواجهة الأمامية تستقبل اسم المدينة؛ الواجهة الخلفية تعالج طلب البحث عن التوقعات؛ طبقة البيانات تحفظ التوقعات السابقة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواجهة الأمامية تستقبل اسم المدينة؛ الواجهة الخلفية تعالج طلب البحث عن التوقعات؛ طبقة البيانات تحفظ التوقعات السابقة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50611,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.34,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50612,
+      "question_number": 53,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يدّعي طالب أن جميع تطبيقات الويب يجب أن تتضمن قاعدة بيانات تقليدية واحدة. لماذا لا يلزم ذلك وفق النموذج؟",
+      "model_answer": "الطبقات الثلاث نموذج تعليمي مبسط وقد تختلف البنية الفعلية؛ وطبقة البيانات قد تضم قواعد بيانات أو ملفات أو تخزين كائنات أو ذاكرة مخبأة أو خدمات بيانات خارجية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الطبقات الثلاث نموذج تعليمي مبسط وقد تختلف البنية الفعلية؛ وطبقة البيانات قد تضم قواعد بيانات أو ملفات أو تخزين كائنات أو ذاكرة مخبأة أو خدمات بيانات خارجية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50612,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.327,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50613,
+      "question_number": 54,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "أدخل مستخدم بيانات موعد على شاشة تعمل بصورة طبيعية، لكن النظام لم يتحقق من توافره. أي طبقة تُراجع أولًا ولماذا؟",
+      "model_answer": "تُراجع الواجهة الخلفية أولًا لأنها مسؤولة عن فحص التوافر وتطبيق قواعد الحجز، مع التحقق من اتصالها بطبقة البيانات عند الحاجة؛ ظهور النموذج لا يثبت سلامة المعالجة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تُراجع الواجهة الخلفية أولًا لأنها مسؤولة عن فحص التوافر وتطبيق قواعد الحجز، مع التحقق من اتصالها بطبقة البيانات عند الحاجة؛ ظهور النموذج لا يثبت سلامة المعالجة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50613,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.234,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50614,
+      "question_number": 55,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "يقول فريق إن لكل طبقة مهمة مستقلة فلا حاجة لتبادل الرسائل بينها. استخدم عملية البحث عن منتج لدحض الفكرة.",
+      "model_answer": "تحتاج العملية إلى تعاون الطبقات: تجمع الواجهة الأمامية المدخل، وتعالج الخلفية الطلب، وتوفر طبقة البيانات المنتجات المطابقة، ثم تعود النتائج عبر الخلفية إلى الواجهة الأمامية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تحتاج العملية إلى تعاون الطبقات: تجمع الواجهة الأمامية المدخل، وتعالج الخلفية الطلب، وتوفر طبقة البيانات المنتجات المطابقة، ثم تعود النتائج عبر الخلفية إلى الواجهة الأمامية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50614,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.42,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50615,
+      "question_number": 56,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "في متجر إلكتروني، تظهر كمية منتج في قائمة العرض ويجري التحقق من توافره عند تأكيد الطلب. وضّح لماذا لا يكفي إظهار الكمية على الشاشة لتنفيذ التحقق من المخزون.",
+      "model_answer": "عرض معلومات المنتج من مهام الواجهة الأمامية، أما التحقق من المخزون عند معالجة الطلب فمن مهام الواجهة الخلفية التي تستعين بطبقة البيانات عند الحاجة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "عرض معلومات المنتج من مهام الواجهة الأمامية، أما التحقق من المخزون عند معالجة الطلب فمن مهام الواجهة الخلفية التي تستعين بطبقة البيانات عند الحاجة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50615,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 54,
+        "lexical_similarity": 0.294,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50616,
+      "question_number": 57,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تغيّر عدد مشاهدات مقطع فيديو بينما احتفظ التطبيق بسجل مشاهدات المستخدم. ما الفرق بين معالجة عدد المشاهدات وحفظ سجل المشاهدة؟",
+      "model_answer": "تجميع عدد المشاهدات من أمثلة عمل الواجهة الخلفية، أما حفظ سجل مشاهدة المستخدم ومعلومات الفيديو فهو من مهام طبقة البيانات، بينما تشغيل الفيديو وعرضه من الواجهة الأمامية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تجميع عدد المشاهدات من أمثلة عمل الواجهة الخلفية، أما حفظ سجل مشاهدة المستخدم ومعلومات الفيديو فهو من مهام طبقة البيانات، بينما تشغيل الفيديو وعرضه من الواجهة الأمامية."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50616,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 53,
+        "lexical_similarity": 0.289,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50617,
+      "question_number": 58,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "تلقى تطبيق تواصل اجتماعي منشورًا، ثم حدد من ينبغي أن يراه وأرسل إشعارًا. أين تظهر المعلومات للمستخدم، وأين يُتخذ قرار جمهور المنشور؟",
+      "model_answer": "تعرض الواجهة الأمامية المحتوى وتستقبل كتابة المنشور\nوتحدد الواجهة الخلفية من يرى المنشور وتدير الإشعارات\nوتحفظ طبقة البيانات المنشورات والمستخدمين والمتابعات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تعرض الواجهة الأمامية المحتوى وتستقبل كتابة المنشور",
+        "وتحدد الواجهة الخلفية من يرى المنشور وتدير الإشعارات",
+        "وتحفظ طبقة البيانات المنشورات والمستخدمين والمتابعات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50617,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 55,
+        "lexical_similarity": 0.306,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50618,
+      "question_number": 59,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "عند البحث عن منتج، وصلت النتائج من طبقة البيانات إلى الواجهة الخلفية. لماذا تُعد هذه خطوة وسيطة لا نهاية تنفيذ الطلب؟",
+      "model_answer": "لأن الواجهة الخلفية تجهّز النتائج لترسلها إلى الواجهة الأمامية، ثم تعرضها الواجهة الأمامية للمستخدم؛ هكذا تكتمل رحلة الطلب بين الطبقات الثلاث.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الواجهة الخلفية تجهّز النتائج لترسلها إلى الواجهة الأمامية، ثم تعرضها الواجهة الأمامية للمستخدم؛ هكذا تكتمل رحلة الطلب بين الطبقات الثلاث."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50618,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 52,
+        "lexical_similarity": 0.498,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50619,
+      "question_number": 60,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "prompt": "قال مطور إن عدم وجود قاعدة بيانات تقليدية يجعل نموذج الطبقات الثلاث غير قابل للتطبيق. ناقش صحة الاستنتاج مستندًا إلى بدائل حفظ البيانات.",
+      "model_answer": "الاستنتاج غير دقيق؛ النموذج تعليمي مبسط وقد تختلف البنية الفعلية للتطبيقات. ويمكن أن تشمل طبقة البيانات قواعد بيانات أو تخزين ملفات وكائنات أو ذاكرة مخبأة أو خدمات بيانات خارجية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الاستنتاج غير دقيق؛ النموذج تعليمي مبسط وقد تختلف البنية الفعلية للتطبيقات. ويمكن أن تشمل طبقة البيانات قواعد بيانات أو تخزين ملفات وكائنات أو ذاكرة مخبأة أو خدمات بيانات خارجية."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50619,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-1: البنية العامة لتطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_1",
+        "printed_page_range": [
+          50,
+          55
+        ],
+        "best_page_hint": 51,
+        "lexical_similarity": 0.32,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    }
+  ]
+}

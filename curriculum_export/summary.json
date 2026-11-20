@@ -1,0 +1,120 @@
+{
+  "total_questions": 3298,
+  "total_lessons": 11,
+  "total_essay_questions": 638,
+  "total_mcq_questions": 2341,
+  "total_true_false_questions": 319,
+  "total_definitions": 137,
+  "lessons": [
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "definitions_count": 19,
+      "essay_count": 77,
+      "mcq_count": 340,
+      "true_false_count": 30,
+      "total_questions": 447,
+      "file": "01_الدرس الأول_ تطور تكنولوجيا المعلومات والتحول.json"
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "definitions_count": 8,
+      "essay_count": 50,
+      "mcq_count": 251,
+      "true_false_count": 30,
+      "total_questions": 331,
+      "file": "02_الدرس الثالث_ الذكاء الاصطناعي في حياتنا اليو.json"
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
+      "definitions_count": 9,
+      "essay_count": 73,
+      "mcq_count": 257,
+      "true_false_count": 30,
+      "total_questions": 360,
+      "file": "03_الدرس الثاني_ كيف يعمل الذكاء الاصطناعي.json"
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "definitions_count": 13,
+      "essay_count": 60,
+      "mcq_count": 260,
+      "true_false_count": 30,
+      "total_questions": 350,
+      "file": "04_الدرس الرابع_ القضايا الأخلاقية المتعلقة بالذ.json"
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "شامل الوحدة الأولى",
+      "definitions_count": 0,
+      "essay_count": 0,
+      "mcq_count": 98,
+      "true_false_count": 0,
+      "total_questions": 98,
+      "file": "05_شامل الوحدة الأولى.json"
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "definitions_count": 5,
+      "essay_count": 60,
+      "mcq_count": 160,
+      "true_false_count": 30,
+      "total_questions": 250,
+      "file": "06_الدرس الأول_ البنية العامة لتطبيقات الويب.json"
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية",
+      "definitions_count": 19,
+      "essay_count": 41,
+      "mcq_count": 78,
+      "true_false_count": 20,
+      "total_questions": 139,
+      "file": "07_الدرس الثالث_ أساسيات تكنولوجيا الواجهة الأما.json"
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "definitions_count": 17,
+      "essay_count": 58,
+      "mcq_count": 159,
+      "true_false_count": 30,
+      "total_questions": 247,
+      "file": "08_الدرس الثاني_ طرق الاتصال في تطبيقات الويب.json"
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الأول: التشفير والمصادقة",
+      "definitions_count": 17,
+      "essay_count": 81,
+      "mcq_count": 259,
+      "true_false_count": 50,
+      "total_questions": 390,
+      "file": "09_الدرس الأول_ التشفير والمصادقة.json"
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
+      "definitions_count": 17,
+      "essay_count": 60,
+      "mcq_count": 210,
+      "true_false_count": 19,
+      "total_questions": 289,
+      "file": "10_الدرس الثالث_ الاستجابة للحوادث وإدارة المخاط.json"
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "definitions_count": 13,
+      "essay_count": 78,
+      "mcq_count": 269,
+      "true_false_count": 50,
+      "total_questions": 397,
+      "file": "11_الدرس الثاني_ حماية البيانات والمعلومات.json"
+    }
+  ]
+}

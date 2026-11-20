@@ -29,6 +29,7 @@ import { KholasaSummaryView, hasZatonaContent } from "./KholasaSummaryView";
 import { KholasaMindMapView } from "./KholasaMindMapView";
 import { KholasaFlashcardsView } from "./KholasaFlashcardsView";
 import { KholasaDefinitionsView } from "./KholasaDefinitionsView";
+import { KholasaExplanationView } from "./KholasaExplanationView";
 import { KholasaLessonQuestionsView } from "./KholasaLessonQuestionsView";
 import type { KholasaMaterial } from "./types";
 import type { Student } from "@/types/platform";
@@ -40,6 +41,7 @@ interface KholasaLessonsTabProps {
 }
 
 type LessonStudyTab =
+  | "explanation"
   | "video"
   | "definitions"
   | "summary"
@@ -254,6 +256,7 @@ export function KholasaLessonsTab({ onPlayVideo, student, isLanguages }: Kholasa
     const showSectionsTab = isLanguagesTrack && hasSections;
 
     const subTabs: Array<{ id: LessonStudyTab; label: string; icon: typeof Sparkles }> = [
+      { id: "explanation", label: "شرح الدرس 📖", icon: FileText },
       { id: "video", label: "فيديو الشرح", icon: Video },
       { id: "definitions", label: `التعريفات والمفاهيم (${defsCount})`, icon: BookOpen },
       ...(showZatonaTab ? [{ id: "summary" as const, label: "أهم النقاط (الزتونة) ⚡", icon: Sparkles }] : []),
@@ -439,6 +442,13 @@ export function KholasaLessonsTab({ onPlayVideo, student, isLanguages }: Kholasa
               </div>
             )}
           </div>
+        )}
+
+        {studyTab === "explanation" && (
+          <KholasaExplanationView
+            material={activeMaterial}
+            onNavigateTab={(tab) => setStudyTab(tab as LessonStudyTab)}
+          />
         )}
 
         {studyTab === "definitions" && <KholasaDefinitionsView material={activeMaterial} />}

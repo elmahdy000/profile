@@ -1,0 +1,2468 @@
+{
+  "unit_id": 1,
+  "unit_title": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+  "lesson_id": "1_1",
+  "lesson_title": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+  "total_questions": 69,
+  "questions": [
+    {
+      "id": 50001,
+      "question_number": 1,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح تطور تكنولوجيا المعلومات في الفترة الممتدة من الأربعينيات إلى الستينيات، موضحًا استخدامها الأساسي في تلك الفترة.",
+      "model_answer": "ظهرت في الأربعينيات إلى الستينيات الحواسيب الإلكترونية المبكرة مثل ENIAC، وكانت تستخدم الصمامات المفرغة.\nوكان استعمالها الأساسي في الأغراض العسكرية والحسابات العلمية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "ظهرت في الأربعينيات إلى الستينيات الحواسيب الإلكترونية المبكرة مثل ENIAC، وكانت تستخدم الصمامات المفرغة.",
+        "وكان استعمالها الأساسي في الأغراض العسكرية والحسابات العلمية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50001,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-000A",
+        "pdf_page": 3,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.345,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50002,
+      "question_number": 2,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح المقصود بقانون مور، وهل يُعد قانونًا فيزيائيًا ثابتًا؟ فسر إجابتك.",
+      "model_answer": "قانون مور ملاحظة تاريخية تفيد بأن عدد الترانزستورات في الدوائر المتكاملة يزداد بمعدل يقارب الضعف كل عامين.\nوهو ليس قانونًا فيزيائيًا ثابتًا، بل اتجاه تجريبي استمر عقودًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "قانون مور ملاحظة تاريخية تفيد بأن عدد الترانزستورات في الدوائر المتكاملة يزداد بمعدل يقارب الضعف كل عامين.",
+        "وهو ليس قانونًا فيزيائيًا ثابتًا، بل اتجاه تجريبي استمر عقودًا."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50002,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-000B",
+        "pdf_page": 3,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.215,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50003,
+      "question_number": 3,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اذكر ثلاثة تغيرات اجتماعية ناتجة عن تكنولوجيا المعلومات.",
+      "model_answer": "1. شبكات التواصل الاجتماعي.\n2. التجارة الإلكترونية.\n3. العمل عن بُعد.\nومن التحولات المذكورة أيضًا التعلم عبر الإنترنت والدفع غير النقدي.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. شبكات التواصل الاجتماعي.",
+        "2. التجارة الإلكترونية.",
+        "3. العمل عن بُعد.",
+        "ومن التحولات المذكورة أيضًا التعلم عبر الإنترنت والدفع غير النقدي."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50003,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-001",
+        "pdf_page": 3,
+        "match_score": 96.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 4,
+        "lexical_similarity": 0.357,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50004,
+      "question_number": 4,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "ما المقصود بمصطلح التجارة الإلكترونية (E-commerce)؟ وضح ذلك بمثالين.",
+      "model_answer": "التجارة الإلكترونية هي بيع السلع والخدمات وشراؤها عبر الإنترنت.\nمثالان: شراء كتاب من متجر إلكتروني، وبيع منتج عبر موقع للتسوق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "التجارة الإلكترونية هي بيع السلع والخدمات وشراؤها عبر الإنترنت.",
+        "مثالان: شراء كتاب من متجر إلكتروني، وبيع منتج عبر موقع للتسوق."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50004,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.218,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50005,
+      "question_number": 5,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح كيف تساهم الحوسبة الطرفية في تعزيز الأمان وسرعة اتخاذ القرار في تقنية القيادة الذاتية دون الحاجة لإرسال البيانات إلى السحابة.",
+      "model_answer": "1. تجمع المركبة المعلومات من الكاميرات والمستشعرات.\n2. تعالج بياناتها محليًا باستخدام الحوسبة الطرفية، دون انتظار إرسالها إلى السحابة.\n3. يؤدي تقليل زمن الاستجابة إلى سرعة اتخاذ قرار القيادة، وهو أمر مهم للسلامة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. تجمع المركبة المعلومات من الكاميرات والمستشعرات.",
+        "2. تعالج بياناتها محليًا باستخدام الحوسبة الطرفية، دون انتظار إرسالها إلى السحابة.",
+        "3. يؤدي تقليل زمن الاستجابة إلى سرعة اتخاذ قرار القيادة، وهو أمر مهم للسلامة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50005,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-003",
+        "pdf_page": 4,
+        "match_score": 97.3,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.387,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50006,
+      "question_number": 6,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قارن بإيجاز بين الواقع المعزز (AR) والواقع الافتراضي (VR) من حيث التعريف وطريقة العمل.",
+      "model_answer": "1. الواقع المعزز (AR): يضيف عناصر أو معلومات رقمية إلى مشهد من العالم الحقيقي.\n2. الواقع الافتراضي (VR): يضع المستخدم داخل بيئة افتراضية ينشئها الحاسوب.\nالفرق: الأول يضيف للواقع الحقيقي، والثاني ينشئ تجربة داخل بيئة رقمية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. الواقع المعزز (AR): يضيف عناصر أو معلومات رقمية إلى مشهد من العالم الحقيقي.",
+        "2. الواقع الافتراضي (VR): يضع المستخدم داخل بيئة افتراضية ينشئها الحاسوب.",
+        "الفرق: الأول يضيف للواقع الحقيقي، والثاني ينشئ تجربة داخل بيئة رقمية."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50006,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.333,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50007,
+      "question_number": 7,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح المبدأ الذي يقوم عليه الكيوبت (qubit) في الحوسبة الكمومية، وكيف يختلف عن البت الكلاسيكي.",
+      "model_answer": "البت الكلاسيكي يمثّل إحدى القيمتين 0 أو 1 في الوقت الواحد.\nأما الكيوبت فيستخدم التراكب الكمومي، فيمكن أن يكون في مزيج من الحالتين 0 و1 قبل القياس.\nولذلك تختلف طريقة تمثيل المعلومات في الحوسبة الكمومية عن الحوسبة التقليدية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "البت الكلاسيكي يمثّل إحدى القيمتين 0 أو 1 في الوقت الواحد.",
+        "أما الكيوبت فيستخدم التراكب الكمومي، فيمكن أن يكون في مزيج من الحالتين 0 و1 قبل القياس.",
+        "ولذلك تختلف طريقة تمثيل المعلومات في الحوسبة الكمومية عن الحوسبة التقليدية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50007,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-005",
+        "pdf_page": 5,
+        "match_score": 97.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 8,
+        "lexical_similarity": 0.133,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50008,
+      "question_number": 8,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "كيف غيّر انتشار الحوسبة السحابية من العقد الثاني من الألفية فصاعدًا طريقة تقديم موارد تكنولوجيا المعلومات؟",
+      "model_answer": "أصبح من الممكن الحصول على موارد تكنولوجيا المعلومات في صورة خدمات عبر الإنترنت بفضل انتشار الحوسبة السحابية.\nكما دعمت تلك الخدمات تحليل البيانات الضخمة وتطبيقات الذكاء الاصطناعي.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "أصبح من الممكن الحصول على موارد تكنولوجيا المعلومات في صورة خدمات عبر الإنترنت بفضل انتشار الحوسبة السحابية.",
+        "كما دعمت تلك الخدمات تحليل البيانات الضخمة وتطبيقات الذكاء الاصطناعي."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50008,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-006",
+        "pdf_page": 5,
+        "match_score": 98.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.328,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50009,
+      "question_number": 9,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح المراحل التاريخية لتطور تكنولوجيا المعلومات منذ ظهور الحواسيب الإلكترونية في الأربعينيات وحتى الستينيات، مبينًا الغرض الأساسي لاستخدامها في تلك الفترة.",
+      "model_answer": "ظهرت في الأربعينيات إلى الستينيات حواسيب إلكترونية مثل ENIAC تعتمد على الصمامات المفرغة، وكانت كبيرة الحجم وتستخدم أساسًا في الأغراض العسكرية والحسابات العلمية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "ظهرت في الأربعينيات إلى الستينيات حواسيب إلكترونية مثل ENIAC تعتمد على الصمامات المفرغة، وكانت كبيرة الحجم وتستخدم أساسًا في الأغراض العسكرية والحسابات العلمية."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50009,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.32,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50010,
+      "question_number": 10,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح قانون مور موضحًا ما يصفه، والتحديات الهندسية والفيزيائية التي تواجه استمرار تصغير مكونات الدوائر.",
+      "model_answer": "يصف قانون مور تضاعف عدد الترانزستورات تقريبًا كل عامين، لكنه اتجاه تاريخي لا قانون ثابت.\nوتواجه عملية التصغير تيارات التسرب والتأثيرات الكمومية مثل النفق الكمومي.\nولذلك يُستعان بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة لتحسين الأداء.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "يصف قانون مور تضاعف عدد الترانزستورات تقريبًا كل عامين، لكنه اتجاه تاريخي لا قانون ثابت.",
+        "وتواجه عملية التصغير تيارات التسرب والتأثيرات الكمومية مثل النفق الكمومي.",
+        "ولذلك يُستعان بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة لتحسين الأداء."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50010,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.283,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50011,
+      "question_number": 11,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "عدد التحولات المجتمعية الخمسة الناتجة عن تكنولوجيا المعلومات، موضحًا مفهوم كل من العمل عن بُعد والتجارة الإلكترونية.",
+      "model_answer": "التحولات الخمسة: شبكات التواصل الاجتماعي، والتجارة الإلكترونية، والعمل عن بُعد، والتعلم عبر الإنترنت، والدفع غير النقدي.\nالعمل عن بُعد: تنفيذ مهام الوظيفة من المنزل أو مكان بعيد باستخدام الإنترنت.\nالتجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "التحولات الخمسة: شبكات التواصل الاجتماعي، والتجارة الإلكترونية، والعمل عن بُعد، والتعلم عبر الإنترنت، والدفع غير النقدي.",
+        "العمل عن بُعد: تنفيذ مهام الوظيفة من المنزل أو مكان بعيد باستخدام الإنترنت.",
+        "التجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50011,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 4,
+        "lexical_similarity": 0.297,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50012,
+      "question_number": 12,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح خصائص واستخدامات التقنيات الناشئة الثلاث البارزة المذكورة في الدرس: القيادة الذاتية، والواقع المعزز/الافتراضي، والحوسبة الكمومية.",
+      "model_answer": "1. القيادة الذاتية: تستخدم الذكاء الاصطناعي والكاميرات والمستشعرات لإدراك المحيط واتخاذ قرارات القيادة.\n2. الواقع المعزز والافتراضي: الأول يضيف معلومات رقمية إلى الواقع؛ والثاني ينشئ بيئة افتراضية للمستخدم.\n3. الحوسبة الكمومية: تستخدم مبادئ ميكانيكا الكم لمعالجة المعلومات، وقد تفيد في فئات محددة من المسائل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. القيادة الذاتية: تستخدم الذكاء الاصطناعي والكاميرات والمستشعرات لإدراك المحيط واتخاذ قرارات القيادة.",
+        "2. الواقع المعزز والافتراضي: الأول يضيف معلومات رقمية إلى الواقع؛ والثاني ينشئ بيئة افتراضية للمستخدم.",
+        "3. الحوسبة الكمومية: تستخدم مبادئ ميكانيكا الكم لمعالجة المعلومات، وقد تفيد في فئات محددة من المسائل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50012,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.443,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50013,
+      "question_number": 13,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح أثر انتشار الحواسيب الشخصية في السبعينيات والثمانينيات، ثم أثر ظهور الويب والبريد الإلكتروني في التسعينيات.",
+      "model_answer": "1. السبعينيات والثمانينيات: انتشرت الحواسيب الشخصية، وبدأ استخدامها على نطاق أوسع بين الأفراد والشركات.\n2. التسعينيات: ظهر الويب، وانتشر البريد الإلكتروني، واتسع الوصول العالمي إلى المعلومات عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. السبعينيات والثمانينيات: انتشرت الحواسيب الشخصية، وبدأ استخدامها على نطاق أوسع بين الأفراد والشركات.",
+        "2. التسعينيات: ظهر الويب، وانتشر البريد الإلكتروني، واتسع الوصول العالمي إلى المعلومات عبر الإنترنت."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50013,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-007",
+        "pdf_page": 7,
+        "match_score": 89.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.303,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50014,
+      "question_number": 14,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح كيف يؤدي استمرار تصغير مكونات الدوائر في قانون مور إلى ظهور تحديات هندسية وفيزيائية مثل تيارات التسرب والتأثيرات الكمومية والنفق الكمومي.",
+      "model_answer": "يصبح تصغير الترانزستورات أصعب مع الاقتراب من الحدود الفيزيائية.\nومن التحديات زيادة تيارات التسرب وحدوث تأثيرات كمومية مثل النفق الكمومي، مما يحد من استمرار التحسين بالتصغير وحده.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "يصبح تصغير الترانزستورات أصعب مع الاقتراب من الحدود الفيزيائية.",
+        "ومن التحديات زيادة تيارات التسرب وحدوث تأثيرات كمومية مثل النفق الكمومي، مما يحد من استمرار التحسين بالتصغير وحده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50014,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-008",
+        "pdf_page": 7,
+        "match_score": 97.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.306,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50015,
+      "question_number": 15,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح باختصار مفهوم كل من شبكات التواصل الاجتماعي (SNS) والتعلم عبر الإنترنت والدفع غير النقدي باعتبارها تحولات مجتمعية.",
+      "model_answer": "1. شبكات التواصل الاجتماعي: تتيح التواصل ونشر المحتوى ومشاركته بسرعة.\n2. التعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية عبر الإنترنت.\n3. الدفع غير النقدي: سداد قيمة السلع والخدمات بوسائل إلكترونية من دون استخدام النقود النقدية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. شبكات التواصل الاجتماعي: تتيح التواصل ونشر المحتوى ومشاركته بسرعة.",
+        "2. التعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية عبر الإنترنت.",
+        "3. الدفع غير النقدي: سداد قيمة السلع والخدمات بوسائل إلكترونية من دون استخدام النقود النقدية."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50015,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-009",
+        "pdf_page": 7,
+        "match_score": 80.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.216,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50016,
+      "question_number": 16,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح كيف تعالج الحوسبة الطرفية البيانات محليًا على متن المركبة ذاتية القيادة فورًا لتقليل زمن الاستجابة وضمان السلامة.",
+      "model_answer": "1. تلتقط كاميرات المركبة ومستشعراتها بيانات البيئة المحيطة.\n2. تُعالج البيانات داخل المركبة بالحوسبة الطرفية دون انتظار السحابة.\n3. تقل مدة الاستجابة ويصبح اتخاذ قرارات القيادة أسرع، مما يدعم السلامة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. تلتقط كاميرات المركبة ومستشعراتها بيانات البيئة المحيطة.",
+        "2. تُعالج البيانات داخل المركبة بالحوسبة الطرفية دون انتظار السحابة.",
+        "3. تقل مدة الاستجابة ويصبح اتخاذ قرارات القيادة أسرع، مما يدعم السلامة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50016,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-010",
+        "pdf_page": 7,
+        "match_score": 96.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.342,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50017,
+      "question_number": 17,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "ناقش أثر ظهور الويب وانتشار الإنترنت في تسعينيات القرن العشرين على إتاحة المعلومات للاستخدام التجاري والعالمي.",
+      "model_answer": "شهدت التسعينيات إتاحة الإنترنت للاستخدام التجاري وظهور الويب.\nوأدى ذلك إلى انتشار الوصول العالمي إلى المعلومات واستخدام البريد الإلكتروني، فتوسعت وسائل الاتصال وتبادل المعلومات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "شهدت التسعينيات إتاحة الإنترنت للاستخدام التجاري وظهور الويب.",
+        "وأدى ذلك إلى انتشار الوصول العالمي إلى المعلومات واستخدام البريد الإلكتروني، فتوسعت وسائل الاتصال وتبادل المعلومات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50017,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-011",
+        "pdf_page": 8,
+        "match_score": 95.9,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.24,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50018,
+      "question_number": 18,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح كيف تُعد القيادة الذاتية من ضمن التقنيات الناشئة البارزة.",
+      "model_answer": "تُعد القيادة الذاتية تقنية ناشئة لأنها تستخدم الذكاء الاصطناعي مع الكاميرات والمستشعرات للتعرف على البيئة المحيطة واتخاذ قرارات القيادة والتحكم في المركبة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "تُعد القيادة الذاتية تقنية ناشئة لأنها تستخدم الذكاء الاصطناعي مع الكاميرات والمستشعرات للتعرف على البيئة المحيطة واتخاذ قرارات القيادة والتحكم في المركبة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50018,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-012",
+        "pdf_page": 8,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.296,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50019,
+      "question_number": 19,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح مفهوم كل من التجارة الإلكترونية والدفع غير النقدي.",
+      "model_answer": "التجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت.\nالدفع غير النقدي: تسديد ثمن السلع والخدمات بوسائل مثل تطبيقات الهاتف والبطاقات ورموز QR دون تداول النقد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "التجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت.",
+        "الدفع غير النقدي: تسديد ثمن السلع والخدمات بوسائل مثل تطبيقات الهاتف والبطاقات ورموز QR دون تداول النقد."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50019,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-013",
+        "pdf_page": 8,
+        "match_score": 97.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.246,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50020,
+      "question_number": 20,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح الفروق الجوهرية بين البت الكلاسيكي والكيوبت (qubit) مستخدمًا مفهوم التراكب الكمومي في الحوسبة الكمومية.",
+      "model_answer": "البت الكلاسيكي يحمل قيمة واحدة هي 0 أو 1.\nالكيوبت يستفيد من مبدأ التراكب الكمومي، فيمكن أن يوجد في مزيج من الحالتين 0 و1 قبل القياس.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "البت الكلاسيكي يحمل قيمة واحدة هي 0 أو 1.",
+        "الكيوبت يستفيد من مبدأ التراكب الكمومي، فيمكن أن يوجد في مزيج من الحالتين 0 و1 قبل القياس."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50020,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-014",
+        "pdf_page": 8,
+        "match_score": 83.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 8,
+        "lexical_similarity": 0.154,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50021,
+      "question_number": 21,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "رتب المراحل الخمس لتطور تكنولوجيا المعلومات ترتيبًا زمنيًا، مع ذكر التقنية الرئيسية المرتبطة بكل مرحلة.",
+      "model_answer": "1. الأربعينيات–الستينيات: حواسيب إلكترونية مبكرة مثل ENIAC.\n2. السبعينيات–الثمانينيات: انتشار الحواسيب الشخصية.\n3. التسعينيات: إتاحة الإنترنت تجاريًا وظهور الويب.\n4. العقد الأول من الألفية: ظهور الهواتف الذكية وانتشار الإنترنت المحمول.\n5. من العقد الثاني فصاعدًا: انتشار الحوسبة السحابية وخدمات الموارد عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. الأربعينيات–الستينيات: حواسيب إلكترونية مبكرة مثل ENIAC.",
+        "2. السبعينيات–الثمانينيات: انتشار الحواسيب الشخصية.",
+        "3. التسعينيات: إتاحة الإنترنت تجاريًا وظهور الويب.",
+        "4. العقد الأول من الألفية: ظهور الهواتف الذكية وانتشار الإنترنت المحمول.",
+        "5. من العقد الثاني فصاعدًا: انتشار الحوسبة السحابية وخدمات الموارد عبر الإنترنت."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50021,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.396,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50022,
+      "question_number": 22,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "كيف ساهم ظهور الهواتف الذكية خلال العقد الأول من الألفية في تغيير طريقة استخدام الإنترنت؟",
+      "model_answer": "أدت الهواتف الذكية إلى انتشار سريع وواسع للإنترنت عبر الهواتف المحمولة؛ فأصبح استخدامه متاحًا أثناء التنقل بدل الاقتصار على الأجهزة الثابتة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "أدت الهواتف الذكية إلى انتشار سريع وواسع للإنترنت عبر الهواتف المحمولة؛ فأصبح استخدامه متاحًا أثناء التنقل بدل الاقتصار على الأجهزة الثابتة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50022,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 8,
+        "lexical_similarity": 0.305,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50023,
+      "question_number": 23,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "لماذا لا يُعد تطور تكنولوجيا المعلومات مجرد زيادة في سرعة الحواسيب أو تصغير حجمها؟",
+      "model_answer": "لأن أثر تكنولوجيا المعلومات امتد إلى حياة الناس؛ فغيّرت وسائل التواصل، والبيع والشراء، والعمل، والتعلم، وطرق الدفع، إلى جانب تطوير أجهزة الحاسب.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "لأن أثر تكنولوجيا المعلومات امتد إلى حياة الناس؛ فغيّرت وسائل التواصل، والبيع والشراء، والعمل، والتعلم، وطرق الدفع، إلى جانب تطوير أجهزة الحاسب."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50023,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 4,
+        "lexical_similarity": 0.283,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50024,
+      "question_number": 24,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح أثر تطور تكنولوجيا المعلومات في طرق التواصل والعمل والتعلم والدفع داخل المجتمع.",
+      "model_answer": "1. التواصل: شبكات التواصل الاجتماعي ومشاركة المحتوى.\n2. العمل: أداء المهام عن بُعد عبر الإنترنت.\n3. التعلم: الحصول على الدروس والمواد التعليمية إلكترونيًا.\n4. الدفع: استخدام وسائل غير نقدية مثل التطبيقات والبطاقات وQR.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. التواصل: شبكات التواصل الاجتماعي ومشاركة المحتوى.",
+        "2. العمل: أداء المهام عن بُعد عبر الإنترنت.",
+        "3. التعلم: الحصول على الدروس والمواد التعليمية إلكترونيًا.",
+        "4. الدفع: استخدام وسائل غير نقدية مثل التطبيقات والبطاقات وQR."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50024,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.357,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50025,
+      "question_number": 25,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "ما الحلول التي اتجهت إليها صناعة الحواسيب لتحسين الأداء مع تزايد صعوبة تصغير الترانزستورات؟",
+      "model_answer": "من وسائل التحسين: تعدد أنوية المعالجات، والمعالجة المتوازية، واستخدام تصميمات متخصصة؛ لأن استمرار تصغير الترانزستورات يواجه تحديات فيزيائية وهندسية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "من وسائل التحسين: تعدد أنوية المعالجات، والمعالجة المتوازية، واستخدام تصميمات متخصصة؛ لأن استمرار تصغير الترانزستورات يواجه تحديات فيزيائية وهندسية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50025,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.219,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50026,
+      "question_number": 26,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "لماذا لا تُعد الحوسبة الكمومية بديلًا عامًا لجميع الحواسيب التقليدية؟",
+      "model_answer": "الحوسبة الكمومية تستخدم مبادئ ميكانيكا الكم، وقد توفر فائدة كبيرة في فئات محددة من المسائل الصعبة.\nلكنها لا تسرّع جميع الحسابات، ولذلك لا تُعد بديلًا عامًا لكل الحواسيب التقليدية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "الحوسبة الكمومية تستخدم مبادئ ميكانيكا الكم، وقد توفر فائدة كبيرة في فئات محددة من المسائل الصعبة.",
+        "لكنها لا تسرّع جميع الحسابات، ولذلك لا تُعد بديلًا عامًا لكل الحواسيب التقليدية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50026,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.187,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50027,
+      "question_number": 27,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح أهمية شبكات التواصل الاجتماعي (SNS) في سرعة نشر المعلومات ومشاركتها بين المستخدمين.",
+      "model_answer": "تتيح شبكات التواصل الاجتماعي للمستخدمين الاتصال ببعضهم ونشر المحتوى ومشاركته بسرعة، مما يزيد سرعة تداول الأخبار والمعلومات بين الأشخاص.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "تتيح شبكات التواصل الاجتماعي للمستخدمين الاتصال ببعضهم ونشر المحتوى ومشاركته بسرعة، مما يزيد سرعة تداول الأخبار والمعلومات بين الأشخاص."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50027,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 11,
+        "lexical_similarity": 0.264,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50028,
+      "question_number": 28,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "كيف يختلف التعلم عبر الإنترنت عن العمل عن بُعد من حيث طبيعة النشاط الذي يُؤدَّى؟",
+      "model_answer": "التعلم عبر الإنترنت نشاط تعليمي تُقدَّم فيه الدروس والمواد التعليمية عن بُعد.\nأما العمل عن بُعد فهو أداء المهام الوظيفية من المنزل أو مكان آخر بعيد باستخدام الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "التعلم عبر الإنترنت نشاط تعليمي تُقدَّم فيه الدروس والمواد التعليمية عن بُعد.",
+        "أما العمل عن بُعد فهو أداء المهام الوظيفية من المنزل أو مكان آخر بعيد باستخدام الإنترنت."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50028,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.218,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50029,
+      "question_number": 29,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح العلاقة بين انتشار الحوسبة السحابية وتطور تطبيقات تحليل البيانات الضخمة والذكاء الاصطناعي.",
+      "model_answer": "توفّر الحوسبة السحابية موارد حوسبة عبر الإنترنت بوصفها خدمات، مما يدعم معالجة البيانات الضخمة وتشغيل تطبيقات الذكاء الاصطناعي وتطويرها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "توفّر الحوسبة السحابية موارد حوسبة عبر الإنترنت بوصفها خدمات، مما يدعم معالجة البيانات الضخمة وتشغيل تطبيقات الذكاء الاصطناعي وتطويرها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50029,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.283,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50030,
+      "question_number": 30,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "لماذا يحتاج نظام القيادة الذاتية إلى استخدام الكاميرات والمستشعرات قبل اتخاذ قرارات القيادة؟",
+      "model_answer": "تجمع الكاميرات والمستشعرات بيانات عن الطريق والعوائق وما يحيط بالمركبة، ثم يعالجها نظام الذكاء الاصطناعي لإدراك البيئة واتخاذ قرارات القيادة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "تجمع الكاميرات والمستشعرات بيانات عن الطريق والعوائق وما يحيط بالمركبة، ثم يعالجها نظام الذكاء الاصطناعي لإدراك البيئة واتخاذ قرارات القيادة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50030,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.302,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50031,
+      "question_number": 31,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "ما الفائدة المحتملة وما التحدي المحتمل عند الانتقال إلى مجتمع يعتمد بالكامل على الدفع غير النقدي؟",
+      "model_answer": "الفائدة: تسهيل الدفع وسرعة إتمام المعاملات دون نقد.\nالتحدي: قد يصعب استخدام الخدمات على من لا يملك الوسيلة الإلكترونية المناسبة، فتختلف القدرة على الاستفادة منها بين الناس.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "الفائدة: تسهيل الدفع وسرعة إتمام المعاملات دون نقد.",
+        "التحدي: قد يصعب استخدام الخدمات على من لا يملك الوسيلة الإلكترونية المناسبة، فتختلف القدرة على الاستفادة منها بين الناس."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50031,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.232,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50032,
+      "question_number": 32,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح فائدة واحدة وتحديًا واحدًا للدفع غير النقدي بالنسبة لكل من العميل وصاحب المتجر الصغير والشخص الذي لا يمتلك بطاقة بنكية أو هاتفًا ذكيًا.",
+      "model_answer": "1. العميل: يدفع بسرعة، لكنه يحتاج إلى وسيلة دفع مناسبة.\n2. صاحب المتجر: يمكنه استقبال مدفوعات إلكترونية، لكنه يحتاج إلى إتاحة وسيلة قبولها.\n3. من لا يملك بطاقة أو هاتفًا: قد يصعب عليه الدفع غير النقدي، مما يجعل الوصول للخدمة أقل سهولة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. العميل: يدفع بسرعة، لكنه يحتاج إلى وسيلة دفع مناسبة.",
+        "2. صاحب المتجر: يمكنه استقبال مدفوعات إلكترونية، لكنه يحتاج إلى إتاحة وسيلة قبولها.",
+        "3. من لا يملك بطاقة أو هاتفًا: قد يصعب عليه الدفع غير النقدي، مما يجعل الوصول للخدمة أقل سهولة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50032,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.256,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50033,
+      "question_number": 33,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "كيف يمكن لدخول الإنترنت عالي السرعة وخدمات الدفع غير النقدي إلى قرية لم تتوافر فيها هذه الخدمات سابقًا أن يغير الحياة اليومية؟ اذكر تغيرين وتحديًا محتملًا.",
+      "model_answer": "1. يمكن للطلاب الوصول إلى دروس ومواد تعليمية عبر الإنترنت.\n2. يمكن للسكان دفع ثمن السلع والخدمات بوسائل إلكترونية.\nالتحدي المحتمل: عدم امتلاك بعض السكان وسيلة إلكترونية مناسبة للاستفادة من الخدمات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. يمكن للطلاب الوصول إلى دروس ومواد تعليمية عبر الإنترنت.",
+        "2. يمكن للسكان دفع ثمن السلع والخدمات بوسائل إلكترونية.",
+        "التحدي المحتمل: عدم امتلاك بعض السكان وسيلة إلكترونية مناسبة للاستفادة من الخدمات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50033,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.248,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50034,
+      "question_number": 34,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "صنف الأمثلة التالية حسب تأثيرها في الحياة اليومية أو الصناعة والاقتصاد، مع توضيح السبب: التسوق الإلكتروني، والدفع باستخدام الهاتف، ومشاركة الصور عبر شبكات التواصل الاجتماعي، والعمل من المنزل.",
+      "model_answer": "1. التسوق الإلكتروني: التجارة الإلكترونية؛ بيع وشراء يؤثر في الاقتصاد.\n2. الدفع بالهاتف: دفع غير نقدي؛ يغير طريقة السداد اليومية.\n3. مشاركة الصور: تواصل اجتماعي؛ نشر المحتوى والتفاعل معه.\n4. العمل من المنزل: عمل عن بُعد؛ أداء الوظيفة من مكان بعيد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. التسوق الإلكتروني: التجارة الإلكترونية؛ بيع وشراء يؤثر في الاقتصاد.",
+        "2. الدفع بالهاتف: دفع غير نقدي؛ يغير طريقة السداد اليومية.",
+        "3. مشاركة الصور: تواصل اجتماعي؛ نشر المحتوى والتفاعل معه.",
+        "4. العمل من المنزل: عمل عن بُعد؛ أداء الوظيفة من مكان بعيد."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50034,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 9,
+        "lexical_similarity": 0.244,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50035,
+      "question_number": 35,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح كيف تغيرت طريقة وصول الأفراد إلى المعلومات عبر مراحل ظهور الحواسيب الشخصية والويب والهواتف الذكية والحوسبة السحابية.",
+      "model_answer": "1. الحواسيب الشخصية: بدأت تُستخدم بواسطة الأفراد.\n2. الويب والإنترنت في التسعينيات: اتسع الوصول العالمي إلى المعلومات والبريد الإلكتروني.\n3. الهواتف الذكية: انتشر الوصول للإنترنت أثناء التنقل.\n4. الحوسبة السحابية: أصبحت موارد الحوسبة تُقدَّم كخدمات عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 5,
+      "student_answer_steps": [
+        "1. الحواسيب الشخصية: بدأت تُستخدم بواسطة الأفراد.",
+        "2. الويب والإنترنت في التسعينيات: اتسع الوصول العالمي إلى المعلومات والبريد الإلكتروني.",
+        "3. الهواتف الذكية: انتشر الوصول للإنترنت أثناء التنقل.",
+        "4. الحوسبة السحابية: أصبحت موارد الحوسبة تُقدَّم كخدمات عبر الإنترنت."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50035,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 8,
+        "lexical_similarity": 0.267,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50066,
+      "question_number": 36,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح المقصود بـ«قانون مور» وهل يُعد قانونًا فيزيائيًا ثابتًا؟ فسر إجابتك.",
+      "model_answer": "قانون مور ملاحظة تصف اتجاهًا تاريخيًا لزيادة عدد الترانزستورات في الدوائر المتكاملة بمعدل يقارب الضعف كل عامين. وهو ليس قانونًا فيزيائيًا ثابتًا، بل اتجاه تجريبي استمر لعقود.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قانون مور ملاحظة تصف اتجاهًا تاريخيًا لزيادة عدد الترانزستورات في الدوائر المتكاملة بمعدل يقارب الضعف كل عامين. وهو ليس قانونًا فيزيائيًا ثابتًا، بل اتجاه تجريبي استمر لعقود."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50066,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-000B",
+        "pdf_page": 3,
+        "match_score": 99.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.234,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50070,
+      "question_number": 37,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قارن بإيجاز بين «الواقع المعزز (AR)» و«الواقع الافتراضي (VR)» من حيث التعريف وطريقة العمل؟",
+      "model_answer": "الواقع المعزز (AR): يضيف عناصر أو معلومات رقمية إلى مشهد من العالم الحقيقي. الواقع الافتراضي (VR): يضع المستخدم داخل بيئة افتراضية مولَّدة حاسوبيًا. الفرق أن AR يضيف إلى الواقع الحقيقي، بينما VR يضع المستخدم داخل بيئة رقمية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الواقع المعزز (AR): يضيف عناصر أو معلومات رقمية إلى مشهد من العالم الحقيقي. الواقع الافتراضي (VR): يضع المستخدم داخل بيئة افتراضية مولَّدة حاسوبيًا. الفرق أن AR يضيف إلى الواقع الحقيقي، بينما VR يضع المستخدم داخل بيئة رقمية."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50070,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-004",
+        "pdf_page": 4,
+        "match_score": 85.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.406,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50075,
+      "question_number": 38,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "عدد التحولات المجتمعية الخمسة الناتجة عن تكنولوجيا المعلومات، موضحًا مفهوم كل من «العمل عن بُعد» و«التجارة الإلكترونية».",
+      "model_answer": "التحولات الخمسة: شبكات التواصل الاجتماعي، التجارة الإلكترونية، العمل عن بُعد، التعلم عبر الإنترنت، والدفع غير النقدي. العمل عن بُعد: أداء العمل من المنزل أو موقع بعيد باستخدام الإنترنت. التجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "التحولات الخمسة: شبكات التواصل الاجتماعي، التجارة الإلكترونية، العمل عن بُعد، التعلم عبر الإنترنت، والدفع غير النقدي. العمل عن بُعد: أداء العمل من المنزل أو موقع بعيد باستخدام الإنترنت. التجارة الإلكترونية: بيع السلع والخدمات وشراؤها عبر الإنترنت."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50075,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.359,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50076,
+      "question_number": 39,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح خصائص واستخدامات التقنيات الناشئة الثلاث البارزة المذكورة في الدرس (القيادة الذاتية، الواقع المعزز/الافتراضي، والحوسبة الكمومية).",
+      "model_answer": "1. القيادة الذاتية: كاميرات ومستشعرات وذكاء اصطناعي لإدراك المحيط واتخاذ قرارات القيادة.\n2. الواقع المعزز: إضافة معلومات رقمية للمشهد الحقيقي؛ والواقع الافتراضي: بيئة رقمية ينغمس فيها المستخدم.\n3. الحوسبة الكمومية: معالجة المعلومات وفق مبادئ ميكانيكا الكم، وقد تفيد في مسائل محددة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. القيادة الذاتية: كاميرات ومستشعرات وذكاء اصطناعي لإدراك المحيط واتخاذ قرارات القيادة.",
+        "2. الواقع المعزز: إضافة معلومات رقمية للمشهد الحقيقي؛ والواقع الافتراضي: بيئة رقمية ينغمس فيها المستخدم.",
+        "3. الحوسبة الكمومية: معالجة المعلومات وفق مبادئ ميكانيكا الكم، وقد تفيد في مسائل محددة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50076,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.46,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50077,
+      "question_number": 40,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اشرح كيف أثَّر ظهور الحواسيب الشخصية (PCs) وانتشار الوصول العالمي إلى المعلومات والبريد الإلكتروني على المجتمع في فترة السبعينيات والثمانينيات.",
+      "model_answer": "انتشرت الحواسيب الشخصية في السبعينيات والثمانينيات، فبدأ استخدام الحاسب بين الأفراد. أما انتشار الوصول العالمي إلى المعلومات والبريد الإلكتروني فارتبط بإتاحة الإنترنت للاستخدام التجاري وظهور الويب في التسعينيات، وفق الجدول الزمني في كتاب الوزارة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "انتشرت الحواسيب الشخصية في السبعينيات والثمانينيات، فبدأ استخدام الحاسب بين الأفراد. أما انتشار الوصول العالمي إلى المعلومات والبريد الإلكتروني فارتبط بإتاحة الإنترنت للاستخدام التجاري وظهور الويب في التسعينيات، وفق الجدول الزمني في كتاب الوزارة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50077,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-007",
+        "pdf_page": 7,
+        "match_score": 89.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.364,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50078,
+      "question_number": 41,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح باختصار مفهوم كل من «شبكات التواصل الاجتماعي (SNS)» و«التعلم عبر الإنترنت» و«الدفع غير النقدي» باعتبارها تحولات مجتمعية.",
+      "model_answer": "1. شبكات التواصل الاجتماعي: التواصل ونشر المحتوى ومشاركته.\n2. التعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية إلكترونيًا.\n3. الدفع غير النقدي: الدفع بالتطبيقات أو البطاقات أو رموز QR دون نقد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. شبكات التواصل الاجتماعي: التواصل ونشر المحتوى ومشاركته.",
+        "2. التعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية إلكترونيًا.",
+        "3. الدفع غير النقدي: الدفع بالتطبيقات أو البطاقات أو رموز QR دون نقد."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50078,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-009",
+        "pdf_page": 7,
+        "match_score": 83.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 11,
+        "lexical_similarity": 0.23,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50079,
+      "question_number": 42,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "وضح الفروق الجوهرية بين «البت الكلاسيكي» و«الكيوبت (qubit)» مستخدمًا مفهوم «التراكب الكمومي» في الحوسبة الكمومية؟",
+      "model_answer": "البت الكلاسيكي يمثل 0 أو 1 في الوقت الواحد؛ أما الكيوبت فيستخدم التراكب الكمومي ليكون في مزيج من الحالتين قبل القياس.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "البت الكلاسيكي يمثل 0 أو 1 في الوقت الواحد؛ أما الكيوبت فيستخدم التراكب الكمومي ليكون في مزيج من الحالتين قبل القياس."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50079,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-014",
+        "pdf_page": 8,
+        "match_score": 90.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 8,
+        "lexical_similarity": 0.148,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50080,
+      "question_number": 43,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "رتب المراحل الخمس لتطور تكنولوجيا المعلومات زمنيًا، واذكر التقنية أو الحدث الأبرز في كل مرحلة.",
+      "model_answer": "1. الأربعينيات–الستينيات: الحواسيب الإلكترونية المبكرة.\n2. السبعينيات–الثمانينيات: الحواسيب الشخصية.\n3. التسعينيات: الإنترنت والويب.\n4. العقد الأول من الألفية: الهواتف الذكية.\n5. من العقد الثاني فصاعدًا: الحوسبة السحابية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الأربعينيات–الستينيات: الحواسيب الإلكترونية المبكرة.",
+        "2. السبعينيات–الثمانينيات: الحواسيب الشخصية.",
+        "3. التسعينيات: الإنترنت والويب.",
+        "4. العقد الأول من الألفية: الهواتف الذكية.",
+        "5. من العقد الثاني فصاعدًا: الحوسبة السحابية."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50080,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.372,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50081,
+      "question_number": 44,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "صنّف الأمثلة الآتية وفق نوع التحول الاجتماعي، مع تفسير اختيار واحد: شراء منتج من متجر إلكتروني، دفع ثمن المشتريات بتطبيق على الهاتف، مشاركة الصور عبر شبكة تواصل اجتماعي، والعمل من المنزل.",
+      "model_answer": "1. شراء منتج عبر متجر إلكتروني: تجارة إلكترونية.\n2. الدفع بتطبيق الهاتف: دفع غير نقدي.\n3. مشاركة الصور: شبكات التواصل الاجتماعي.\n4. العمل من المنزل: عمل عن بُعد.\nالتفسير: شراء المنتج يُعد تجارة إلكترونية لأنه بيع أو شراء للسلع عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. شراء منتج عبر متجر إلكتروني: تجارة إلكترونية.",
+        "2. الدفع بتطبيق الهاتف: دفع غير نقدي.",
+        "3. مشاركة الصور: شبكات التواصل الاجتماعي.",
+        "4. العمل من المنزل: عمل عن بُعد.",
+        "التفسير: شراء المنتج يُعد تجارة إلكترونية لأنه بيع أو شراء للسلع عبر الإنترنت."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50081,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 9,
+        "lexical_similarity": 0.226,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50082,
+      "question_number": 45,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "اذكر ميزة واحدة ومصدر قلق واحد محتمل لمجتمع يعتمد بدرجة كبيرة على الدفع غير النقدي، وفسر كلًّا منهما.",
+      "model_answer": "الميزة: تسهيل وسرعة إتمام الدفع دون تداول نقود.\nمصدر القلق: قد يُستبعد من الخدمة من لا تتوافر له أدوات الدفع الإلكتروني المناسبة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الميزة: تسهيل وسرعة إتمام الدفع دون تداول نقود.",
+        "مصدر القلق: قد يُستبعد من الخدمة من لا تتوافر له أدوات الدفع الإلكتروني المناسبة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50082,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.246,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50083,
+      "question_number": 46,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قرية لم يكن فيها اتصال بالإنترنت ثم حصلت على إنترنت عالي السرعة وأصبحت خدمات الدفع غير النقدي متاحة. توقَّع تغيرين في الحياة اليومية وتحديًا محتملاً وفسر إجابتك.",
+      "model_answer": "التغير الأول: إمكان التعلم عبر الإنترنت.\nالتغير الثاني: تسديد ثمن السلع والخدمات إلكترونيًا.\nالتحدي: اختلاف قدرة السكان على الوصول للخدمات تبعًا لتوافر الأجهزة ووسائل الدفع.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التغير الأول: إمكان التعلم عبر الإنترنت.",
+        "التغير الثاني: تسديد ثمن السلع والخدمات إلكترونيًا.",
+        "التحدي: اختلاف قدرة السكان على الوصول للخدمات تبعًا لتوافر الأجهزة ووسائل الدفع."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50083,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.257,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50084,
+      "question_number": 47,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "لماذا لا تُعد الحوسبة الكمومية بديلًا عامًا لكل الحواسيب التقليدية، رغم احتمال تفوقها في بعض المسائل؟",
+      "model_answer": "لأن الحوسبة الكمومية تستخدم مبادئ ميكانيكا الكم وقد توفر تفوقًا في فئات محددة من المسائل، لكنها لا تسرع جميع أنواع الحسابات، ولذلك ليست بديلًا عامًا للحواسيب التقليدية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الحوسبة الكمومية تستخدم مبادئ ميكانيكا الكم وقد توفر تفوقًا في فئات محددة من المسائل، لكنها لا تسرع جميع أنواع الحسابات، ولذلك ليست بديلًا عامًا للحواسيب التقليدية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50084,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.214,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50085,
+      "question_number": 48,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قارن بين أثر ظهور الهواتف الذكية في العقد الأول من الألفية وأثر انتشار الحوسبة السحابية من العقد الثاني فصاعدًا.",
+      "model_answer": "ظهور الهواتف الذكية في العقد الأول من الألفية ساهم في الانتشار السريع والواسع للإنترنت عبر الهواتف المحمولة. أما الحوسبة السحابية من العقد الثاني فصاعدًا فارتبطت بتحليل البيانات الضخمة والذكاء الاصطناعي وانتشار تقديم موارد تكنولوجيا المعلومات كخدمات عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "ظهور الهواتف الذكية في العقد الأول من الألفية ساهم في الانتشار السريع والواسع للإنترنت عبر الهواتف المحمولة. أما الحوسبة السحابية من العقد الثاني فصاعدًا فارتبطت بتحليل البيانات الضخمة والذكاء الاصطناعي وانتشار تقديم موارد تكنولوجيا المعلومات كخدمات عبر الإنترنت."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50085,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.362,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50180,
+      "question_number": 49,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "ما المقصود بمصطلح: المرحلة الثانية (السبعينيات – الثمانينيات)؟",
+      "model_answer": "انتشار الحواسيب الشخصية (PCs) وتطور الدوائر المتكاملة (ICs)، مما أدى إلى بداية انتقال استخدام الحواسيب إلى الشركات والمنازل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 2,
+      "student_answer_steps": [
+        "انتشار الحواسيب الشخصية (PCs) وتطور الدوائر المتكاملة (ICs)، مما أدى إلى بداية انتقال استخدام الحواسيب إلى الشركات والمنازل."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50180,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.274,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50181,
+      "question_number": 50,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يعرض طالب صورة لحاسوب ضخم يستخدم الصمامات المفرغة ويقول إن الأفراد كانوا يعتمدون عليه في المنزل؛ حلّل العبارة وحدد الفترة والاستخدام الأقرب للصواب.",
+      "model_answer": "ارتبطت الحواسيب الضخمة والصمامات المفرغة بالأربعينيات إلى الستينيات، واستُخدمت في الحسابات العلمية والعسكرية، ولم تكن حواسيب منزلية واسعة الانتشار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "ارتبطت الحواسيب الضخمة والصمامات المفرغة بالأربعينيات إلى الستينيات، واستُخدمت في الحسابات العلمية والعسكرية، ولم تكن حواسيب منزلية واسعة الانتشار."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50181,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 5,
+        "lexical_similarity": 0.201,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50182,
+      "question_number": 51,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "تقارن أسرة بين الحصول على معلومات عبر البريد الإلكتروني والويب وبين نشر الأخبار بسرعة على منصات التواصل. كيف يختلف التحولان في سياقهما التاريخي والوظيفي؟",
+      "model_answer": "ارتبط انتشار الويب والبريد الإلكتروني بالتسعينيات وتوسيع الوصول العالمي إلى المعلومات\nأما شبكات التواصل فتمكّن المستخدمين من التواصل ونشر المحتوى ومشاركته بسرعة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "ارتبط انتشار الويب والبريد الإلكتروني بالتسعينيات وتوسيع الوصول العالمي إلى المعلومات",
+        "أما شبكات التواصل فتمكّن المستخدمين من التواصل ونشر المحتوى ومشاركته بسرعة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50182,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 11,
+        "lexical_similarity": 0.312,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50183,
+      "question_number": 52,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يقول طالب إن انتشار الحواسيب الشخصية جاء بعد انتشار الهواتف الذكية؛ صحح ترتيب المرحلتين وبيّن أثر إحداهما.",
+      "model_answer": "انتشرت الحواسيب الشخصية في السبعينيات والثمانينيات وبدأ استخدام الأفراد للحاسب؛ ثم ظهرت الهواتف الذكية وانتشر الإنترنت المحمول على نطاق واسع في العقد الأول من الألفية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "انتشرت الحواسيب الشخصية في السبعينيات والثمانينيات وبدأ استخدام الأفراد للحاسب؛ ثم ظهرت الهواتف الذكية وانتشر الإنترنت المحمول على نطاق واسع في العقد الأول من الألفية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50183,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.281,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50184,
+      "question_number": 53,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "لاحظت مدرسة أنها تستخدم خدمات حاسوبية عبر الإنترنت بدل الاعتماد على جهاز داخل كل فصل. بأي مرحلة يرتبط هذا الاتجاه، ولماذا لا يعني أن الحوسبة أصبحت بلا أجهزة فعلية؟",
+      "model_answer": "يرتبط بانتشار الحوسبة السحابية من العقد الثاني من الألفية فصاعدًا وتقديم الموارد كخدمات عبر الإنترنت\nوالسحابة تعتمد على أجهزة حقيقية موجودة في مواقع فعلية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يرتبط بانتشار الحوسبة السحابية من العقد الثاني من الألفية فصاعدًا وتقديم الموارد كخدمات عبر الإنترنت",
+        "والسحابة تعتمد على أجهزة حقيقية موجودة في مواقع فعلية."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50184,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.259,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50185,
+      "question_number": 54,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "استنتج طالب من قانون مور أن سرعة كل حاسوب تتضاعف حتمًا كل عامين؛ حدّد موضع الخلط وصححه.",
+      "model_answer": "قانون مور يصف اتجاهًا تاريخيًا لتضاعف عدد الترانزستورات في الدوائر المتكاملة تقريبًا كل عامين، ولا يضمن تضاعف سرعة كل حاسوب، وليس قانونًا فيزيائيًا ثابتًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قانون مور يصف اتجاهًا تاريخيًا لتضاعف عدد الترانزستورات في الدوائر المتكاملة تقريبًا كل عامين، ولا يضمن تضاعف سرعة كل حاسوب، وليس قانونًا فيزيائيًا ثابتًا."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50185,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.212,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50186,
+      "question_number": 55,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يقول فريق إن زيادة عدد الترانزستورات ستستمر بلا قيود؛ ما اعتراضان تقنيان مذكوران، وما مساران لتحسين الأداء رغم ذلك؟",
+      "model_answer": "تواجه عملية التصغير تحديات منها تيارات التسرب وتأثيرات كمومية مثل النفق الكمومي\nويمكن تحسين الأداء بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "تواجه عملية التصغير تحديات منها تيارات التسرب وتأثيرات كمومية مثل النفق الكمومي",
+        "ويمكن تحسين الأداء بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50186,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.276,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50187,
+      "question_number": 56,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يشارك طالب محتوى عبر منصة، ويطلب كتابًا من متجر إلكتروني؛ فسّر اختلاف الدور الاجتماعي لكل خدمة.",
+      "model_answer": "المنصة تمثل شبكات التواصل الاجتماعي التي تتيح التواصل ونشر المحتوى ومشاركته، بينما يمثل طلب الكتاب التجارة الإلكترونية القائمة على بيع السلع والخدمات وشرائها عبر الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المنصة تمثل شبكات التواصل الاجتماعي التي تتيح التواصل ونشر المحتوى ومشاركته، بينما يمثل طلب الكتاب التجارة الإلكترونية القائمة على بيع السلع والخدمات وشرائها عبر الإنترنت."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50187,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.255,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50188,
+      "question_number": 57,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يعمل موظف من المنزل ويحضر طالب محاضرة إلكترونية. لماذا لا يصح اعتبار النشاطين خدمة واحدة رغم اعتمادهما على الإنترنت؟",
+      "model_answer": "الأول عمل عن بعد: تنفيذ مهام العمل من موقع بعيد عبر الإنترنت؛ والثاني تعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية بواسطة الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الأول عمل عن بعد: تنفيذ مهام العمل من موقع بعيد عبر الإنترنت؛ والثاني تعلم عبر الإنترنت: تقديم الدروس والمواد التعليمية بواسطة الإنترنت."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50188,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.214,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50189,
+      "question_number": 58,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "دفعت أسرة قيمة مشترياتها بتطبيق هاتف ومسحت رمز QR. ما التغير الاجتماعي الذي توضحه الواقعة، وما السمة التي تميزه؟",
+      "model_answer": "توضح الدفع غير النقدي: سداد قيمة سلعة أو خدمة بوسيلة غير نقدية مثل تطبيقات الهاتف أو البطاقات أو رموز QR، دون تداول نقد ورقي عند الدفع.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "توضح الدفع غير النقدي: سداد قيمة سلعة أو خدمة بوسيلة غير نقدية مثل تطبيقات الهاتف أو البطاقات أو رموز QR، دون تداول نقد ورقي عند الدفع."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50189,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 10,
+        "lexical_similarity": 0.189,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50190,
+      "question_number": 59,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "سيارة ذاتية القيادة ترصد عائقًا أمامها. اقترح موضع معالجة بيانات المستشعرات للحظة اتخاذ القرار وعلّل وفق ما ورد عن زمن الاستجابة.",
+      "model_answer": "من الأنسب معالجة البيانات اللازمة للقرار محليًا على المركبة بالحوسبة الطرفية؛ لأن انتظار إرسالها إلى السحابة قد يزيد زمن الاستجابة ويؤثر في السلامة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "من الأنسب معالجة البيانات اللازمة للقرار محليًا على المركبة بالحوسبة الطرفية؛ لأن انتظار إرسالها إلى السحابة قد يزيد زمن الاستجابة ويؤثر في السلامة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50190,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.361,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50191,
+      "question_number": 60,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يعتقد شخص أن القيادة الذاتية تعتمد على كاميرا فقط. بيّن لماذا هذا التفسير ناقص في إطار آلية العمل المذكورة.",
+      "model_answer": "تستخدم القيادة الذاتية كاميرات ومستشعرات لإدراك المحيط، ويعالج النظام البيانات بمساعدة الذكاء الاصطناعي لاتخاذ قرارات القيادة والتحكم فيها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تستخدم القيادة الذاتية كاميرات ومستشعرات لإدراك المحيط، ويعالج النظام البيانات بمساعدة الذكاء الاصطناعي لاتخاذ قرارات القيادة والتحكم فيها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50191,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.31,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50192,
+      "question_number": 61,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يشاهد طالب عناصر رقمية مضافة إلى مشهد حقيقي، بينما يدخل آخر بيئة مصطنعة بالكامل. صنّف التجربتين وفسّر الفارق.",
+      "model_answer": "الأولى واقع معزز AR لأنه يضيف عناصر أو معلومات رقمية إلى مشهد حقيقي\nوالثانية واقع افتراضي VR لأنه يضع المستخدم في بيئة مولدة حاسوبيًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الأولى واقع معزز AR لأنه يضيف عناصر أو معلومات رقمية إلى مشهد حقيقي",
+        "والثانية واقع افتراضي VR لأنه يضع المستخدم في بيئة مولدة حاسوبيًا."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50192,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.248,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50193,
+      "question_number": 62,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يرى طالب أن الحوسبة الكمومية ستجعل كل البرامج أسرع من الحواسيب التقليدية. قيّم هذا الاستنتاج.",
+      "model_answer": "الاستنتاج غير صحيح؛ الحوسبة الكمومية نهج يستخدم خصائص ميكانيكا الكم وقد يفيد في فئات محددة من المسائل، لكنه لا يسرّع جميع الحسابات وليس بديلًا عامًا لكل الحواسيب التقليدية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الاستنتاج غير صحيح؛ الحوسبة الكمومية نهج يستخدم خصائص ميكانيكا الكم وقد يفيد في فئات محددة من المسائل، لكنه لا يسرّع جميع الحسابات وليس بديلًا عامًا لكل الحواسيب التقليدية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50193,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.209,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50194,
+      "question_number": 63,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يفسر شخص توسع استخدام الإنترنت على الهواتف بأنه نتيجة انتشار الحواسيب الشخصية في السبعينيات؛ ما التقنية والمرحلة الأكثر ارتباطًا بهذا التوسع؟",
+      "model_answer": "ارتبط الانتشار السريع والواسع للإنترنت عبر المحمول بظهور الهواتف الذكية في العقد الأول من الألفية، بعد انتشار الحواسيب الشخصية في مرحلة أقدم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "ارتبط الانتشار السريع والواسع للإنترنت عبر المحمول بظهور الهواتف الذكية في العقد الأول من الألفية، بعد انتشار الحواسيب الشخصية في مرحلة أقدم."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50194,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.3,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50195,
+      "question_number": 64,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قدّمت مكتبة خدمة شراء عبر الإنترنت، ومدرسة دروسًا إلكترونية، ومؤسسة العمل من المنزل. حدد التحولات الثلاثة ووجه اختلاف أثرها الاجتماعي.",
+      "model_answer": "التجارة الإلكترونية غيّرت شراء السلع والخدمات، والتعلم عبر الإنترنت غيّر إتاحة الدروس والمواد التعليمية، والعمل عن بعد أتاح أداء مهام الوظيفة من مواقع أخرى باستخدام الإنترنت.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التجارة الإلكترونية غيّرت شراء السلع والخدمات، والتعلم عبر الإنترنت غيّر إتاحة الدروس والمواد التعليمية، والعمل عن بعد أتاح أداء مهام الوظيفة من مواقع أخرى باستخدام الإنترنت."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50195,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.283,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50196,
+      "question_number": 65,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "طالب يرسل رسالة عبر البريد الإلكتروني من هاتف ذكي؛ هل ظهور البريد الإلكتروني والانتشار الواسع للإنترنت عبر الهواتف ينتميان إلى المرحلة التاريخية نفسها؟ فسّر.",
+      "model_answer": "لا؛ ارتبط انتشار الويب والبريد الإلكتروني وإتاحة الإنترنت تجاريًا بالتسعينيات، بينما ارتبط الانتشار الواسع للإنترنت عبر الهواتف الذكية بالعقد الأول من الألفية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ ارتبط انتشار الويب والبريد الإلكتروني وإتاحة الإنترنت تجاريًا بالتسعينيات، بينما ارتبط الانتشار الواسع للإنترنت عبر الهواتف الذكية بالعقد الأول من الألفية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50196,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.265,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50197,
+      "question_number": 66,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "قال مدير إن تحويل موارد الحوسبة إلى خدمة سحابية يعني بالضرورة انتقال العاملين للعمل من منازلهم. حلّل العلاقة بين التحولين وحدّد الفرق.",
+      "model_answer": "الحوسبة السحابية تعني تقديم موارد تكنولوجيا المعلومات كخدمات عبر الإنترنت\nأما العمل عن بُعد فهو أداء المهام من المنزل أو مكان بعيد باستخدام الإنترنت. قد يجتمعان، لكنهما مفهومان مختلفان.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الحوسبة السحابية تعني تقديم موارد تكنولوجيا المعلومات كخدمات عبر الإنترنت",
+        "أما العمل عن بُعد فهو أداء المهام من المنزل أو مكان بعيد باستخدام الإنترنت. قد يجتمعان، لكنهما مفهومان مختلفان."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50197,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.273,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50198,
+      "question_number": 67,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "في تجربة تعليمية، تظهر أسماء الأجزاء فوق جهاز حقيقي في حالة، وفي حالة أخرى ينتقل الطالب إلى بيئة رقمية كاملة. ما التقنية المناسبة لكل حالة؟ ولماذا؟",
+      "model_answer": "الحالة الأولى واقع معزز AR لأنه يضيف معلومات رقمية إلى مشهد من العالم الحقيقي؛ والحالة الثانية واقع افتراضي VR لأنه يضع المستخدم داخل بيئة افتراضية مولدة حاسوبيًا.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الحالة الأولى واقع معزز AR لأنه يضيف معلومات رقمية إلى مشهد من العالم الحقيقي؛ والحالة الثانية واقع افتراضي VR لأنه يضع المستخدم داخل بيئة افتراضية مولدة حاسوبيًا."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50198,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 7,
+        "lexical_similarity": 0.28,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50199,
+      "question_number": 68,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "متجر يبيع منتجاته عبر الإنترنت ويقبل الدفع برمز QR. لماذا تُعد العمليتان تحولَين اجتماعيَّين متصلَين لكنهما غير متطابقَين؟",
+      "model_answer": "بيع السلع وشراؤها عبر الإنترنت يعبّر عن التجارة الإلكترونية، أما دفع قيمة الشراء برمز QR من دون نقود نقدية فيعبّر عن الدفع غير النقدي؛ الأولى تصف قناة التجارة والثانية وسيلة السداد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "بيع السلع وشراؤها عبر الإنترنت يعبّر عن التجارة الإلكترونية، أما دفع قيمة الشراء برمز QR من دون نقود نقدية فيعبّر عن الدفع غير النقدي؛ الأولى تصف قناة التجارة والثانية وسيلة السداد."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50199,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.228,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50200,
+      "question_number": 69,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "prompt": "يريد فريق معالجة تأثير بطء زيادة كثافة الترانزستورات؛ فاقترح أن الحوسبة الكمومية ستعوض كل تطبيقات الحواسيب التقليدية. اقترح تقييمًا أدق مستندًا إلى بدائل تحسين الأداء.",
+      "model_answer": "قانون مور اتجاه تاريخي لا يضمن استمرار مضاعفة الترانزستورات؛ تواجه عملية التصغير تسربًا وتأثيرات كمومية. يمكن تحسين الأداء بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة، والحوسبة الكمومية قد تفيد فئات محددة من المسائل وليست بديلًا عامًا.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "قانون مور اتجاه تاريخي لا يضمن استمرار مضاعفة الترانزستورات؛ تواجه عملية التصغير تسربًا وتأثيرات كمومية. يمكن تحسين الأداء بتعدد الأنوية والمعالجة المتوازية والتصميمات المتخصصة، والحوسبة الكمومية قد تفيد فئات محددة من المسائل وليست بديلًا عامًا."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50200,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-1: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_1",
+        "printed_page_range": [
+          4,
+          11
+        ],
+        "best_page_hint": 6,
+        "lexical_similarity": 0.343,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    }
+  ]
+}

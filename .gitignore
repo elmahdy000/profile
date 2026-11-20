@@ -57,6 +57,8 @@ artifacts/api-server/public/uploads/
 artifacts/api-server/private/
 
 # Temporary files and documents
+__pycache__/
+*.pyc
 *.docx
 ffffffffffffffffffffffffffffff.txt
 find_vscode_backups.py

@@ -1,0 +1,1974 @@
+{
+  "unit_id": 3,
+  "unit_title": "الوحدة الثالثة: تطبيقات الويب",
+  "lesson_id": "3_2",
+  "lesson_title": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+  "total_questions": 58,
+  "questions": [
+    {
+      "id": 50520,
+      "question_number": 1,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "وضّح المقصود بنموذج العميل (Client) والخادم (Server).",
+      "model_answer": "العميل (Client): جهاز أو برنامج يرسل طلبًا، مثل متصفح الويب.\nالخادم (Server): نظام يستقبل الطلب ويعالجه ثم يعيد الاستجابة المناسبة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "العميل (Client): جهاز أو برنامج يرسل طلبًا، مثل متصفح الويب.",
+        "الخادم (Server): نظام يستقبل الطلب ويعالجه ثم يعيد الاستجابة المناسبة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50520,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.346,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50521,
+      "question_number": 2,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "صمّم رسمًا تخطيطيًا يوضح كيفية التواصل بين العميل والخادم.",
+      "model_answer": "العميل (المتصفح) ── طلب HTTP ──→ الخادم\nالعميل (المتصفح) ←── استجابة HTTP ── الخادم\nفالعميل يطلب، والخادم يستقبل ويعالج ويرد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "العميل (المتصفح) ── طلب HTTP ──→ الخادم",
+        "العميل (المتصفح) ←── استجابة HTTP ── الخادم",
+        "فالعميل يطلب، والخادم يستقبل ويعالج ويرد."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50521,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-151",
+        "pdf_page": 53,
+        "match_score": 93.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.338,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50522,
+      "question_number": 3,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "لماذا يُعد HTTPS أكثر أمانًا من HTTP؟ وضّح بمثال.",
+      "model_answer": "يستخدم HTTPS بروتوكول HTTP عبر اتصال آمن بتقنية TLS؛ مما يساعد على سرية الاتصال وسلامته ومصادقة الخادم ويصعّب قراءة المحتوى أو تعديله أثناء النقل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يستخدم HTTPS بروتوكول HTTP عبر اتصال آمن بتقنية TLS؛ مما يساعد على سرية الاتصال وسلامته ومصادقة الخادم ويصعّب قراءة المحتوى أو تعديله أثناء النقل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50522,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.285,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50523,
+      "question_number": 4,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "وضّح الفرق بين طريقتي GET وPOST، مع مثال لكل منهما.",
+      "model_answer": "GET: طريقة لطلب بيانات أو موارد من الخادم، مثل عرض نتائج البحث.\nPOST: طريقة لإرسال بيانات إلى الخادم لمعالجتها، مثل إرسال نموذج تسجيل الدخول.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "GET: طريقة لطلب بيانات أو موارد من الخادم، مثل عرض نتائج البحث.",
+        "POST: طريقة لإرسال بيانات إلى الخادم لمعالجتها، مثل إرسال نموذج تسجيل الدخول."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50523,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.179,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50524,
+      "question_number": 5,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "فسّر معنى رمز الحالة HTTP 200.",
+      "model_answer": "يعني نجاح الطلب، أي أن الخادم عالج الطلب بنجاح.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يعني نجاح الطلب، أي أن الخادم عالج الطلب بنجاح."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50524,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.226,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50525,
+      "question_number": 6,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ماذا يعني رمز الحالة HTTP 404، ومتى يظهر؟",
+      "model_answer": "يعني أن المورد المطلوب غير موجود بهذا العنوان؛ وقد يظهر عند طلب صفحة ويب مفقودة.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يعني أن المورد المطلوب غير موجود بهذا العنوان؛ وقد يظهر عند طلب صفحة ويب مفقودة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50525,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.215,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50526,
+      "question_number": 7,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما دلالة رمز الحالة HTTP 500 في الاستجابة التي يعيدها الخادم؟",
+      "model_answer": "يشير إلى خطأ داخلي في الخادم منعه من إكمال الطلب، ولا يحدد الرمز وحده السبب التفصيلي.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يشير إلى خطأ داخلي في الخادم منعه من إكمال الطلب، ولا يحدد الرمز وحده السبب التفصيلي."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50526,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.277,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50527,
+      "question_number": 8,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما المقصود بواجهة برمجة التطبيقات (API)، وكيف تساعد في تطبيقات الويب؟",
+      "model_answer": "API هي مجموعة قواعد واضحة تتيح لبرنامج طلب بيانات أو وظائف من برنامج أو خدمة أخرى.\nوفي تطبيق الويب تساعد الواجهة الأمامية على التواصل مع خدمات الواجهة الخلفية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "API هي مجموعة قواعد واضحة تتيح لبرنامج طلب بيانات أو وظائف من برنامج أو خدمة أخرى.",
+        "وفي تطبيق الويب تساعد الواجهة الأمامية على التواصل مع خدمات الواجهة الخلفية."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50527,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.292,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50528,
+      "question_number": 9,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "عند فتح صفحة ويب، بيّن دور العميل ودور الخادم في عملية الطلب والاستجابة.",
+      "model_answer": "يُرسل المتصفح بصفته العميل طلبًا للحصول على الصفحة أو البيانات. يستقبل الخادم الطلب ويعالجه، ثم يعيد استجابة يعرض العميل نتيجتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يُرسل المتصفح بصفته العميل طلبًا للحصول على الصفحة أو البيانات. يستقبل الخادم الطلب ويعالجه، ثم يعيد استجابة يعرض العميل نتيجتها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50528,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.361,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50529,
+      "question_number": 10,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "لماذا يُستخدم HTTPS عند إرسال بيانات تسجيل الدخول؟",
+      "model_answer": "لأنه يستخدم اتصال TLS آمنًا يساعد على حماية سرية الاتصال وسلامته ومصادقة الخادم، فيقلل من إمكان قراءة البيانات أو تعديلها أثناء النقل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأنه يستخدم اتصال TLS آمنًا يساعد على حماية سرية الاتصال وسلامته ومصادقة الخادم، فيقلل من إمكان قراءة البيانات أو تعديلها أثناء النقل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50529,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.257,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50530,
+      "question_number": 11,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما دور API عند اتصال الواجهة الأمامية بخدمة خلفية؟",
+      "model_answer": "توفّر API قواعد واضحة للتواصل؛ فقد ترسل الواجهة الأمامية طلبًا عبرها إلى خدمة خلفية، ثم تستقبل البيانات العائدة منها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "توفّر API قواعد واضحة للتواصل؛ فقد ترسل الواجهة الأمامية طلبًا عبرها إلى خدمة خلفية، ثم تستقبل البيانات العائدة منها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50530,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.191,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50531,
+      "question_number": 12,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "إذا استجاب الخادم لطلب برمز HTTP 200، فما النتيجة التي يعبّر عنها الرمز؟",
+      "model_answer": "يدل الرمز 200 على نجاح معالجة الطلب. وهو يصف نتيجة المعالجة، وليس اسم طريقة الطلب أو بروتوكول الاتصال.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يدل الرمز 200 على نجاح معالجة الطلب. وهو يصف نتيجة المعالجة، وليس اسم طريقة الطلب أو بروتوكول الاتصال."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50531,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.284,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50532,
+      "question_number": 13,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "لماذا يُعد نموذج الطلب والاستجابة أساسيًا في كثير من تطبيقات الويب؟ اذكر مثالًا.",
+      "model_answer": "لأن العميل يرسل طلبًا للحصول على بيانات أو إجراء، ثم يعالجه الخادم ويرد بنتيجة.\nمثال: يطلب المتصفح صفحة ويب، فيعيد الخادم الصفحة أو رمزًا يوضح نتيجة الطلب.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن العميل يرسل طلبًا للحصول على بيانات أو إجراء، ثم يعالجه الخادم ويرد بنتيجة.",
+        "مثال: يطلب المتصفح صفحة ويب، فيعيد الخادم الصفحة أو رمزًا يوضح نتيجة الطلب."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50532,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-158",
+        "pdf_page": 56,
+        "match_score": 79.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.386,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50533,
+      "question_number": 14,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ميّز بين استخدام GET وPOST وحدد موقفًا مناسبًا لكل طريقة.",
+      "model_answer": "GET: لطلب بيانات أو موارد، مثل إظهار نتائج البحث.\nPOST: لإرسال بيانات للمعالجة، مثل محتويات نموذج تسجيل الدخول.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "GET: لطلب بيانات أو موارد، مثل إظهار نتائج البحث.",
+        "POST: لإرسال بيانات للمعالجة، مثل محتويات نموذج تسجيل الدخول."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50533,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.133,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50534,
+      "question_number": 15,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "اشرح أهمية HTTPS في حماية البيانات أثناء انتقالها عبر الشبكة.",
+      "model_answer": "يستخدم HTTPS بروتوكول HTTP عبر اتصال TLS، مما يساعد على حماية سرية الاتصال وسلامته وعلى مصادقة الخادم، ويصعّب على المتجسس قراءة المحتوى أو تعديله أثناء النقل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يستخدم HTTPS بروتوكول HTTP عبر اتصال TLS، مما يساعد على حماية سرية الاتصال وسلامته وعلى مصادقة الخادم، ويصعّب على المتجسس قراءة المحتوى أو تعديله أثناء النقل."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50534,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.292,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50535,
+      "question_number": 16,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "صمّم طريقة مناسبة لإرسال نموذج تسجيل مستخدم جديد في تطبيق ويب، وفسّر اختيارك.",
+      "model_answer": "1. يُرسل المستخدم بيانات النموذج من الواجهة الأمامية.\n2. يُستخدم POST لإرسال البيانات إلى الخادم لمعالجتها.\n3. ويُفضَّل HTTPS لحماية بيانات تسجيل الدخول أثناء النقل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. يُرسل المستخدم بيانات النموذج من الواجهة الأمامية.",
+        "2. يُستخدم POST لإرسال البيانات إلى الخادم لمعالجتها.",
+        "3. ويُفضَّل HTTPS لحماية بيانات تسجيل الدخول أثناء النقل."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50535,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.257,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50536,
+      "question_number": 17,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "اشرح كيف يتعامل الخادم مع طلب وارد من العميل، وما الذي يمكن أن تعنيه الاستجابة إذا كان المورد غير موجود أو حدث خطأ داخلي.",
+      "model_answer": "يستقبل الخادم طلب العميل ويعالجه ثم يعيد استجابة.\nإذا كان المورد غير موجود فقد يعيد 404؛ وإذا حدث خطأ داخلي منعه من إكمال الطلب فقد يعيد 500؛ وإذا نجح الطلب فقد يعيد 200.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يستقبل الخادم طلب العميل ويعالجه ثم يعيد استجابة.",
+        "إذا كان المورد غير موجود فقد يعيد 404؛ وإذا حدث خطأ داخلي منعه من إكمال الطلب فقد يعيد 500؛ وإذا نجح الطلب فقد يعيد 200."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50536,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.262,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50537,
+      "question_number": 18,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "فسّر دور API في ربط برمجيات مختلفة، مع مثال من تطبيق ويب.",
+      "model_answer": "تضع API قواعد يستطيع بها تطبيق طلب بيانات أو وظائف من خدمة أخرى.\nمثال: تطبيق مدرسة يطلب جدول اليوم عبر API ثم يعرض البيانات التي أعادتها الخدمة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تضع API قواعد يستطيع بها تطبيق طلب بيانات أو وظائف من خدمة أخرى.",
+        "مثال: تطبيق مدرسة يطلب جدول اليوم عبر API ثم يعرض البيانات التي أعادتها الخدمة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50537,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.191,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50538,
+      "question_number": 19,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "اشرح كيف تُستخدم JSON في تبادل البيانات، ولماذا تصلح لتطبيقات الويب.",
+      "model_answer": "قد تعيد API بيانات بصيغة JSON، وهي صيغة نصية شائعة لتمثيل البيانات المهيكلة وتبادلها باستخدام كائنات ومصفوفات وقيم بسيطة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قد تعيد API بيانات بصيغة JSON، وهي صيغة نصية شائعة لتمثيل البيانات المهيكلة وتبادلها باستخدام كائنات ومصفوفات وقيم بسيطة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50538,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-164",
+        "pdf_page": 57,
+        "match_score": 80.3,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.28,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50539,
+      "question_number": 20,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "اقترح موقفًا في تطبيق ويب يحتاج إلى طريقة POST، مع توضيح سبب اختيارها.",
+      "model_answer": "إرسال بيانات نموذج تسجيل الدخول باستخدام POST؛ لأنها طريقة لإرسال محتويات النموذج إلى الخادم لمعالجتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "إرسال بيانات نموذج تسجيل الدخول باستخدام POST؛ لأنها طريقة لإرسال محتويات النموذج إلى الخادم لمعالجتها."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50539,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.156,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50540,
+      "question_number": 21,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما وظيفة بروتوكول HTTP عند تواصل متصفح ويب مع خادم؟",
+      "model_answer": "HTTP بروتوكول يُستخدم لتبادل الرسائل بين العميل والخادم على الويب، ويحدد قواعد هذا التبادل.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "HTTP بروتوكول يُستخدم لتبادل الرسائل بين العميل والخادم على الويب، ويحدد قواعد هذا التبادل."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50540,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.403,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50541,
+      "question_number": 22,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما الفرق بين «طريقة طلب HTTP» و«رمز حالة HTTP»؟",
+      "model_answer": "طريقة HTTP: تحدد الإجراء المطلوب، مثل GET لاسترجاع البيانات أو POST لإرسالها.\nرمز حالة HTTP: يخبر العميل بنتيجة الطلب، مثل 200 للنجاح و404 لعدم وجود المورد.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "طريقة HTTP: تحدد الإجراء المطلوب، مثل GET لاسترجاع البيانات أو POST لإرسالها.",
+        "رمز حالة HTTP: يخبر العميل بنتيجة الطلب، مثل 200 للنجاح و404 لعدم وجود المورد."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50541,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.28,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50542,
+      "question_number": 23,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "تتبّع مراحل طلب صفحة ويب بدءًا من المتصفح حتى وصول الاستجابة، مع توضيح دور طريقة الطلب ورمز الحالة.",
+      "model_answer": "1. يرسل المتصفح طلب HTTP إلى الخادم، ويحدد طريقة الطلب مثل GET.\n2. يستقبل الخادم الطلب ويعالجه.\n3. يعيد استجابة تتضمن رمز الحالة، مثل 200 للنجاح أو 404 لعدم وجود المورد.\n4. يعرض المتصفح النتيجة للمستخدم.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. يرسل المتصفح طلب HTTP إلى الخادم، ويحدد طريقة الطلب مثل GET.",
+        "2. يستقبل الخادم الطلب ويعالجه.",
+        "3. يعيد استجابة تتضمن رمز الحالة، مثل 200 للنجاح أو 404 لعدم وجود المورد.",
+        "4. يعرض المتصفح النتيجة للمستخدم."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50542,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.201,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50543,
+      "question_number": 24,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "وردت العبارة: «GET مخصّصة لإرسال بيانات النماذج إلى الخادم ليعالجها». صحّح العبارة مع توضيح الاستخدام المعتاد لكل من GET وPOST.",
+      "model_answer": "العبارة غير صحيحة. تُستخدم GET عادةً لطلب مورد أو بيانات من الخادم، مثل نتائج البحث. وتُستخدم POST عادةً لإرسال بيانات إلى الخادم ليعالجها، مثل محتويات نموذج تسجيل الدخول.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "العبارة غير صحيحة. تُستخدم GET عادةً لطلب مورد أو بيانات من الخادم، مثل نتائج البحث. وتُستخدم POST عادةً لإرسال بيانات إلى الخادم ليعالجها، مثل محتويات نموذج تسجيل الدخول."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50543,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.229,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50544,
+      "question_number": 25,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "صنّف العمليات الآتية إلى GET أو POST مع السبب: عرض صفحة ويب، إرسال نموذج تسجيل دخول، عرض نتائج بحث، إرسال محتويات نموذج تواصل.",
+      "model_answer": "1. عرض صفحة ويب: GET لطلب مورد.\n2. إرسال نموذج دخول: POST لإرسال بيانات للمعالجة.\n3. عرض نتائج بحث: GET لاسترجاع بيانات.\n4. إرسال نموذج تواصل: POST لإرسال محتواه إلى الخادم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. عرض صفحة ويب: GET لطلب مورد.",
+        "2. إرسال نموذج دخول: POST لإرسال بيانات للمعالجة.",
+        "3. عرض نتائج بحث: GET لاسترجاع بيانات.",
+        "4. إرسال نموذج تواصل: POST لإرسال محتواه إلى الخادم."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50544,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.184,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50545,
+      "question_number": 26,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "قارن بين الرموز 200 و404 و500 من حيث نتيجة معالجة الطلب.",
+      "model_answer": "200: نجح الطلب.\n404: المورد المطلوب غير موجود بهذا العنوان.\n500: خطأ داخلي في الخادم منعه من إكمال الطلب.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "200: نجح الطلب.",
+        "404: المورد المطلوب غير موجود بهذا العنوان.",
+        "500: خطأ داخلي في الخادم منعه من إكمال الطلب."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50545,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.168,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50546,
+      "question_number": 27,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "استقبل المتصفح رمز الحالة 404، فاستنتج مستخدم أن الخادم يعاني خطأً داخليًا. قيّم الاستنتاج.",
+      "model_answer": "الاستنتاج غير دقيق؛ فالرمز 404 يعني أن المورد المطلوب غير موجود بهذا العنوان. أما الخطأ الداخلي في الخادم الذي يمنع إكمال الطلب فيمثله الرمز 500.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الاستنتاج غير دقيق؛ فالرمز 404 يعني أن المورد المطلوب غير موجود بهذا العنوان. أما الخطأ الداخلي في الخادم الذي يمنع إكمال الطلب فيمثله الرمز 500."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50546,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.223,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50547,
+      "question_number": 28,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "قد يعيد الخادم الرمز 500 بدلًا من 200؛ ماذا تستنتج؟ وما الذي لا يمكنك تحديده من الرمز وحده؟",
+      "model_answer": "يُستنتج حدوث خطأ داخلي في الخادم منعه من إكمال الطلب بدلًا من نجاح المعالجة. ولا يمكن تحديد السبب التفصيلي من رمز 500 وحده.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يُستنتج حدوث خطأ داخلي في الخادم منعه من إكمال الطلب بدلًا من نجاح المعالجة. ولا يمكن تحديد السبب التفصيلي من رمز 500 وحده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50547,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.184,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50548,
+      "question_number": 29,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "قال مستخدم إن GET وHTTPS يؤديان الوظيفة نفسها عند طلب صفحة ويب. وضّح الخطأ في قوله.",
+      "model_answer": "GET طريقة طلب HTTP تُستخدم عادةً لطلب مورد أو بيانات من الخادم. أما HTTPS فهو استخدام HTTP عبر اتصال TLS آمن يساعد على حماية الاتصال؛ لذلك فهما ليسا وظيفتين متماثلتين.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "GET طريقة طلب HTTP تُستخدم عادةً لطلب مورد أو بيانات من الخادم. أما HTTPS فهو استخدام HTTP عبر اتصال TLS آمن يساعد على حماية الاتصال؛ لذلك فهما ليسا وظيفتين متماثلتين."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50548,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.313,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50549,
+      "question_number": 30,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "عندما يبدأ عنوان موقع بـ https://، ما الذي يدل عليه ذلك؟ وما الدور الذي تؤديه تقنية TLS؟",
+      "model_answer": "يدل بدء العنوان بـ https:// على استخدام اتصال HTTPS. وتساعد TLS على حماية سرية الاتصال وسلامته ومصادقة الخادم، بحيث يصعب قراءة المحتوى أو تعديله أثناء النقل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يدل بدء العنوان بـ https:// على استخدام اتصال HTTPS. وتساعد TLS على حماية سرية الاتصال وسلامته ومصادقة الخادم، بحيث يصعب قراءة المحتوى أو تعديله أثناء النقل."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50549,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.237,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50550,
+      "question_number": 31,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ما الفرق بين API وJSON في تطبيقات الويب؟",
+      "model_answer": "API: قواعد للتواصل تتيح لبرنامج طلب بيانات أو وظائف من برنامج آخر.\nJSON: صيغة نصية لتمثيل البيانات المهيكلة وتبادلها، وقد تستخدمها API في الاستجابة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "API: قواعد للتواصل تتيح لبرنامج طلب بيانات أو وظائف من برنامج آخر.",
+        "JSON: صيغة نصية لتمثيل البيانات المهيكلة وتبادلها، وقد تستخدمها API في الاستجابة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50550,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.22,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50551,
+      "question_number": 32,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "قد ترسل الواجهة الأمامية طلبًا عبر API ثم تستقبل بيانات بصيغة JSON. فسّر وظيفة كل من API وJSON في هذا الموقف.",
+      "model_answer": "API تضع قواعد واضحة تتيح للواجهة الأمامية طلب بيانات أو وظائف من خدمة خلفية. أما JSON فهي صيغة نصية شائعة قد تُمثل بها البيانات المهيكلة العائدة من الخدمة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "API تضع قواعد واضحة تتيح للواجهة الأمامية طلب بيانات أو وظائف من خدمة خلفية. أما JSON فهي صيغة نصية شائعة قد تُمثل بها البيانات المهيكلة العائدة من الخدمة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50551,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.241,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50554,
+      "question_number": 33,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "تقدّم خدمة طقس API تُعيد توقعات اليوم عند إرسال طلب. حدّد طريقة HTTP المناسبة، وسبب استخدام HTTPS، وفائدة إرجاع البيانات بصيغة JSON.",
+      "model_answer": "1. GET لطلب توقعات الطقس من الخدمة.\n2. HTTPS لحماية الاتصال أثناء نقل الطلب والبيانات عبر TLS.\n3. JSON لتمثيل بيانات التوقعات في صيغة نصية منظمة يسهل تبادلها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. GET لطلب توقعات الطقس من الخدمة.",
+        "2. HTTPS لحماية الاتصال أثناء نقل الطلب والبيانات عبر TLS.",
+        "3. JSON لتمثيل بيانات التوقعات في صيغة نصية منظمة يسهل تبادلها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50554,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.29,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50555,
+      "question_number": 34,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "تطبيق مدرسة يتيح تحميل سجل الدرجات، وإرسال نموذج تسجيل الدخول، وطلب جدول اليوم من نظام مدرسة أخرى. حدّد ما يناسب كل مهمة من GET وPOST وAPI.",
+      "model_answer": "1. استرجاع سجل الدرجات: GET لأنه طلب بيانات.\n2. إرسال بيانات تسجيل الدخول: POST لأنها بيانات تُرسل للمعالجة.\n3. الحصول على جدول اليوم من نظام آخر: API لتنظيم التواصل بين النظامين.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. استرجاع سجل الدرجات: GET لأنه طلب بيانات.",
+        "2. إرسال بيانات تسجيل الدخول: POST لأنها بيانات تُرسل للمعالجة.",
+        "3. الحصول على جدول اليوم من نظام آخر: API لتنظيم التواصل بين النظامين."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50555,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.229,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50556,
+      "question_number": 35,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "اقترح تصميمًا مناسبًا للتواصل في تطبيق مدرسة يجمع بين تسجيل الدخول وعرض الجداول، واذكر سببين لاختياراتك.",
+      "model_answer": "1. يستخدم التطبيق HTTPS لحماية بيانات الاتصال.\n2. يستخدم POST لإرسال نموذج تسجيل الدخول إلى الخادم.\n3. يستخدم GET لطلب الجداول، ويمكن التواصل مع خدمة خلفية عبر API.\nالسبب: اختلاف عملية الإرسال للمعالجة عن استرجاع البيانات، مع حماية البيانات أثناء نقلها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. يستخدم التطبيق HTTPS لحماية بيانات الاتصال.",
+        "2. يستخدم POST لإرسال نموذج تسجيل الدخول إلى الخادم.",
+        "3. يستخدم GET لطلب الجداول، ويمكن التواصل مع خدمة خلفية عبر API.",
+        "السبب: اختلاف عملية الإرسال للمعالجة عن استرجاع البيانات، مع حماية البيانات أثناء نقلها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50556,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.205,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50557,
+      "question_number": 36,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "تطبيق ويب يعرض بيانات من خدمة خارجية: ما الأداة المناسبة لتنظيم تبادل البيانات؟ وما صيغة شائعة يمكن أن تعود بها البيانات؟",
+      "model_answer": "API هي الواجهة التي تنظّم طلب البيانات أو الوظائف من خدمة خارجية.\nJSON صيغة نصية منظمة وشائعة يمكن للخدمة أن ترسل بها البيانات المطلوبة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "API هي الواجهة التي تنظّم طلب البيانات أو الوظائف من خدمة خارجية.",
+        "JSON صيغة نصية منظمة وشائعة يمكن للخدمة أن ترسل بها البيانات المطلوبة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50557,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.274,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50558,
+      "question_number": 37,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يريد مستخدم مشاهدة نتائج بحث، ثم إرسال محتويات نموذج تواصل. ما طريقة HTTP المناسبة لكل عملية؟ علّل اختيارك.",
+      "model_answer": "مشاهدة نتائج البحث: GET لاسترجاع البيانات.\nإرسال نموذج تواصل: POST لإرسال محتوى النموذج إلى الخادم لمعالجته.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "مشاهدة نتائج البحث: GET لاسترجاع البيانات.",
+        "إرسال نموذج تواصل: POST لإرسال محتوى النموذج إلى الخادم لمعالجته."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50558,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.191,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50559,
+      "question_number": 38,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "عند استخدام تطبيق ويب، صف طلبًا واحدًا يمكن أن يرسله العميل، والاستجابة المتوقعة من الخادم، والطريقة المناسبة له.",
+      "model_answer": "مثال: يرسل المتصفح طلب GET لعرض صفحة ويب. يستقبل الخادم الطلب ويعالجه ويعيد استجابة؛ وقد يكون رمزها 200 إذا تمت المعالجة بنجاح، أو 404 إذا كان المورد المطلوب غير موجود بهذا العنوان.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "مثال: يرسل المتصفح طلب GET لعرض صفحة ويب. يستقبل الخادم الطلب ويعالجه ويعيد استجابة؛ وقد يكون رمزها 200 إذا تمت المعالجة بنجاح، أو 404 إذا كان المورد المطلوب غير موجود بهذا العنوان."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50559,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.307,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50620,
+      "question_number": 39,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "ينقر طالب رابطًا في المتصفح، فيقول زميله إن المتصفح يستقبل الطلب والخادم يرسله. صحح تبادل الأدوار.",
+      "model_answer": "المتصفح عميل يرسل طلبًا إلى خدمة على الخادم؛ والخادم يستقبل الطلب ويعالجه ثم يعيد الاستجابة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المتصفح عميل يرسل طلبًا إلى خدمة على الخادم؛ والخادم يستقبل الطلب ويعالجه ثم يعيد الاستجابة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50620,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.325,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50621,
+      "question_number": 40,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "نقل المتصفح رسالة إلى خدمة ويب واستقبل ردًا. ما وظيفة HTTP التي تفسر تنظيم هذا التبادل؟",
+      "model_answer": "HTTP بروتوكول يحدد قواعد تبادل الرسائل بين العميل والخادم على الويب وفق نموذج الطلب والاستجابة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "HTTP بروتوكول يحدد قواعد تبادل الرسائل بين العميل والخادم على الويب وفق نموذج الطلب والاستجابة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50621,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 57,
+        "lexical_similarity": 0.403,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50622,
+      "question_number": 41,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "تريد مدرسة حماية بيانات تسجيل الدخول أثناء انتقالها. أي صيغة اتصال تختار وما الحماية المقصودة؟",
+      "model_answer": "تختار HTTPS لأنه يستخدم HTTP عبر TLS آمن لحماية سرية البيانات وسلامتها أثناء النقل والمساعدة على مصادقة الخادم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تختار HTTPS لأنه يستخدم HTTP عبر TLS آمن لحماية سرية البيانات وسلامتها أثناء النقل والمساعدة على مصادقة الخادم."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50622,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.228,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50623,
+      "question_number": 42,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يرى مستخدم أن HTTPS يعني أن الخادم لن يعيد أبدًا رمز خطأ. قيّم الاستنتاج.",
+      "model_answer": "HTTPS يحمي الاتصال أثناء النقل، لكنه لا يمنع فشل الطلب أو غياب المورد أو الخطأ الداخلي في الخادم؛ ويمكن أن تظهر رموز حالة تدل على ذلك.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "HTTPS يحمي الاتصال أثناء النقل، لكنه لا يمنع فشل الطلب أو غياب المورد أو الخطأ الداخلي في الخادم؛ ويمكن أن تظهر رموز حالة تدل على ذلك."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50623,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.25,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50624,
+      "question_number": 43,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يريد طالب عرض نتائج البحث من خدمة ويب من دون إرسال محتويات نموذج للمعالجة. ما الطريقة المستخدمة عادة ولماذا؟",
+      "model_answer": "GET؛ تُستخدم عادة لطلب مورد أو استرجاع بيانات مثل نتائج البحث وصفحات الويب من الخادم.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "GET؛ تُستخدم عادة لطلب مورد أو استرجاع بيانات مثل نتائج البحث وصفحات الويب من الخادم."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50624,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 61,
+        "lexical_similarity": 0.207,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50625,
+      "question_number": 44,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "أرسل مستخدم بيانات نموذج تسجيل الدخول ليعالجها الخادم. لماذا تكون POST الطريقة المعتادة في المثال؟",
+      "model_answer": "POST تُستخدم عادة لإرسال بيانات إلى الخادم لمعالجتها، ومن أمثلتها بيانات تسجيل الدخول ومحتويات النماذج.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "POST تُستخدم عادة لإرسال بيانات إلى الخادم لمعالجتها، ومن أمثلتها بيانات تسجيل الدخول ومحتويات النماذج."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50625,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.24,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50626,
+      "question_number": 45,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "في منصة مدرسية، أحد الطلبين يعرض الجدول اليومي والآخر يرسل اسم المستخدم وكلمة المرور. حدد الطريقة الأنسب عادة لكل طلب وعلّل.",
+      "model_answer": "GET لاسترجاع الجدول من الخادم\nوPOST لإرسال بيانات نموذج تسجيل الدخول إلى الخادم لمعالجتها، مع استخدام HTTPS لحماية النقل.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "GET لاسترجاع الجدول من الخادم",
+        "وPOST لإرسال بيانات نموذج تسجيل الدخول إلى الخادم لمعالجتها، مع استخدام HTTPS لحماية النقل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50626,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.236,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50627,
+      "question_number": 46,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "أعادت خدمة ويب الرمز 200 بعد طلب صفحة. ما النتيجة التي يمكن استنتاجها من الرمز وما الذي لا يوضحه؟",
+      "model_answer": "يشير 200 إلى نجاح معالجة الطلب؛ ولا يصف وحده محتوى الصفحة أو كل تفاصيل تنفيذ الخدمة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يشير 200 إلى نجاح معالجة الطلب؛ ولا يصف وحده محتوى الصفحة أو كل تفاصيل تنفيذ الخدمة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50627,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.167,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50628,
+      "question_number": 47,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يحاول طالب فتح ملف PDF من عنوان محدد، فحصل على 404. ما التفسير الأقرب دون افتراض انهيار الخادم كله؟",
+      "model_answer": "المورد المطلوب غير موجود عند ذلك العنوان؛ ولا يعني الرمز وحده أن الخادم بأكمله متعطل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المورد المطلوب غير موجود عند ذلك العنوان؛ ولا يعني الرمز وحده أن الخادم بأكمله متعطل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50628,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.175,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50629,
+      "question_number": 48,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "أعادت خدمة المدرسة الرمز 500، فأعلن طالب أن الملف المطلوب غير موجود. ما خطأ التفسير؟",
+      "model_answer": "500 يدل على خطأ داخلي في الخادم منعه من إكمال الطلب، بينما 404 يدل على عدم وجود المورد المطلوب؛ ولا يحدد 500 وحده السبب التفصيلي.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "500 يدل على خطأ داخلي في الخادم منعه من إكمال الطلب، بينما 404 يدل على عدم وجود المورد المطلوب؛ ولا يحدد 500 وحده السبب التفصيلي."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50629,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.201,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50630,
+      "question_number": 49,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يحتاج تطبيق المدرسة إلى الحصول على جدول اليوم من خدمة نظام آخر. لماذا تحتاج البرمجيات إلى واجهة محددة للتواصل؟",
+      "model_answer": "تستخدم API لأنها مجموعة قواعد واضحة تسمح لبرنامج بطلب بيانات أو وظائف من برنامج أو خدمة أخرى.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تستخدم API لأنها مجموعة قواعد واضحة تسمح لبرنامج بطلب بيانات أو وظائف من برنامج أو خدمة أخرى."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50630,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.22,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50631,
+      "question_number": 50,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "استقبل تطبيق الطقس بيانات المدينة ودرجة الحرارة في نص منظّم. لماذا تصلح صيغة JSON لتمثيل هذا النوع من البيانات؟",
+      "model_answer": "JSON صيغة نصية شائعة لتبادل البيانات المهيكلة باستخدام كائنات ومصفوفات وقيم بسيطة وتدعمها أدوات ولغات عديدة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "JSON صيغة نصية شائعة لتبادل البيانات المهيكلة باستخدام كائنات ومصفوفات وقيم بسيطة وتدعمها أدوات ولغات عديدة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50631,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.237,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50632,
+      "question_number": 51,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "استلم مطور البيانات {\"city\":\"Cairo\",\"temperature\":31}. استخرج مفتاحًا وقيمته، وبيّن لماذا لا تمثل الصيغة بروتوكول اتصال مستقلًا.",
+      "model_answer": "المفتاح city وقيمته Cairo، أو temperature وقيمته 31؛ وJSON صيغة لتمثيل البيانات المتبادلة، بينما HTTP/HTTPS بروتوكولات لتنظيم الاتصال.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "المفتاح city وقيمته Cairo، أو temperature وقيمته 31؛ وJSON صيغة لتمثيل البيانات المتبادلة، بينما HTTP/HTTPS بروتوكولات لتنظيم الاتصال."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50632,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.217,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50633,
+      "question_number": 52,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يرسل تطبيق طلبًا للحصول على توقعات اليوم من API. اختر طريقة الطلب والبروتوكول وصيغة بيانات ممكنة مع سبب موجز لكل اختيار.",
+      "model_answer": "GET لاسترجاع التوقعات، وHTTPS لحماية الاتصال عبر TLS، ويمكن أن تعيد API بيانات بتنسيق JSON لتمثيل المعلومات المهيكلة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "GET لاسترجاع التوقعات، وHTTPS لحماية الاتصال عبر TLS، ويمكن أن تعيد API بيانات بتنسيق JSON لتمثيل المعلومات المهيكلة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50633,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.267,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50634,
+      "question_number": 53,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "أرسل متصفح GET للحصول على صفحة، فأعاد الخادم 404. فسّر لماذا لا تكفي معرفة طريقة الطلب لتوقع نتيجة المعالجة.",
+      "model_answer": "GET تصف نوع العملية المطلوبة وهو استرجاع مورد، أما رمز الحالة 404 فهو نتيجة الاستجابة ويشير إلى عدم وجود المورد عند العنوان؛ الطريقة لا تضمن نجاح الطلب.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "GET تصف نوع العملية المطلوبة وهو استرجاع مورد، أما رمز الحالة 404 فهو نتيجة الاستجابة ويشير إلى عدم وجود المورد عند العنوان؛ الطريقة لا تضمن نجاح الطلب."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50634,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.241,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50635,
+      "question_number": 54,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "استخدمت صفحة مدرسة GET لاسترجاع جدولها عبر HTTPS، فاعتبر طالب أن وجود HTTPS يحوّل الطلب إلى POST. وضّح الفرق بين الأمرين.",
+      "model_answer": "GET طريقة HTTP تُستخدم عادة لطلب البيانات\nوHTTPS هو HTTP عبر اتصال TLS آمن لحماية النقل. نوع الطريقة لا يتغير لمجرد أن الاتصال آمن.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "GET طريقة HTTP تُستخدم عادة لطلب البيانات",
+        "وHTTPS هو HTTP عبر اتصال TLS آمن لحماية النقل. نوع الطريقة لا يتغير لمجرد أن الاتصال آمن."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50635,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.303,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50636,
+      "question_number": 55,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "طلب مستخدم صفحة فأعاده الخادم برمز 404، ثم طلب صفحة أخرى فردّ برمز 500. ما الفرق الذي يمكن إثباته من كل رمز، وما الذي لا يمكن الجزم به من الرمز الثاني؟",
+      "model_answer": "404 يعني أن المورد المطلوب غير موجود عند العنوان المطلوب، بينما 500 يعني خطأ داخليًا في الخادم منعه من إكمال الطلب\nوالرمز 500 وحده لا يبيّن السبب التفصيلي.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "404 يعني أن المورد المطلوب غير موجود عند العنوان المطلوب، بينما 500 يعني خطأ داخليًا في الخادم منعه من إكمال الطلب",
+        "والرمز 500 وحده لا يبيّن السبب التفصيلي."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50636,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 59,
+        "lexical_similarity": 0.245,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50637,
+      "question_number": 56,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "أرسلت خدمة طقس البيانات {\"city\":\"Cairo\",\"temperature\":31} إلى تطبيق. حدّد نوع المعلومات الذي يمكن استخلاصه، ولماذا لا تصف هذه الصيغة طريقة إرسال الطلب؟",
+      "model_answer": "هذه بيانات منظّمة بصيغة JSON؛ المفتاح city قيمته Cairo، والمفتاح temperature قيمته 31.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "هذه بيانات منظّمة بصيغة JSON؛ المفتاح city قيمته Cairo، والمفتاح temperature قيمته 31."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50637,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.186,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50638,
+      "question_number": 57,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يتصل نظام مدرسة بخدمة خارجية لاسترجاع جدول الحصص. هل تعني الحاجة إلى API أن الاستجابة يجب أن تكون بصيغة JSON في كل الحالات؟ علّل.",
+      "model_answer": "لا؛ API مجموعة قواعد تتيح طلب بيانات أو وظائف من برنامج آخر، وقد تعيد بيانات بصيغة JSON، لكن استخدام هذه الصيغة احتمال شائع وليس شرطًا لازمًا في جميع الحالات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ API مجموعة قواعد تتيح طلب بيانات أو وظائف من برنامج آخر، وقد تعيد بيانات بصيغة JSON، لكن استخدام هذه الصيغة احتمال شائع وليس شرطًا لازمًا في جميع الحالات."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50638,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 60,
+        "lexical_similarity": 0.215,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50639,
+      "question_number": 58,
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "prompt": "يراجع مسؤول طلب تسجيل دخول ويجد فيه اسم طريقة الطلب ورمز حالة الاستجابة. لماذا لا ينبغي استعمال أحدهما بدلًا من الآخر عند تحليل العملية؟",
+      "model_answer": "طريقة HTTP مثل POST توضّح نوع العملية المطلوبة وإرسال بيانات نموذج ليعالجها الخادم، أما رمز الحالة مثل 200 أو 404 أو 500 فيوضح نتيجة معالجة الطلب. لكل منهما معنى ووظيفة مختلفة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "طريقة HTTP مثل POST توضّح نوع العملية المطلوبة وإرسال بيانات نموذج ليعالجها الخادم، أما رمز الحالة مثل 200 أو 404 أو 500 فيوضح نتيجة معالجة الطلب. لكل منهما معنى ووظيفة مختلفة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50639,
+      "official_unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "official_lesson_title": "الدرس 3-2: طرق الاتصال في تطبيقات الويب",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "3_2",
+        "printed_page_range": [
+          56,
+          61
+        ],
+        "best_page_hint": 58,
+        "lexical_similarity": 0.254,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    }
+  ]
+}

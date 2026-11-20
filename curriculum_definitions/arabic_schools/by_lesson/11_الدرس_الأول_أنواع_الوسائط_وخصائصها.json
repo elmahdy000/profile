@@ -1,0 +1,21 @@
+{
+  "unit_number": 4,
+  "unit_title": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 11,
+  "lesson_title": "الدرس الأول: أنواع الوسائط وخصائصها",
+  "definitions": [
+    {
+      "id": "DEF-138",
+      "term": "الاتصال أحادي الاتجاه",
+      "current_definition": "من المرسل إلى المستقبل فقط.",
+      "updated_definition": ""
+    },
+    {
+      "id": "DEF-139",
+      "term": "الاتصال ثنائي الاتجاه",
+      "current_definition": "يمكن للمستخدمين الاستجابة والمشاركة.",
+      "updated_definition": ""
+    }
+  ],
+  "total_definitions": 2
+}

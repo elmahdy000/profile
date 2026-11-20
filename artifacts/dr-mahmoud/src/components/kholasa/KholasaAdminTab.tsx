@@ -20,10 +20,12 @@ import {
   Save,
   ArrowRight,
   ArrowLeft,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { KholasaContentEditor } from "./admin/KholasaContentEditor";
+import { KholasaExplanationEditor } from "./admin/KholasaExplanationEditor";
 import {
   KholasaQuestionsManager,
   type AdminQbRow,
@@ -40,7 +42,7 @@ interface KholasaAdminTabProps {
   videoOptions: Array<{ id: number; title: string; stage?: string | null; courseId?: number | null }>;
 }
 
-type StudioTab = "basic" | "content" | "mindmaps" | "questions" | "exams";
+type StudioTab = "basic" | "explanation" | "content" | "mindmaps" | "questions" | "exams";
 
 interface LessonBundle {
   mcqQuestions: AdminQbRow[];
@@ -470,6 +472,16 @@ export function KholasaAdminTab({ adminApi, videoOptions }: KholasaAdminTabProps
                       <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100">
                         <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditor(m, "explanation")}
+                          className="h-8 px-2.5 rounded-xl text-xs font-bold gap-1 cursor-pointer border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100"
+                          title="إدخال أو تعديل شرح الدرس المكتوب"
+                        >
+                          <FileText className="h-3.5 w-3.5 text-blue-600" /> الشرح
+                        </Button>
+                        <Button
+                          type="button"
                           size="sm"
                           onClick={() => openEditor(m, "content")}
                           className="flex-1 h-8 rounded-xl text-xs font-bold gap-1 cursor-pointer"
@@ -535,22 +547,23 @@ export function KholasaAdminTab({ adminApi, videoOptions }: KholasaAdminTabProps
               </button>
             </div>
 
-            {/* 5 Studio Navigation Tabs */}
+            {/* 6 Studio Navigation Tabs */}
             <div className="flex overflow-x-auto gap-1.5 border-b border-slate-100 px-4 py-2.5 bg-white">
               {(
                 [
                   { id: "basic", label: "1. البيانات والفيديو", icon: Video, disabled: false },
-                  { id: "content", label: "2. الزتونة والتعريفات والبطاقات", icon: BookOpen, disabled: false },
-                  { id: "mindmaps", label: `3. الخرائط الذهنية (${editing.mindmapImages?.length || 0})`, icon: MapIcon, disabled: false },
+                  { id: "explanation", label: "2. شرح الدرس المكتوب ✍️", icon: FileText, disabled: false },
+                  { id: "content", label: "3. الزتونة والتعريفات والبطاقات", icon: BookOpen, disabled: false },
+                  { id: "mindmaps", label: `4. الخرائط الذهنية (${editing.mindmapImages?.length || 0})`, icon: MapIcon, disabled: false },
                   {
                     id: "questions",
-                    label: `4. الأسئلة (${bundle.mcqQuestions.length + bundle.trueFalseQuestions.length + bundle.essayQuestions.length})`,
+                    label: `5. الأسئلة (${bundle.mcqQuestions.length + bundle.trueFalseQuestions.length + bundle.essayQuestions.length})`,
                     icon: HelpCircle,
                     disabled: isNew,
                   },
                   {
                     id: "exams",
-                    label: `5. رفع/توليد الاختبارات (${bundle.quizzes.length})`,
+                    label: `6. رفع/توليد الاختبارات (${bundle.quizzes.length})`,
                     icon: ClipboardCheck,
                     disabled: isNew,
                   },
@@ -664,6 +677,23 @@ export function KholasaAdminTab({ adminApi, videoOptions }: KholasaAdminTabProps
                     نشر الدرس للطلاب المفعلين والمسددين
                   </label>
                 </div>
+              )}
+
+              {studioTab === "explanation" && (
+                <KholasaExplanationEditor
+                  material={editing}
+                  onChange={(nextText) =>
+                    setEditing({
+                      ...editing,
+                      explanation: nextText,
+                      summaryData: {
+                        ...editing.summaryData,
+                        explanation: nextText,
+                        explanationText: nextText,
+                      },
+                    })
+                  }
+                />
               )}
 
               {studioTab === "content" && (
@@ -794,7 +824,7 @@ export function KholasaAdminTab({ adminApi, videoOptions }: KholasaAdminTabProps
                 <Button type="button" variant="outline" onClick={() => setEditing(null)} className="h-9 rounded-xl text-xs font-bold">
                   إغلاق
                 </Button>
-                {(studioTab === "basic" || studioTab === "content" || studioTab === "mindmaps" || isNew) && (
+                {(studioTab === "basic" || studioTab === "explanation" || studioTab === "content" || studioTab === "mindmaps" || isNew) && (
                   <Button
                     type="button"
                     disabled={saving}

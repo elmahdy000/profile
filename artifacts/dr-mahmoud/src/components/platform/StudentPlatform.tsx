@@ -68,6 +68,7 @@ import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { MonthlyPaymentReminderModal } from "./tabs/MonthlyPaymentReminderModal";
 import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
 import { EssayExamsTab } from "./tabs/EssayExamsTab";
+import { AssessmentQuestionBadge } from "./AssessmentQuestionBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 import { LockedContentNotice } from "./tabs/LockedContentNotice";
@@ -1944,7 +1945,12 @@ export function StudentPlatform() {
       <AnimatePresence>
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (() => {
-          const isHomework = activeQuiz.scope === "homework" || activeQuiz.category === "واجب";
+          const isHomework =
+            activeQuiz.scope === "homework" ||
+            activeQuiz.category === "واجب" ||
+            activeQuiz.category === "homework" ||
+            activeQuiz.title?.includes("واجب") ||
+            activeQuiz.title?.toLowerCase().includes("homework");
           return (
             <motion.div
               className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
@@ -2228,12 +2234,17 @@ export function StudentPlatform() {
                             {(() => {
                               if (!isEng) {
                                 return (
-                                  <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed whitespace-pre-line break-words">
-                                    <span className="inline-flex items-center justify-center h-7 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums ml-2 shrink-0">
-                                      #{qi + 1}
-                                    </span>
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums shrink-0">
+                                        #{qi + 1}
+                                      </span>
+                                      <AssessmentQuestionBadge question={q} />
+                                    </div>
+                                    <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed whitespace-pre-line break-words pt-0.5">
                                       <BidiStatement text={q.prompt} />
-                                  </h3>
+                                    </h3>
+                                  </div>
                                 );
                               }
 
@@ -2247,12 +2258,17 @@ export function StudentPlatform() {
                               return (
                                 <>
                                   {/* English Title Line */}
-                                  <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed break-words whitespace-pre-line">
-                                    <span className="inline-flex items-center justify-center h-7 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums mr-2 shrink-0">
-                                      #{qi + 1}
-                                    </span>
-                                    {titleLine}
-                                  </h3>
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="inline-flex items-center justify-center h-6 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums shrink-0">
+                                        #{qi + 1}
+                                      </span>
+                                      <AssessmentQuestionBadge question={q} />
+                                    </div>
+                                    <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed break-words whitespace-pre-line pt-0.5">
+                                      {titleLine}
+                                    </h3>
+                                  </div>
 
                                   {/* Code Block if lines look like C++/Code */}
                                   {codeLines.length > 0 && (
@@ -2320,11 +2336,25 @@ export function StudentPlatform() {
                       {isEssay ? (
                         <div className="space-y-3 pt-1">
                           {isHomework ? (
-                            <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-dashed border-amber-300/80 dark:border-amber-700/60 text-right">
-                              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                                <FileText className="h-4 w-4 text-amber-600" />
-                                <span>سؤال مقالي — يُنقل ويُحل في كشكول الواجب بخط اليد ✍️</span>
-                              </span>
+                            <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border-2 border-dashed border-amber-300 dark:border-amber-700/60 space-y-2">
+                              <div className="flex items-center gap-2 text-xs font-black text-amber-800 dark:text-amber-300" dir={isEng ? "ltr" : "rtl"}>
+                                <FileText className="h-4 w-4 text-amber-600 shrink-0" />
+                                <span>
+                                  {isEng
+                                    ? "📓 Written Essay — Write & solve in your homework notebook to hand in during class ✍️"
+                                    : "📓 سؤال مقالي ورقي — يُنقل ويُحل في كشكول الواجب بخط اليد ويُسلّم بالحصة القادمة ✍️"}
+                                </span>
+                              </div>
+                              <div className="space-y-2.5 pt-1 opacity-75">
+                                <div className="border-b border-dashed border-amber-300/80 dark:border-amber-700/50 h-5" />
+                                <div className="border-b border-dashed border-amber-300/80 dark:border-amber-700/50 h-5" />
+                                <div className="border-b border-dashed border-amber-300/80 dark:border-amber-700/50 h-5" />
+                              </div>
+                              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold" dir={isEng ? "ltr" : "rtl"}>
+                                {isEng
+                                  ? "💡 Notice: No typing required on the platform. Solve manually in your notebook or print the sheet."
+                                  : "💡 تنبيه: لا يتطلب الحل كتابة إلكترونية على المنصة، قم بنقله أو طباعة الورقة وحله ورقياً."}
+                              </p>
                             </div>
                           ) : (
                             <div className="space-y-1.5">

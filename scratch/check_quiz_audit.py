@@ -1,12 +1,26 @@
-import sys, paramiko, json
+import os
+import paramiko
 
-sys.stdout.reconfigure(encoding='utf-8')
+host = os.environ.get("REMOTE_HOST", "72.62.27.196")
+password = os.environ.get("REMOTE_SSH_PASSWORD", "")
+pg_password = os.environ.get("PGPASSWORD", "")
+
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect('72.62.27.196', username='root', password='e#LWhcSAa6B&R8s')
+c.connect(host, username='root', password=password)
 
-cmd = """sudo -u postgres psql -d profile -t -A -c "SELECT id, action, entity_type, entity_id, details, created_at FROM audit_logs WHERE action LIKE '%QUIZ%' OR details LIKE '%اختبار%' ORDER BY id DESC LIMIT 30;" """
-stdin, stdout, stderr = c.exec_command(cmd)
-print(stdout.read().decode('utf-8'))
+def run_query(sql):
+    cmd = f'PGPASSWORD={pg_password} psql -h localhost -U postgres -d profile -c "{sql}"'
+    _, o, e = c.exec_command(cmd)
+    return o.read().decode('utf-8', errors='replace')
+
+print("=== AUDIT LOGS FOR QUIZZES ===")
+print(run_query("""
+SELECT id, action, entity_type, entity_id, details, created_at 
+FROM audit_logs 
+WHERE entity_type = 'quiz' OR action ILIKE '%quiz%' 
+ORDER BY id DESC 
+LIMIT 5;
+"""))
 
 c.close()

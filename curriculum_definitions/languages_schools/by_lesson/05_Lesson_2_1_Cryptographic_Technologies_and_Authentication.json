@@ -1,0 +1,236 @@
+{
+  "unit_number": 2,
+  "unit_title_en": "Unit 2: Cybersecurity",
+  "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+  "lesson_number": 5,
+  "lesson_title_en": "Lesson 2-1: Cryptographic Technologies and Authentication",
+  "lesson_title_ar": "الدرس الأول: تقنيات التشفير والمصادقة",
+  "total_definitions": 14,
+  "approved_definitions_count": 14,
+  "definitions": [
+    {
+      "id": "DEF-050",
+      "term_en": "HTTPS (HTTP Secure)",
+      "current_definition_en": "A communication protocol that adds TLS encryption to HTTP. It provides encryption, tamper detection, and verification of the communication partner.",
+      "updated_definition_en": "A communication protocol that adds TLS encryption to HTTP. It provides encryption, tamper detection, and verification of the communication partner.",
+      "official_term_en": "HTTPS (HTTP Secure)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 35,
+        "printed_page": 34,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-051",
+      "term_en": "TLS handshake",
+      "current_definition_en": "The procedure for establishing secure HTTPS communication.",
+      "updated_definition_en": "The procedure for establishing secure HTTPS communication.",
+      "official_term_en": "TLS handshake",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 35,
+        "printed_page": 34,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-052",
+      "term_en": "Public-key cryptography",
+      "current_definition_en": "Cryptography using public and private keys to safely share a common key for communication.",
+      "updated_definition_en": "Cryptography using public and private keys to safely share a common key for communication.",
+      "official_term_en": "Public-key cryptography",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 35,
+        "printed_page": 34,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-053",
+      "term_en": "Common-key (symmetric-key) cryptography",
+      "current_definition_en": "Cryptography that uses a shared common key to encrypt and exchange data quickly.",
+      "updated_definition_en": "Cryptography that uses a shared common key to encrypt and exchange data quickly.",
+      "official_term_en": "Common-key (symmetric-key) cryptography",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 35,
+        "printed_page": 34,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-054",
+      "term_en": "Public key and private key",
+      "current_definition_en": "A public key locks; a different private key unlocks. For digital signatures, the private key signs and the public key verifies.",
+      "updated_definition_en": "A public key locks; a different private key unlocks. For digital signatures, the private key signs and the public key verifies.",
+      "official_term_en": "Public key and private key",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 35,
+        "printed_page": 34,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-058",
+      "term_en": "Encryption",
+      "current_definition_en": "Prevents communication content from being read by third parties.",
+      "updated_definition_en": "Prevents communication content from being read by third parties.",
+      "official_term_en": "Encryption",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 37,
+        "printed_page": 36,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-059",
+      "term_en": "Digital signature",
+      "current_definition_en": "Detects data tampering or impersonation of the sender, and provides non-repudiation.",
+      "updated_definition_en": "Detects data tampering or impersonation of the sender, and provides non-repudiation.",
+      "official_term_en": "Digital signature",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 37,
+        "printed_page": 36,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-060",
+      "term_en": "Digital certificate",
+      "current_definition_en": "Verifies that the communication partner is authentic.",
+      "updated_definition_en": "Verifies that the communication partner is authentic.",
+      "official_term_en": "Digital certificate",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 37,
+        "printed_page": 36,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-061",
+      "term_en": "Certificate authority (CA)",
+      "current_definition_en": "A trusted authority that vouches that a site is genuine when the browser verifies its certificate.",
+      "updated_definition_en": "A trusted authority that vouches that a site is genuine when the browser verifies its certificate.",
+      "official_term_en": "Certificate authority (CA)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 37,
+        "printed_page": 36,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-062",
+      "term_en": "Multi-factor authentication",
+      "current_definition_en": "Combining two or more of the three factors of authentication: knowledge, possession, and biometric.",
+      "updated_definition_en": "Combining two or more of the three factors of authentication: knowledge, possession, and biometric.",
+      "official_term_en": "Multi-factor authentication",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 36,
+        "printed_page": 35,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-063",
+      "term_en": "Two-factor authentication (2FA)",
+      "current_definition_en": "Using two independent factors from different categories to verify identity.",
+      "updated_definition_en": "Using two independent factors from different categories to verify identity.",
+      "official_term_en": "Two-factor authentication (2FA)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 33,
+        "printed_page": 33,
+        "basis": "assessment_supported_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-064",
+      "term_en": "Knowledge factor",
+      "current_definition_en": "An authentication factor based on knowledge, such as a password.",
+      "updated_definition_en": "An authentication factor based on knowledge, such as a password.",
+      "official_term_en": "Knowledge factor",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 36,
+        "printed_page": 35,
+        "basis": "defined_in_example"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-065",
+      "term_en": "Possession factor",
+      "current_definition_en": "An authentication factor based on possession, such as a smartphone receiving a one-time password or a smart card.",
+      "updated_definition_en": "An authentication factor based on possession, such as a smartphone receiving a one-time password or a smart card.",
+      "official_term_en": "Possession factor",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 36,
+        "printed_page": 35,
+        "basis": "defined_in_example"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-066",
+      "term_en": "Biometric factor",
+      "current_definition_en": "An authentication factor based on biometric traits, such as a fingerprint.",
+      "updated_definition_en": "An authentication factor based on biometric traits, such as a fingerprint.",
+      "official_term_en": "Biometric factor",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 36,
+        "printed_page": 35,
+        "basis": "defined_in_example"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

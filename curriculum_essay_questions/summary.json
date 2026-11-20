@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-11-20",
+  "title": "ملخص بنك الأسئلة المقالية المعتمدة - منهج الحاسب الآلي والذكاء الاصطناعي",
+  "total_units": 3,
+  "total_lessons": 10,
+  "total_essay_questions": 625,
+  "breakdown_by_unit": [
+    {
+      "unit_id": 1,
+      "unit_title": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lessons_count": 4,
+      "questions_count": 244
+    },
+    {
+      "unit_id": 2,
+      "unit_title": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lessons_count": 3,
+      "questions_count": 219
+    },
+    {
+      "unit_id": 3,
+      "unit_title": "الوحدة الثالثة: تطبيقات الويب",
+      "lessons_count": 3,
+      "questions_count": 162
+    }
+  ],
+  "breakdown_by_classification": {
+    "OFFICIAL_ASSESSMENT_NEAR_LITERAL": 85,
+    "OFFICIAL_ASSESSMENT_VERIFIED_ADDED": 3,
+    "ASSESSMENT_SIMILAR_WORDING": 31,
+    "PRACTICE": 506
+  }
+}

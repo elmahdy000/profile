@@ -42,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
 import { isPrimarilyEnglish, splitModelAnswerTranslation } from "@/components/kholasa/kholasa-speech";
+import { AssessmentQuestionBadge } from "../AssessmentQuestionBadge";
 
 interface TypeCounts {
   mcq: number;
@@ -1803,6 +1804,7 @@ export function SelfAssessmentTab({
                       }`}>
                         {isEssay ? "سؤال مقالي" : isTF ? "صح أو خطأ" : "اختيار من متعدد"}
                       </span>
+                      <AssessmentQuestionBadge question={currentQ} />
                     </div>
                     <span className="font-mono tabular-nums">{currentQ.points || 1} درجة</span>
                   </div>
@@ -2081,6 +2083,7 @@ export function SelfAssessmentTab({
                     <span className="h-6 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600">
                       #{rev.questionIndex + 1}
                     </span>
+                    <AssessmentQuestionBadge question={rev} />
                     <span
                       className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
                         rev.isCorrect

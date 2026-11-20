@@ -1,0 +1,33 @@
+{
+  "unit_number": 4,
+  "unit_title": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 14,
+  "lesson_title": "الدرس الرابع: عملية التحسين التكراري للمواقع",
+  "definitions": [
+    {
+      "id": "DEF-161",
+      "term": "دورة PDCA",
+      "current_definition": "طريقة تدفع التحسين قدمًا باستمرار من خلال تكرار الخطوات الأربع: خطط، نفذ، تحقق، تصرف.",
+      "updated_definition": ""
+    },
+    {
+      "id": "DEF-162",
+      "term": "التحسين المستمر",
+      "current_definition": "التحسن قليلًا في كل مرة.",
+      "updated_definition": ""
+    },
+    {
+      "id": "DEF-163",
+      "term": "التفكير التصميمي (Design Thinking)",
+      "current_definition": "طريقة مرنة لفهم المشكلة من منظور المستخدم وتجربة حلول ثم تحسينها.",
+      "updated_definition": ""
+    },
+    {
+      "id": "DEF-164",
+      "term": "اختبار A/B",
+      "current_definition": "تجربة تقارن نسختين A وB وفق مقياس محدد مسبقًا، ويُوزع المستخدمون أو الزيارات بينهما بطريقة عشوائية قدر الإمكان أو وفق تصميم تجربة مناسب.",
+      "updated_definition": ""
+    }
+  ],
+  "total_definitions": 4
+}

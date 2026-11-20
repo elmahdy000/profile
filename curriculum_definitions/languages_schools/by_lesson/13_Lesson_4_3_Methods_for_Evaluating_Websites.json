@@ -1,0 +1,180 @@
+{
+  "unit_number": 4,
+  "unit_title_en": "Unit 4: Web and Media Design",
+  "unit_title_ar": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 13,
+  "lesson_title_en": "Lesson 4-3: Methods for Evaluating Websites",
+  "lesson_title_ar": "الدرس الثالث: طرق تقييم المواقع الإلكترونية",
+  "total_definitions": 12,
+  "approved_definitions_count": 12,
+  "definitions": [
+    {
+      "id": "DEF-150",
+      "term_en": "Qualitative evaluation",
+      "current_definition_en": "Explores in depth the reasons behind users’ psychology and behavior and evaluates qualitative aspects that cannot be expressed in numbers.",
+      "updated_definition_en": "Explores in depth the reasons behind users’ psychology and behavior and evaluates qualitative aspects that cannot be expressed in numbers.",
+      "official_term_en": "Qualitative evaluation",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 90,
+        "printed_page": 89,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-151",
+      "term_en": "Quantitative evaluation",
+      "current_definition_en": "Uses numerical data such as access counts and time and evaluates the current state objectively and statistically.",
+      "updated_definition_en": "Uses numerical data such as access counts and time and evaluates the current state objectively and statistically.",
+      "official_term_en": "Quantitative evaluation",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 90,
+        "printed_page": 89,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-152",
+      "term_en": "Usability testing",
+      "current_definition_en": "Observing actual user operations to identify points that are hard to use.",
+      "updated_definition_en": "Observing actual user operations to identify points that are hard to use.",
+      "official_term_en": "Usability testing",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 90,
+        "printed_page": 89,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-153",
+      "term_en": "Interviews",
+      "current_definition_en": "Hearing users’ direct voices to understand their needs and dissatisfactions.",
+      "updated_definition_en": "Hearing users’ direct voices to understand their needs and dissatisfactions.",
+      "official_term_en": "Interviews",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 90,
+        "printed_page": 89,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-154",
+      "term_en": "Web analytics",
+      "current_definition_en": "A technique for analyzing how a website is accessed using numerical values.",
+      "updated_definition_en": "A technique for analyzing how a website is accessed using numerical values.",
+      "official_term_en": "Web analytics",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 90,
+        "printed_page": 89,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-155",
+      "term_en": "PV (Page View)",
+      "current_definition_en": "The total number of times a page has been viewed.",
+      "updated_definition_en": "The total number of times a page has been viewed.",
+      "official_term_en": "PV (Page View)",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-156",
+      "term_en": "Bounce rate",
+      "current_definition_en": "The proportion of visits that ended after viewing only the first page.",
+      "updated_definition_en": "The proportion of visits that ended after viewing only the first page.",
+      "official_term_en": "Bounce rate",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-157",
+      "term_en": "Conversion rate (CVR)",
+      "current_definition_en": "The proportion of visits that achieved a target action (purchase, registration, etc.).",
+      "updated_definition_en": "The proportion of visits that achieved a target action (purchase, registration, etc.).",
+      "official_term_en": "Conversion rate (CVR)",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-158",
+      "term_en": "Heuristic evaluation",
+      "current_definition_en": "A method in which experts identify problems in a website’s user interface based on rules of thumb (heuristics).",
+      "updated_definition_en": "A method in which experts identify problems in a website’s user interface based on rules of thumb (heuristics).",
+      "official_term_en": "Heuristic evaluation",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-159",
+      "term_en": "Consistency",
+      "current_definition_en": "Whether the design and operations are unified across the site.",
+      "updated_definition_en": "Whether the design and operations are unified across the site.",
+      "official_term_en": "Consistency",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-160",
+      "term_en": "Error prevention",
+      "current_definition_en": "Whether the design makes it hard for users to make mistakes.",
+      "updated_definition_en": "Whether the design makes it hard for users to make mistakes.",
+      "official_term_en": "Error prevention",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-161",
+      "term_en": "Visibility of system status",
+      "current_definition_en": "Whether system status is clearly indicated to users (e.g., processing indicators, input error messages).",
+      "updated_definition_en": "Whether system status is clearly indicated to users (e.g., processing indicators, input error messages).",
+      "official_term_en": "Visibility of system status",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 91,
+        "printed_page": 90,
+        "basis": "table_description"
+      }
+    }
+  ]
+}

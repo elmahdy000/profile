@@ -1,0 +1,1801 @@
+{
+  "unit_id": 1,
+  "unit_title": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+  "lesson_id": "1_3",
+  "lesson_title": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+  "total_questions": 50,
+  "questions": [
+    {
+      "id": 50110,
+      "question_number": 1,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح كيف أصبحت تقنيات مثل منصات الفيديو والمساعدات الصوتية جزءًا من الخدمات اليومية، وما هو الدور الأساسي للذكاء الاصطناعي فيها؟",
+      "model_answer": "1. منصات الفيديو: تستخدم أنظمة التوصية بيانات مشاهدة المستخدم السابقة لتوقع تفضيلاته واقتراح مقاطع مناسبة.\n2. المساعدات الصوتية: تتعرف على الكلام وتفهم الأوامر وتنفذ المهام أو تقدم الإجابة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. منصات الفيديو: تستخدم أنظمة التوصية بيانات مشاهدة المستخدم السابقة لتوقع تفضيلاته واقتراح مقاطع مناسبة.",
+        "2. المساعدات الصوتية: تتعرف على الكلام وتفهم الأوامر وتنفذ المهام أو تقدم الإجابة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50110,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-034",
+        "pdf_page": 17,
+        "match_score": 98.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.268,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50111,
+      "question_number": 2,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "وضح المقصود بـ«الذكاء الاصطناعي للتشخيص بالصور» في مجال الرعاية الصحية، وكيف يسهم في الكشف عن الأمراض؟",
+      "model_answer": "يستخدم الذكاء الاصطناعي تحليل الصور الطبية مثل الأشعة السينية والمقطعية للمساعدة في التعرف على علامات المرض.\nوهو أداة مساعدة للطبيب؛ إذ يجب أن يراجع الطبيب النتائج ويؤكد التشخيص النهائي.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يستخدم الذكاء الاصطناعي تحليل الصور الطبية مثل الأشعة السينية والمقطعية للمساعدة في التعرف على علامات المرض.",
+        "وهو أداة مساعدة للطبيب؛ إذ يجب أن يراجع الطبيب النتائج ويؤكد التشخيص النهائي."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50111,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-035",
+        "pdf_page": 17,
+        "match_score": 99.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.369,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50112,
+      "question_number": 3,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر أربع خدمات أساسية للذكاء الاصطناعي في الحياة اليومية مع بيان دور الذكاء الاصطناعي في كل خدمة.",
+      "model_answer": "1. أنظمة التوصية: اقتراح فيديوهات أو منتجات وفق السلوك السابق.\n2. المساعد الصوتي: التعرف على الأوامر الصوتية وتنفيذها.\n3. الترجمة الآلية: ترجمة النصوص أو الكلام بين اللغات.\n4. التعرف على الوجه: التعرف على الشخص في الصور لدعم وظائف مثل فتح الهاتف.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. أنظمة التوصية: اقتراح فيديوهات أو منتجات وفق السلوك السابق.",
+        "2. المساعد الصوتي: التعرف على الأوامر الصوتية وتنفيذها.",
+        "3. الترجمة الآلية: ترجمة النصوص أو الكلام بين اللغات.",
+        "4. التعرف على الوجه: التعرف على الشخص في الصور لدعم وظائف مثل فتح الهاتف."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50112,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-036",
+        "pdf_page": 17,
+        "match_score": 99.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.454,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50113,
+      "question_number": 4,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "ما الدور الذي يلعبه الذكاء الاصطناعي في قطاع التصنيع؟ اذكر مثالين توضيحيين.",
+      "model_answer": "1. فحص جودة المنتجات آليًا بالاعتماد على تحليل الصور.\n2. الصيانة التنبؤية، أي توقع الأعطال في الآلات قبل حدوثها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. فحص جودة المنتجات آليًا بالاعتماد على تحليل الصور.",
+        "2. الصيانة التنبؤية، أي توقع الأعطال في الآلات قبل حدوثها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50113,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-037",
+        "pdf_page": 17,
+        "match_score": 83.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.263,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50114,
+      "question_number": 5,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "وضح كيف يتم استخدام الذكاء الاصطناعي في قطاع الزراعة ودوره في مراقبة المحاصيل والآفات.",
+      "model_answer": "يُستخدم الذكاء الاصطناعي في الزراعة للتنبؤ بموعد الحصاد والكشف عن الآفات وأمراض المحاصيل؛ مما يساعد على متابعة حالتها ودعم قرارات الإنتاج.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يُستخدم الذكاء الاصطناعي في الزراعة للتنبؤ بموعد الحصاد والكشف عن الآفات وأمراض المحاصيل؛ مما يساعد على متابعة حالتها ودعم قرارات الإنتاج."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50114,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-038",
+        "pdf_page": 18,
+        "match_score": 98.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.281,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50115,
+      "question_number": 6,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر أربع مهام يمكن أن يؤديها الذكاء الاصطناعي في معالجة البيانات المعقدة والتعرف على الصور والأصوات.",
+      "model_answer": "1. إيجاد الأنماط في البيانات المعقدة وتصنيفها.\n2. التعرف على محتوى الصور.\n3. التعرف على الأصوات والكلام.\n4. الاستدلال الاحتمالي والتنبؤ من البيانات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. إيجاد الأنماط في البيانات المعقدة وتصنيفها.",
+        "2. التعرف على محتوى الصور.",
+        "3. التعرف على الأصوات والكلام.",
+        "4. الاستدلال الاحتمالي والتنبؤ من البيانات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50115,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-039",
+        "pdf_page": 18,
+        "match_score": 96.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.275,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50116,
+      "question_number": 7,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح مقولة «الذكاء الاصطناعي بارع في إيجاد الأنماط في البيانات، لكن الحكم البشري لا يزال ضروريًا».",
+      "model_answer": "يستطيع الذكاء الاصطناعي إيجاد الأنماط وتصنيفها والتعرف على الصور والأصوات والتنبؤ.\nلكن نتائجه قد تتأثر ببيانات تدريب غير كافية أو متحيزة؛ لذلك يلزم الحكم البشري في القرارات ذات الأثر الكبير وفي مسائل الخصوصية والأخلاق.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يستطيع الذكاء الاصطناعي إيجاد الأنماط وتصنيفها والتعرف على الصور والأصوات والتنبؤ.",
+        "لكن نتائجه قد تتأثر ببيانات تدريب غير كافية أو متحيزة؛ لذلك يلزم الحكم البشري في القرارات ذات الأثر الكبير وفي مسائل الخصوصية والأخلاق."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50116,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-040",
+        "pdf_page": 19,
+        "match_score": 94.6,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 23,
+        "lexical_similarity": 0.3,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50117,
+      "question_number": 8,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر ثلاثة احتياطات للاستخدام المتعلقة بالذكاء الاصطناعي.",
+      "model_answer": "1. التحقق من دقة النتائج وعدم الاعتماد عليها دون مراجعة.\n2. حماية البيانات الشخصية ومراعاة الخصوصية.\n3. الحذر من التحيز وتأكيد مسؤولية البشر عن القرارات عالية الأثر.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. التحقق من دقة النتائج وعدم الاعتماد عليها دون مراجعة.",
+        "2. حماية البيانات الشخصية ومراعاة الخصوصية.",
+        "3. الحذر من التحيز وتأكيد مسؤولية البشر عن القرارات عالية الأثر."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50117,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-041",
+        "pdf_page": 19,
+        "match_score": 95.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.223,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50118,
+      "question_number": 9,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح كيفية استخدام أنظمة التوصية في الحياة اليومية مع ذكر أمثلة تطبيقية مثل يوتيوب وأمازون.",
+      "model_answer": "تستخدم أنظمة التوصية بيانات السلوك السابق للمستخدم للتنبؤ بتفضيلاته واقتراح ما قد يهمه. ففي يوتيوب يمكن أن تقترح مقاطع فيديو، وفي أمازون يمكن أن تعرض توصيات لمنتجات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تستخدم أنظمة التوصية بيانات السلوك السابق للمستخدم للتنبؤ بتفضيلاته واقتراح ما قد يهمه. ففي يوتيوب يمكن أن تقترح مقاطع فيديو، وفي أمازون يمكن أن تعرض توصيات لمنتجات."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50118,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-042",
+        "pdf_page": 19,
+        "match_score": 100.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.298,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50119,
+      "question_number": 10,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر استخدامات الذكاء الاصطناعي في الرعاية الصحية.",
+      "model_answer": "1. التشخيص بالصور للكشف المساعد عن الأمراض.\n2. دعم اكتشاف الأدوية وتطويرها.\nويظل تأكيد التشخيص الطبي من اختصاص الطبيب البشري.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. التشخيص بالصور للكشف المساعد عن الأمراض.",
+        "2. دعم اكتشاف الأدوية وتطويرها.",
+        "ويظل تأكيد التشخيص الطبي من اختصاص الطبيب البشري."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50119,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-043",
+        "pdf_page": 19,
+        "match_score": 99.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.35,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50120,
+      "question_number": 11,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر أربعة قطاعات صناعية رئيسية يتم فيها إدخال تقنيات الذكاء الاصطناعي مع بيان دور كل قطاع باختصار.",
+      "model_answer": "1. الرعاية الصحية: تحليل الأشعة ودعم اكتشاف الأدوية.\n2. التصنيع: فحص جودة المنتجات والصيانة التنبؤية.\n3. الزراعة: توقع موعد الحصاد والكشف عن الآفات.\n4. الخدمات اللوجستية: تحسين مسارات التوصيل.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. الرعاية الصحية: تحليل الأشعة ودعم اكتشاف الأدوية.",
+        "2. التصنيع: فحص جودة المنتجات والصيانة التنبؤية.",
+        "3. الزراعة: توقع موعد الحصاد والكشف عن الآفات.",
+        "4. الخدمات اللوجستية: تحسين مسارات التوصيل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50120,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-044",
+        "pdf_page": 19,
+        "match_score": 89.4,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.265,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50121,
+      "question_number": 12,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح ما يبرع فيه الذكاء الاصطناعي وما يتطلب الحذر عند استخدامه فيما يتعلق بالقرارات ذات البعد الأخلاقي والخصوصية.",
+      "model_answer": "يبرع الذكاء الاصطناعي في إيجاد الأنماط في البيانات المعقدة وتصنيفها، والتعرف على الصور والأصوات والنصوص، والاستدلال الاحتمالي والتنبؤ. ويستلزم الحذر عند التعامل مع البيانات الشخصية، أو إصدار أحكام أخلاقية قد تتضمن تحيزًا أو تمييزًا، أو اتخاذ قرارات عالية الأثر؛ لأن دقة النتائج وعدالتها غير مضمونتين دون تحقق وإشراف بشري.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يبرع الذكاء الاصطناعي في إيجاد الأنماط في البيانات المعقدة وتصنيفها، والتعرف على الصور والأصوات والنصوص، والاستدلال الاحتمالي والتنبؤ. ويستلزم الحذر عند التعامل مع البيانات الشخصية، أو إصدار أحكام أخلاقية قد تتضمن تحيزًا أو تمييزًا، أو اتخاذ قرارات عالية الأثر؛ لأن دقة النتائج وعدالتها غير مضمونتين دون تحقق وإشراف بشري."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50121,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.331,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50122,
+      "question_number": 13,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر دور الذكاء الاصطناعي في المساعدات الصوتية مع ذكر مثالين.",
+      "model_answer": "يتعرف الذكاء الاصطناعي في المساعدات الصوتية على الصوت، ويفهم أوامر المستخدم، ثم ينفذها. مثالان: سيري (Siri) ومساعد جوجل.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "يتعرف الذكاء الاصطناعي في المساعدات الصوتية على الصوت، ويفهم أوامر المستخدم، ثم ينفذها. مثالان: سيري (Siri) ومساعد جوجل."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50122,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-045",
+        "pdf_page": 20,
+        "match_score": 97.5,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.293,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50123,
+      "question_number": 14,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "ناقش دور الذكاء الاصطناعي في قطاعي الزراعة والخدمات اللوجستية في تحسين العمليات والإنتاجية.",
+      "model_answer": "في الزراعة يُستخدم للتنبؤ بموعد الحصاد والكشف عن الآفات والأمراض. وفي الخدمات اللوجستية يُستخدم لتحسين مسارات التوصيل. وهذان الاستخدامان يساعدان على دعم القرارات وتحسين العمليات في كل قطاع.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "في الزراعة يُستخدم للتنبؤ بموعد الحصاد والكشف عن الآفات والأمراض. وفي الخدمات اللوجستية يُستخدم لتحسين مسارات التوصيل. وهذان الاستخدامان يساعدان على دعم القرارات وتحسين العمليات في كل قطاع."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50123,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-046",
+        "pdf_page": 20,
+        "match_score": 97.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.319,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50124,
+      "question_number": 15,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "وضح باختصار احتياطات الاستخدام المرتبطة ببيانات التدريب المتحيزة والقرارات عالية الأثر وتحديد المسؤولية.",
+      "model_answer": "1. بيانات التدريب المتحيزة أو غير الممثلة قد تؤدي إلى نتائج غير عادلة أو غير دقيقة.\n2. القرارات عالية الأثر تحتاج إلى حكم بشري ومراجعة.\n3. يجب تحديد الأطراف المسؤولة عن تطوير النظام وتشغيله واستخدامه عند وقوع خطأ.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "1. بيانات التدريب المتحيزة أو غير الممثلة قد تؤدي إلى نتائج غير عادلة أو غير دقيقة.",
+        "2. القرارات عالية الأثر تحتاج إلى حكم بشري ومراجعة.",
+        "3. يجب تحديد الأطراف المسؤولة عن تطوير النظام وتشغيله واستخدامه عند وقوع خطأ."
+      ],
+      "writing_style": "SEQUENCE",
+      "writing_tip": "اكتب المراحل أو الأسهم بالترتيب الصحيح.",
+      "original_id": 50124,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-047",
+        "pdf_page": 20,
+        "match_score": 99.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.204,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50125,
+      "question_number": 16,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح سبب ضرورة وجود تأكيد من طبيب بشري للتشخيص الطبي بدلًا من الاعتماد على الذكاء الاصطناعي وحده.",
+      "model_answer": "لأن نظام التشخيص بالصور قد يخطئ، خاصةً إذا كانت بيانات التدريب غير كافية أو غير ممثلة أو متحيزة. والتشخيص الطبي قرار عالي الأثر؛ لذا يجب أن يراجع طبيب بشري النتائج ويؤكد التشخيص النهائي بدلًا من الاعتماد على النظام وحده.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن نظام التشخيص بالصور قد يخطئ، خاصةً إذا كانت بيانات التدريب غير كافية أو غير ممثلة أو متحيزة. والتشخيص الطبي قرار عالي الأثر؛ لذا يجب أن يراجع طبيب بشري النتائج ويؤكد التشخيص النهائي بدلًا من الاعتماد على النظام وحده."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50125,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.211,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50126,
+      "question_number": 17,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح ثلاث خدمات يمكن أن يؤديها الذكاء الاصطناعي في الحياة اليومية.",
+      "model_answer": "1. أنظمة التوصية: اقتراح منتجات أو فيديوهات وفق الاهتمامات.\n2. المساعدات الصوتية: فهم الأوامر المنطوقة وتنفيذها.\n3. الترجمة الآلية: نقل الكلام أو النص من لغة إلى أخرى.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. أنظمة التوصية: اقتراح منتجات أو فيديوهات وفق الاهتمامات.",
+        "2. المساعدات الصوتية: فهم الأوامر المنطوقة وتنفيذها.",
+        "3. الترجمة الآلية: نقل الكلام أو النص من لغة إلى أخرى."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50126,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-048",
+        "pdf_page": 21,
+        "match_score": 96.1,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.337,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50127,
+      "question_number": 18,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر مثالين لإسهام الذكاء الاصطناعي في قطاع التصنيع.",
+      "model_answer": "1. فحص جودة المنتجات بالاعتماد على تحليل الصور.\n2. الصيانة التنبؤية لتوقع أعطال الآلات قبل حدوثها.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "1. فحص جودة المنتجات بالاعتماد على تحليل الصور.",
+        "2. الصيانة التنبؤية لتوقع أعطال الآلات قبل حدوثها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50127,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-049",
+        "pdf_page": 21,
+        "match_score": 95.0,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.223,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50128,
+      "question_number": 19,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "وضح الأبعاد المتعلقة بمشكلة الصندوق الأسود وقضايا الحقوق عند استخدام أعمال محمية بحقوق المؤلف كبيانات تدريب.",
+      "model_answer": "مشكلة الصندوق الأسود: صعوبة فهم كيف وصل النظام إلى قراره أو حكمه، مما يصعب تقييم الأخطاء.\nأما استخدام أعمال محمية بحقوق المؤلف ضمن بيانات التدريب فيثير مسائل تتعلق بحقوق أصحاب تلك الأعمال، ويجب مراعاتها عند استخدام الذكاء الاصطناعي.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "مشكلة الصندوق الأسود: صعوبة فهم كيف وصل النظام إلى قراره أو حكمه، مما يصعب تقييم الأخطاء.",
+        "أما استخدام أعمال محمية بحقوق المؤلف ضمن بيانات التدريب فيثير مسائل تتعلق بحقوق أصحاب تلك الأعمال، ويجب مراعاتها عند استخدام الذكاء الاصطناعي."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50128,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "OFFICIAL_ASSESSMENT_NEAR_LITERAL",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-050",
+        "pdf_page": 21,
+        "match_score": 97.2,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.255,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50129,
+      "question_number": 20,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "وضح الفروق الجوهرية بين ما يبرع فيه الذكاء الاصطناعي من إيجاد الأنماط وبين الجوانب التي تتطلب الحذر الشديد مثل الخصوصية والأخلاق.",
+      "model_answer": "يبرع الذكاء الاصطناعي في تحليل الأنماط والتعرف على الصور والأصوات والتنبؤ.\nأما الأخلاق والخصوصية والقرارات ذات الأثر الكبير فتحتاج إلى الحذر والتحقق والحكم البشري لأن النتائج قد تكون متحيزة أو غير دقيقة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يبرع الذكاء الاصطناعي في تحليل الأنماط والتعرف على الصور والأصوات والتنبؤ.",
+        "أما الأخلاق والخصوصية والقرارات ذات الأثر الكبير فتحتاج إلى الحذر والتحقق والحكم البشري لأن النتائج قد تكون متحيزة أو غير دقيقة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50129,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "ASSESSMENT_SIMILAR_WORDING",
+      "assessment_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-Assessments-1.pdf",
+        "official_essay_id": "OFF-ESSAY-051",
+        "pdf_page": 21,
+        "match_score": 88.8,
+        "matching_method": "normalized_text_similarity"
+      },
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.271,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50130,
+      "question_number": 21,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "قارن بين المساعد الصوتي والترجمة الآلية من حيث المهمة التي يؤديها كل منهما، مع ذكر مثال وارد لكل خدمة.",
+      "model_answer": "1. المساعد الصوتي: يتعرف على الكلام ويفهم الأوامر وينفذها، مثل Siri.\n2. الترجمة الآلية: تحول النص أو الكلام بين اللغات، مثل خدمة ترجمة النصوص على الإنترنت.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "1. المساعد الصوتي: يتعرف على الكلام ويفهم الأوامر وينفذها، مثل Siri.",
+        "2. الترجمة الآلية: تحول النص أو الكلام بين اللغات، مثل خدمة ترجمة النصوص على الإنترنت."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50130,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 23,
+        "lexical_similarity": 0.229,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50131,
+      "question_number": 22,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "ما الفرق بين التعرف على الوجه والتشخيص بالصور من حيث مجال الاستخدام والهدف؟",
+      "model_answer": "التعرف على الوجه: تحليل الوجوه في الصور للتعرف على الأشخاص، مثل فتح الهاتف.\nالتشخيص بالصور: تحليل الأشعة الطبية للمساعدة في اكتشاف الأمراض، مع مراجعة الطبيب للنتيجة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "التعرف على الوجه: تحليل الوجوه في الصور للتعرف على الأشخاص، مثل فتح الهاتف.",
+        "التشخيص بالصور: تحليل الأشعة الطبية للمساعدة في اكتشاف الأمراض، مع مراجعة الطبيب للنتيجة."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50131,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.257,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50132,
+      "question_number": 23,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "قارن بين «الهلوسة» و«مشكلة الصندوق الأسود» في أنظمة الذكاء الاصطناعي.",
+      "model_answer": "الهلوسة: إنتاج معلومات تبدو مقنعة لكنها غير صحيحة أو بلا سند.\nالصندوق الأسود: صعوبة تفسير الخطوات أو العوامل التي أدت إلى قرار النظام.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الهلوسة: إنتاج معلومات تبدو مقنعة لكنها غير صحيحة أو بلا سند.",
+        "الصندوق الأسود: صعوبة تفسير الخطوات أو العوامل التي أدت إلى قرار النظام."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50132,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.291,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50133,
+      "question_number": 24,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "ترغب مكتبة مدرسية في اقتراح كتب للطلاب بناءً على ما استعاروه سابقًا. ما التقنية المناسبة؟ وكيف تعمل؟ واذكر احتياطًا واحدًا عند استخدامها.",
+      "model_answer": "التقنية المناسبة هي نظام التوصية\nإذ يستند إلى بيانات الاستعارات السابقة لتقدير تفضيلات الطالب واقتراح كتب قد تهمه. والاحتياط هو مراعاة خصوصية بيانات الطلاب والتحقق من ملاءمة التوصيات\nلأن مخرجات الذكاء الاصطناعي ليست مضمونة الدقة دائمًا.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التقنية المناسبة هي نظام التوصية",
+        "إذ يستند إلى بيانات الاستعارات السابقة لتقدير تفضيلات الطالب واقتراح كتب قد تهمه. والاحتياط هو مراعاة خصوصية بيانات الطلاب والتحقق من ملاءمة التوصيات",
+        "لأن مخرجات الذكاء الاصطناعي ليست مضمونة الدقة دائمًا."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50133,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.217,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50134,
+      "question_number": 25,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اذكر فائدة واحدة لاستخدام الذكاء الاصطناعي في الزراعة ومصدر قلق واحد ينبغي مراعاته قبل إدخاله.",
+      "model_answer": "الفائدة: مساعدة المزارع على كشف الآفات والأمراض أو التنبؤ بموعد الحصاد.\nمصدر القلق: قد تخطئ النتائج إذا كانت بيانات التدريب غير كافية أو متحيزة؛ لذلك ينبغي مراجعتها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الفائدة: مساعدة المزارع على كشف الآفات والأمراض أو التنبؤ بموعد الحصاد.",
+        "مصدر القلق: قد تخطئ النتائج إذا كانت بيانات التدريب غير كافية أو متحيزة؛ لذلك ينبغي مراجعتها."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50134,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.307,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50135,
+      "question_number": 26,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "لماذا قد يثير استخدام خدمات الذكاء الاصطناعي لبيانات ما يشاهده المستخدم أو يشتريه أو يقوله مخاوف تتعلق بالخصوصية؟",
+      "model_answer": "لأن هذه المعلومات تمثل بيانات شخصية عن سلوك المستخدم واهتماماته، ويستلزم التعامل معها الحذر وحماية الخصوصية. لذلك يجب مراعاة كيفية استخدام تلك البيانات وعدم تجاهل مسؤولية البشر عن استخدامها.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن هذه المعلومات تمثل بيانات شخصية عن سلوك المستخدم واهتماماته، ويستلزم التعامل معها الحذر وحماية الخصوصية. لذلك يجب مراعاة كيفية استخدام تلك البيانات وعدم تجاهل مسؤولية البشر عن استخدامها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50135,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.232,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50136,
+      "question_number": 27,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "لماذا قد تصبح نتائج الذكاء الاصطناعي غير دقيقة عندما تكون بيانات التدريب غير كافية أو غير ممثلة أو متحيزة؟",
+      "model_answer": "لأن النظام يعتمد على الأنماط التي يتعلمها من البيانات. فإذا كانت البيانات غير كافية أو لا تمثل الحالات المختلفة أو تتضمن تحيزًا، فقد لا تعكس الأنماط المتعلمة الواقع بصورة مناسبة؛ مما يؤدي إلى نتائج غير دقيقة أو متحيزة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن النظام يعتمد على الأنماط التي يتعلمها من البيانات. فإذا كانت البيانات غير كافية أو لا تمثل الحالات المختلفة أو تتضمن تحيزًا، فقد لا تعكس الأنماط المتعلمة الواقع بصورة مناسبة؛ مما يؤدي إلى نتائج غير دقيقة أو متحيزة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50136,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.244,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50137,
+      "question_number": 28,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "قارن أثر الخطأ المحتمل في اقتراح فيديو غير مناسب وأثر الخطأ في تشخيص مرض من صورة طبية. أيهما يتطلب إشرافًا بشريًا أكبر؟ ولماذا؟",
+      "model_answer": "اقتراح فيديو غير مناسب خطأ في خدمة توصية يومية. أما التشخيص الخاطئ فقد يؤثر في صحة شخص، ولذلك فهو أعلى أثرًا. لهذا يتطلب التشخيص بالصور مراجعة طبيب بشري وتأكيدًا نهائيًا، ولا ينبغي الاعتماد على نتيجة الذكاء الاصطناعي وحدها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "اقتراح فيديو غير مناسب خطأ في خدمة توصية يومية. أما التشخيص الخاطئ فقد يؤثر في صحة شخص، ولذلك فهو أعلى أثرًا. لهذا يتطلب التشخيص بالصور مراجعة طبيب بشري وتأكيدًا نهائيًا، ولا ينبغي الاعتماد على نتيجة الذكاء الاصطناعي وحدها."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50137,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.185,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50138,
+      "question_number": 29,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "اشرح لماذا لا يعني تفوق الذكاء الاصطناعي في الاستدلال الاحتمالي والتنبؤ اعتمادَ مخرجاته بوصفها نتائج صحيحة دائمًا.",
+      "model_answer": "لأن الذكاء الاصطناعي يستدل ويتنبأ استنادًا إلى البيانات، وقد يخطئ إذا كانت البيانات غير كافية أو متحيزة أو غير ممثلة. لذلك يجب التحقق من مخرجاته، خاصةً في الاستخدامات ذات الأثر المرتفع.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لأن الذكاء الاصطناعي يستدل ويتنبأ استنادًا إلى البيانات، وقد يخطئ إذا كانت البيانات غير كافية أو متحيزة أو غير ممثلة. لذلك يجب التحقق من مخرجاته، خاصةً في الاستخدامات ذات الأثر المرتفع."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50138,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.27,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50139,
+      "question_number": 30,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "صنّف المهام الآتية إلى «ما يبرع فيه الذكاء الاصطناعي» و«ما يتطلب الحذر عند استخدامه»: إيجاد السمات في الصور والنصوص وتصنيفها، الأحكام الأخلاقية، الاستدلال الاحتمالي والتنبؤ، اتخاذ قرار يشمل بيانات شخصية، التعرف على الصور والصوت والنص وتوليد بعض المحتوى.",
+      "model_answer": "ما يبرع فيه: إيجاد السمات في الصور والنصوص وتصنيفها\nوالاستدلال الاحتمالي والتنبؤ من البيانات\nوالتعرف على الصور والصوت والنص وتوليد بعض المحتوى.",
+      "explanation": "",
+      "difficulty": "easy",
+      "points": 10,
+      "student_answer_steps": [
+        "ما يبرع فيه: إيجاد السمات في الصور والنصوص وتصنيفها",
+        "والاستدلال الاحتمالي والتنبؤ من البيانات",
+        "والتعرف على الصور والصوت والنص وتوليد بعض المحتوى."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50139,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 23,
+        "lexical_similarity": 0.338,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50221,
+      "question_number": 31,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "لاحظ طالب أن منصة فيديو تقترح مقاطع شبيهة بما شاهده سابقًا. فسّر نوع البيانات الذي تعتمد عليه الآلية وطبيعة نتيجتها.",
+      "model_answer": "تستخدم أنظمة التوصية بيانات السلوك السابق للتنبؤ بتفضيلات المستخدم وعرض مقاطع قد تناسب اهتماماته.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "تستخدم أنظمة التوصية بيانات السلوك السابق للتنبؤ بتفضيلات المستخدم وعرض مقاطع قد تناسب اهتماماته."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50221,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.217,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50222,
+      "question_number": 32,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "طلب شخص من هاتفه معرفة الطقس بصوته، فاستجاب الهاتف. ما العمليات التي تفسر عمل الخدمة؟",
+      "model_answer": "يتعرف المساعد الصوتي على الكلام ويفهم الأمر ثم ينفذه أو يقدّم الاستجابة المطلوبة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يتعرف المساعد الصوتي على الكلام ويفهم الأمر ثم ينفذه أو يقدّم الاستجابة المطلوبة."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50222,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 23,
+        "lexical_similarity": 0.161,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50223,
+      "question_number": 33,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "فتح مستخدم صفحة أجنبية فحوّل النص إلى لغته. لماذا يختلف هذا الاستخدام عن خدمة التوصية؟",
+      "model_answer": "الترجمة الآلية تحول النص تلقائيًا إلى لغة أخرى، أما التوصية فتتنبأ باهتمامات المستخدم من سلوكه السابق وتعرض محتوى مناسبًا.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الترجمة الآلية تحول النص تلقائيًا إلى لغة أخرى، أما التوصية فتتنبأ باهتمامات المستخدم من سلوكه السابق وتعرض محتوى مناسبًا."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50223,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.21,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50224,
+      "question_number": 34,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "تتعرف كاميرا هاتف على وجه صاحب الجهاز، بينما يقترح تطبيق صورًا جديدة. كيف تختلف وظيفة التعرف عن توليد الصور؟",
+      "model_answer": "التعرف على الوجه يكشف الوجوه الموجودة في الصور ويتعرف عليها، أما توليد الصور فينشئ صورًا جديدة؛ الأولى تعرّف والثانية توليد محتوى.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "التعرف على الوجه يكشف الوجوه الموجودة في الصور ويتعرف عليها، أما توليد الصور فينشئ صورًا جديدة؛ الأولى تعرّف والثانية توليد محتوى."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50224,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 23,
+        "lexical_similarity": 0.184,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50225,
+      "question_number": 35,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يريد مستشفى اعتماد تشخيص تلقائي من صور الأشعة دون مراجعة طبيب. قيّم القرار في ضوء قدرات الذكاء الاصطناعي وحدوده.",
+      "model_answer": "يستطيع الذكاء الاصطناعي المساعدة في اكتشاف أنماط الأمراض بالصور، لكنه قد يخطئ؛ لذا ينبغي أن يراجع الطبيب البشري التشخيص النهائي لارتفاع أثر القرار.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يستطيع الذكاء الاصطناعي المساعدة في اكتشاف أنماط الأمراض بالصور، لكنه قد يخطئ؛ لذا ينبغي أن يراجع الطبيب البشري التشخيص النهائي لارتفاع أثر القرار."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50225,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.295,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50226,
+      "question_number": 36,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يستخدم مزارع نظامًا لتحليل صور النباتات وتحديد احتمال وجود آفات. ما الاستخدام الصناعي المقصود، وما العامل الذي قد يضعف دقته؟",
+      "model_answer": "هذا استخدام للذكاء الاصطناعي في الزراعة للكشف عن الآفات والأمراض؛ وقد تقل دقته إذا كانت بيانات التدريب غير كافية أو غير ممثلة.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "هذا استخدام للذكاء الاصطناعي في الزراعة للكشف عن الآفات والأمراض؛ وقد تقل دقته إذا كانت بيانات التدريب غير كافية أو غير ممثلة."
+      ],
+      "writing_style": "DEFINITION",
+      "writing_tip": "ابدأ بالتعريف ثم أضف الجزء الآخر المطلوب فقط.",
+      "original_id": 50226,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.244,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50227,
+      "question_number": 37,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "تنبه مصنع إلى احتمال عطل آلة قبل توقفها، ويفحص آخر جودة المنتجات بالصور. حدد الدور المختلف للذكاء الاصطناعي في كل حالة.",
+      "model_answer": "الأولى صيانة تنبؤية تتوقع الأعطال قبل وقوعها؛ والثانية أتمتة فحص جودة المنتج لرصد العيوب.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "الأولى صيانة تنبؤية تتوقع الأعطال قبل وقوعها؛ والثانية أتمتة فحص جودة المنتج لرصد العيوب."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50227,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.177,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50228,
+      "question_number": 38,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "تريد شركة توصيل تحسين طرق انتقال الطلبات. ما مهمة الذكاء الاصطناعي المناسبة ولماذا تنتمي إلى قطاع مختلف عن التصنيع؟",
+      "model_answer": "المهمة تحسين مسارات التوصيل، وهي من استخدامات الذكاء الاصطناعي في الخدمات اللوجستية؛ أما التصنيع فيتعلق بفحص جودة المنتجات والصيانة التنبؤية.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "المهمة تحسين مسارات التوصيل، وهي من استخدامات الذكاء الاصطناعي في الخدمات اللوجستية؛ أما التصنيع فيتعلق بفحص جودة المنتجات والصيانة التنبؤية."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50228,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.316,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50229,
+      "question_number": 39,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "تريد مكتبة مدرسية التوصية بكتب للطلاب بالاعتماد على سجل استعاراتهم. وضح الفائدة واحتياطًا ضروريًا قبل استخدام البيانات.",
+      "model_answer": "الفائدة توقع تفضيلات الطلاب واقتراح كتب مناسبة من سجل الاستعارات؛ والاحتياط حماية بيانات الاستعارات والمعلومات الشخصية وعدم استخدامها بصورة غير مناسبة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الفائدة توقع تفضيلات الطلاب واقتراح كتب مناسبة من سجل الاستعارات؛ والاحتياط حماية بيانات الاستعارات والمعلومات الشخصية وعدم استخدامها بصورة غير مناسبة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50229,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.146,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50230,
+      "question_number": 40,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يعتمد فريق على نتائج نموذج مدرّب على بيانات لا تمثل كل الحالات. ما المخاطرة المتوقعة، وما سببها؟",
+      "model_answer": "قد تصبح النتائج غير دقيقة أو متحيزة لأن بيانات التدريب غير الممثلة أو المتحيزة لا تعكس الأنماط المطلوبة بصورة كافية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "قد تصبح النتائج غير دقيقة أو متحيزة لأن بيانات التدريب غير الممثلة أو المتحيزة لا تعكس الأنماط المطلوبة بصورة كافية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50230,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.145,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50231,
+      "question_number": 41,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "أنتج مساعد نصًا مقنعًا عن موضوع دون سند واضح. هل تعد سرعة إنتاج النص دليلًا على صحته؟ علّل.",
+      "model_answer": "لا؛ فقد يولّد الذكاء الاصطناعي معلومات غير صحيحة أو غير مدعومة تبدو مقنعة، وهو ما يعرف بالهلوسة؛ يلزم التحقق من المخرجات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "لا؛ فقد يولّد الذكاء الاصطناعي معلومات غير صحيحة أو غير مدعومة تبدو مقنعة، وهو ما يعرف بالهلوسة؛ يلزم التحقق من المخرجات."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50231,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.182,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50232,
+      "question_number": 42,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "أصدر نظام تنبؤ حكمًا مهمًا ولم تتضح طريقة وصوله إليه. ما المشكلة التي تواجه المستخدم عند تقييم الحكم؟",
+      "model_answer": "هذه مشكلة الصندوق الأسود؛ يصعب فهم أساس الحكم وبالتالي يصعب التحقق من الأخطاء أو التحيز في النتيجة.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "هذه مشكلة الصندوق الأسود؛ يصعب فهم أساس الحكم وبالتالي يصعب التحقق من الأخطاء أو التحيز في النتيجة."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50232,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.186,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50233,
+      "question_number": 43,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يريد طالب حصر فوائد الذكاء الاصطناعي في توليد المحتوى فقط. اذكر مجالَي قدرة آخرين من المقرر مع تطبيق واحد.",
+      "model_answer": "يبرع أيضًا في إيجاد وتصنيف الأنماط وفي التعرف والتنبؤ؛ مثل التعرف على صور الأشعة أو توقع أعطال الآلات.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "يبرع أيضًا في إيجاد وتصنيف الأنماط وفي التعرف والتنبؤ؛ مثل التعرف على صور الأشعة أو توقع أعطال الآلات."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50233,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.222,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50234,
+      "question_number": 44,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يرى مدير مصنع أن النظام الذكي يجب أن يتخذ وحده كل القرارات حتى لو كانت عالية الأثر. ما الاعتراض المستند إلى خصائص النظام؟",
+      "model_answer": "لا تضمن النماذج دقة كل النتائج، وقد تتأثر بالتحيز وجودة البيانات؛ لذا يحتاج القرار عالي الأثر إلى حكم بشري واضح المسؤولية.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "لا تضمن النماذج دقة كل النتائج، وقد تتأثر بالتحيز وجودة البيانات؛ لذا يحتاج القرار عالي الأثر إلى حكم بشري واضح المسؤولية."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50234,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.165,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50235,
+      "question_number": 45,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "تقارن مدرسة نظامًا يقترح كتبًا وآخر يدعم اكتشاف أمراض بصور الأشعة. ما نوع المهارة المشتركة، ولماذا يختلف مستوى الحذر المطلوب؟",
+      "model_answer": "يشتركان في تحليل أنماط البيانات للتنبؤ أو المساعدة في القرار\nلكن التشخيص الطبي أعلى أثرًا إذا حدث خطأ، فيستلزم مراجعة بشرية أقوى.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "يشتركان في تحليل أنماط البيانات للتنبؤ أو المساعدة في القرار",
+        "لكن التشخيص الطبي أعلى أثرًا إذا حدث خطأ، فيستلزم مراجعة بشرية أقوى."
+      ],
+      "writing_style": "COMPARISON",
+      "writing_tip": "اذكر طرفي المقارنة بوضوح وبالترتيب.",
+      "original_id": 50235,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 22,
+        "lexical_similarity": 0.156,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50236,
+      "question_number": 46,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "حلّل لماذا يمكن لنظام تحليل صور الأشعة ونظام فحص جودة المنتجات أن يشتركا في مهارة حاسوبية واحدة، مع اختلاف الحاجة إلى المراجعة البشرية.",
+      "model_answer": "كلاهما يستفيد من التعرف على الأنماط في الصور؛ لكن نتيجة التشخيص الطبي قد تكون عالية الأثر على حياة الأشخاص، لذا تكون المراجعة البشرية مهمة خصوصًا مع احتمال الخطأ أو تحيز البيانات.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "كلاهما يستفيد من التعرف على الأنماط في الصور؛ لكن نتيجة التشخيص الطبي قد تكون عالية الأثر على حياة الأشخاص، لذا تكون المراجعة البشرية مهمة خصوصًا مع احتمال الخطأ أو تحيز البيانات."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50236,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 20,
+        "lexical_similarity": 0.194,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50237,
+      "question_number": 47,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "يريد مصنع تقدير موعد تعطل آلة، بينما تسعى شركة توزيع لاختيار مسارات توصيل أفضل. ما وجه الاختلاف في توظيف التنبؤ وتحليل البيانات في الحالتين؟",
+      "model_answer": "في المصنع تُستخدم الصيانة التنبؤية للتنبؤ بأعطال المعدات قبل وقوعها؛ وفي الخدمات اللوجستية تُستخدم أدوات الذكاء الاصطناعي لتحسين مسارات التوصيل. كلاهما يعتمد على تحليل بيانات للمساعدة في اتخاذ قرار.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "في المصنع تُستخدم الصيانة التنبؤية للتنبؤ بأعطال المعدات قبل وقوعها؛ وفي الخدمات اللوجستية تُستخدم أدوات الذكاء الاصطناعي لتحسين مسارات التوصيل. كلاهما يعتمد على تحليل بيانات للمساعدة في اتخاذ قرار."
+      ],
+      "writing_style": "APPLICATION",
+      "writing_tip": "حدد الفكرة ثم اربطها بالموقف المحدد في السؤال.",
+      "original_id": 50237,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.238,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50238,
+      "question_number": 48,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "أظهرت منصة فيديو توصيات دقيقة لمستخدم، فاستنتج مديرها أنه يمكن جمع بيانات السلوك دون أي احتياطات. لماذا لا تكفي فائدة التوصية لتبرير ذلك؟",
+      "model_answer": "التوصية تستفيد من بيانات السلوك السابق للتنبؤ بالتفضيلات، لكن جمع البيانات الشخصية وتحليلها يثير مسائل تتعلق بالخصوصية، فيلزم التعامل مع بيانات المستخدمين بصورة مناسبة وحمايتها.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "التوصية تستفيد من بيانات السلوك السابق للتنبؤ بالتفضيلات، لكن جمع البيانات الشخصية وتحليلها يثير مسائل تتعلق بالخصوصية، فيلزم التعامل مع بيانات المستخدمين بصورة مناسبة وحمايتها."
+      ],
+      "writing_style": "REASONING",
+      "writing_tip": "ابدأ بالسبب المباشر، ثم اذكر النتيجة عند الحاجة.",
+      "original_id": 50238,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 19,
+        "lexical_similarity": 0.236,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    },
+    {
+      "id": 50239,
+      "question_number": 49,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "نظامان قدّما حكمين غير مناسبين: الأول تدرب على أمثلة لا تمثل كل الحالات، والثاني لم يتمكن الفريق من شرح سبب حكمه. حدّد المشكلة الأساسية في كل حالة.",
+      "model_answer": "الأول يتأثر بنقص تمثيل بيانات التدريب، مما قد يقلل دقة النتيجة أو يجعلها متحيزة\nوالثاني يواجه مشكلة الصندوق الأسود، أي غموض كيفية التوصل إلى الحكم وصعوبة تقييمه.",
+      "explanation": "",
+      "difficulty": "hard",
+      "points": 10,
+      "student_answer_steps": [
+        "الأول يتأثر بنقص تمثيل بيانات التدريب، مما قد يقلل دقة النتيجة أو يجعلها متحيزة",
+        "والثاني يواجه مشكلة الصندوق الأسود، أي غموض كيفية التوصل إلى الحكم وصعوبة تقييمه."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50239,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.179,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "REVISED"
+    },
+    {
+      "id": 50240,
+      "question_number": 50,
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "prompt": "عُرض على فريق نظام يُنشئ نصوصًا بسرعة وآخر يُصنف الصور بدقة، فأعلن أن السرعة والدقة تلغيان الحاجة إلى احتياط. ما الاعتباران اللذان أغفلهما؟",
+      "model_answer": "قد يتضمن النص المولد معلومات غير صحيحة أو غير مدعومة رغم مظهرها المقنع، وقد يتأثر تصنيف الصور ببيانات تدريب غير كافية أو متحيزة. لذلك يلزم التحقق والمراجعة البشرية خاصة في القرارات عالية الأثر.",
+      "explanation": "",
+      "difficulty": "medium",
+      "points": 10,
+      "student_answer_steps": [
+        "قد يتضمن النص المولد معلومات غير صحيحة أو غير مدعومة رغم مظهرها المقنع، وقد يتأثر تصنيف الصور ببيانات تدريب غير كافية أو متحيزة. لذلك يلزم التحقق والمراجعة البشرية خاصة في القرارات عالية الأثر."
+      ],
+      "writing_style": "ENUMERATION",
+      "writing_tip": "اكتب العدد المطلوب من النقاط دون حشو.",
+      "original_id": 50240,
+      "official_unit_title": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+      "official_lesson_title": "الدرس 1-3: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+      "source_classification": "PRACTICE",
+      "assessment_source": null,
+      "curriculum_source": {
+        "document": "Programming-ArtificialIntelligence-Ar-EB-part1.pdf",
+        "lesson_id": "1_3",
+        "printed_page_range": [
+          18,
+          23
+        ],
+        "best_page_hint": 21,
+        "lexical_similarity": 0.184,
+        "page_hint_is_not_manual_verification": true
+      },
+      "review_status": "PRESERVED"
+    }
+  ]
+}

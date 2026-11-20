@@ -1,0 +1,92 @@
+{
+  "unit_number": 3,
+  "unit_title_en": "Unit 3: Web Applications",
+  "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+  "lesson_number": 8,
+  "lesson_title_en": "Lesson 3-1: The Overall Structure of Web Applications",
+  "lesson_title_ar": "الدرس الأول: البنية العامة لتطبيقات الويب",
+  "total_definitions": 5,
+  "approved_definitions_count": 5,
+  "definitions": [
+    {
+      "id": "DEF-097",
+      "term_en": "Web application",
+      "current_definition_en": "An application used through a web browser. It can be used as long as you have a browser, without needing to install dedicated software.",
+      "updated_definition_en": "An application used through a web browser. It can be used as long as you have a browser, without needing to install dedicated software.",
+      "official_term_en": "Web application",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 57,
+        "printed_page": 56,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-098",
+      "term_en": "Frontend",
+      "current_definition_en": "The screen component that users see directly. It runs on the browser and accepts user input.",
+      "updated_definition_en": "The screen component that users see directly. It runs on the browser and accepts user input.",
+      "official_term_en": "Frontend",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 57,
+        "printed_page": 56,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-099",
+      "term_en": "Backend",
+      "current_definition_en": "The server-side processing that users do not see. It processes data and makes decisions.",
+      "updated_definition_en": "The server-side processing that users do not see. It processes data and makes decisions.",
+      "official_term_en": "Backend",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 57,
+        "printed_page": 56,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-100",
+      "term_en": "Database",
+      "current_definition_en": "A system that organizes, stores, and manages data. It retrieves data when needed and records new data.",
+      "updated_definition_en": "A system that organizes, stores, and manages data. It retrieves data when needed and records new data.",
+      "official_term_en": "Database",
+      "term_corrected": false,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 57,
+        "printed_page": 56,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-101",
+      "term_en": "Three-tier architecture",
+      "current_definition_en": "A web application architecture composed of three cooperating tiers: frontend, backend, and database.",
+      "updated_definition_en": "A web application architecture composed of three cooperating tiers: frontend, backend, and database.",
+      "official_term_en": "Three-tier architecture",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 57,
+        "printed_page": 56,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

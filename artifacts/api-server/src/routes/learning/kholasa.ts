@@ -747,6 +747,39 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
   }
 });
 
+router.post("/learning/mistakes/record", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const { question, selectedOption, isCorrect, unit, lesson, questionBankId } = req.body || {};
+    if (!question || typeof question.prompt !== "string" || !Array.isArray(question.options)) {
+      res.status(400).json({ error: "بيانات السؤال غير مكتملة" });
+      return;
+    }
+
+    await recordSubmissionMistakes({
+      studentId: student.id,
+      stage: student.grade || (student as any).educationGrade || "الصف الثاني الثانوي",
+      unit: unit || null,
+      lesson: lesson || null,
+      sourceType: "mistakes_practice",
+      items: [{
+        question,
+        questionBankId: Number(questionBankId) || null,
+        selectedOption: Number(selectedOption) ?? -1,
+        isCorrect: Boolean(isCorrect),
+        unit: unit || null,
+        lesson: lesson || null,
+      }],
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/learning/mistakes/:id/resolve", requireStudent, async (req, res, next) => {
   try {
     const student = assertActivePaidStudent(res);

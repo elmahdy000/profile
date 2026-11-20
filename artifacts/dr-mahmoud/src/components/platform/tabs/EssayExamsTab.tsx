@@ -48,6 +48,7 @@ import {
   stopSpeech,
   isSpeechSupported,
 } from "../../kholasa/kholasa-speech";
+import { AssessmentQuestionBadge } from "../AssessmentQuestionBadge";
 import { BidiStatement } from "../../kholasa/BidiStatement";
 
 interface EssayBankQuestion {
@@ -868,6 +869,7 @@ export function EssayExamsTab({
                           <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                             سؤال مقالي #{idx + 1}
                           </span>
+                          <AssessmentQuestionBadge question={q} />
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${difficultyClass}`}>
                             {difficultyLabel}
                           </span>
@@ -1374,6 +1376,7 @@ export function EssayExamsTab({
                     <h3 className="text-sm font-bold text-foreground">
                       السؤال رقم ({idx + 1})
                     </h3>
+                    <AssessmentQuestionBadge question={q} />
                   </div>
                   <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
                     {q.points} درجات
@@ -1752,6 +1755,7 @@ export function EssayExamsTab({
                     <h3 className="text-sm sm:text-base font-bold text-foreground">
                       السؤال رقم ({idx + 1})
                     </h3>
+                    <AssessmentQuestionBadge question={q} />
                   </div>
 
                   <div className="flex items-center gap-2">

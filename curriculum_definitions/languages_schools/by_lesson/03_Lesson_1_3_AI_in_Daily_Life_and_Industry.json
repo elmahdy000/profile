@@ -1,0 +1,124 @@
+{
+  "unit_number": 1,
+  "unit_title_en": "Unit 1: Information Technology and Society",
+  "unit_title_ar": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+  "lesson_number": 3,
+  "lesson_title_en": "Lesson 1-3: AI in Daily Life and Industry",
+  "lesson_title_ar": "الدرس الثالث: الذكاء الاصطناعي في الحياة اليومية والصناعة",
+  "total_definitions": 7,
+  "approved_definitions_count": 7,
+  "definitions": [
+    {
+      "id": "DEF-029",
+      "term_en": "Recommendation system",
+      "current_definition_en": "A system that predicts preferences from past behavior data and displays recommendations.",
+      "updated_definition_en": "A system that predicts preferences from past behavior data and displays recommendations.",
+      "official_term_en": "Recommendation system",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 21,
+        "printed_page": 20,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-030",
+      "term_en": "Voice assistant",
+      "current_definition_en": "A system that recognizes a voice, understands commands, and executes them.",
+      "updated_definition_en": "A system that recognizes a voice, understands commands, and executes them.",
+      "official_term_en": "Voice assistant",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 21,
+        "printed_page": 20,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-031",
+      "term_en": "Machine translation",
+      "current_definition_en": "Automatically translates text into different languages.",
+      "updated_definition_en": "Automatically translates text into different languages.",
+      "official_term_en": "Machine translation",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 21,
+        "printed_page": 20,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-032",
+      "term_en": "Face recognition",
+      "current_definition_en": "Automatically detects and identifies human faces in photographs.",
+      "updated_definition_en": "Automatically detects and identifies human faces in photographs.",
+      "official_term_en": "Face recognition",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 21,
+        "printed_page": 20,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-033",
+      "term_en": "Image-diagnosis AI",
+      "current_definition_en": "AI used in healthcare to detect diseases from X-ray and CT images.",
+      "updated_definition_en": "AI used in healthcare to detect diseases from X-ray and CT images.",
+      "official_term_en": "Image-diagnosis AI",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 22,
+        "printed_page": 21,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-034",
+      "term_en": "Predictive maintenance",
+      "current_definition_en": "Using AI to predict when machines will fail, supporting maintenance before a failure occurs.",
+      "updated_definition_en": "Using AI to predict when machines will fail, supporting maintenance before a failure occurs.",
+      "official_term_en": "Predictive maintenance",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 22,
+        "printed_page": 21,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-036",
+      "term_en": "Black-box problem",
+      "current_definition_en": "When it is unclear how an AI reached its judgment.",
+      "updated_definition_en": "When it is unclear how an AI reached its judgment.",
+      "official_term_en": "Black-box problem",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 22,
+        "printed_page": 21,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "total_questions": 2348,
+  "total_units": 3,
+  "total_lessons": 11,
+  "lessons": [
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "file": "01_Unit1_Lesson1_Development_of_Information_Technology.json",
+      "count": 340
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
+      "file": "02_Unit1_Lesson2_How_AI_Works.json",
+      "count": 257
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "file": "03_Unit1_Lesson3_AI_in_Daily_Life.json",
+      "count": 251
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      "file": "04_Unit1_Lesson4_Ethical_Issues_with_AI.json",
+      "count": 260
+    },
+    {
+      "unit": "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      "lesson": "شامل الوحدة الأولى",
+      "file": "05_Unit1_Comprehensive_Review.json",
+      "count": 98
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الأول: التشفير والمصادقة",
+      "file": "06_Unit2_Lesson1_Cryptography_and_Authentication.json",
+      "count": 259
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثاني: حماية البيانات والمعلومات",
+      "file": "07_Unit2_Lesson2_Data_and_Information_Protection.json",
+      "count": 269
+    },
+    {
+      "unit": "الوحدة الثانية: الأمن السيبراني والتشفير",
+      "lesson": "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
+      "file": "08_Unit2_Lesson3_Incident_Response_and_Risk_Management.json",
+      "count": 210
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "file": "09_Unit3_Lesson1_Overall_Structure_of_Web_Applications.json",
+      "count": 160
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "file": "10_Unit3_Lesson2_Communication_Methods_in_Web_Applications.json",
+      "count": 159
+    },
+    {
+      "unit": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson": "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية",
+      "file": "11_Unit3_Lesson3_Fundamentals_of_Frontend_Technology.json",
+      "count": 85
+    }
+  ]
+}

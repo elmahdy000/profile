@@ -1,0 +1,204 @@
+{
+  "unit_number": 1,
+  "unit_title_en": "Unit 1: Information Technology and Society",
+  "unit_title_ar": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+  "lesson_number": 1,
+  "lesson_title_en": "Lesson 1-1: Development of Information Technology and Social Transformation",
+  "lesson_title_ar": "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+  "total_definitions": 12,
+  "approved_definitions_count": 12,
+  "definitions": [
+    {
+      "id": "DEF-006",
+      "term_en": "Moore's Law",
+      "current_definition_en": "The empirical observation that the number of transistors on an integrated circuit doubles approximately every two years.",
+      "updated_definition_en": "The empirical observation that the number of transistors on an integrated circuit doubles approximately every two years.",
+      "official_term_en": "Moore's Law",
+      "term_corrected": false,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 6,
+        "printed_page": 5,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-007",
+      "term_en": "SNS (Social Networking Service)",
+      "current_definition_en": "Services that allow users to connect with each other and post and share information. They are highly effective at spreading information rapidly.",
+      "updated_definition_en": "Services that allow users to connect with each other and post and share information. They are highly effective at spreading information rapidly.",
+      "official_term_en": "SNS (Social Networking Service)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 7,
+        "printed_page": 6,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-008",
+      "term_en": "E-commerce (EC)",
+      "current_definition_en": "Buying and selling goods and services through the Internet.",
+      "updated_definition_en": "Buying and selling goods and services through the Internet.",
+      "official_term_en": "E-commerce (EC)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 7,
+        "printed_page": 6,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-009",
+      "term_en": "Remote work",
+      "current_definition_en": "A working style in which work is performed from home or other remote locations using the Internet.",
+      "updated_definition_en": "A working style in which work is performed from home or other remote locations using the Internet.",
+      "official_term_en": "Remote work",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 7,
+        "printed_page": 6,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-010",
+      "term_en": "Online learning",
+      "current_definition_en": "A learning style in which classes and study materials are delivered using the Internet.",
+      "updated_definition_en": "A learning style in which classes and study materials are delivered using the Internet.",
+      "official_term_en": "Online learning",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 7,
+        "printed_page": 6,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-011",
+      "term_en": "Cashless payment",
+      "current_definition_en": "A system for making payments using electronic money, QR codes, etc., without using cash.",
+      "updated_definition_en": "A system for making payments using electronic money, QR codes, etc., without using cash.",
+      "official_term_en": "Cashless payment",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 7,
+        "printed_page": 6,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-012",
+      "term_en": "Autonomous driving",
+      "current_definition_en": "A technology that uses AI to drive a vehicle without human operation. It uses cameras and sensors to recognize the surroundings, makes driving decisions, and controls a vehicle.",
+      "updated_definition_en": "A technology that uses AI to drive a vehicle without human operation. It uses cameras and sensors to recognize the surroundings, makes driving decisions, and controls a vehicle.",
+      "official_term_en": "Autonomous driving",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 8,
+        "printed_page": 7,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-013",
+      "term_en": "Edge computing",
+      "current_definition_en": "Processing data on the device itself, instantly, instead of sending it to the cloud.",
+      "updated_definition_en": "Processing data on the device itself, instantly, instead of sending it to the cloud.",
+      "official_term_en": "Edge computing",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 8,
+        "printed_page": 7,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-014",
+      "term_en": "AR (Augmented Reality)",
+      "current_definition_en": "A technology that overlays digital information on real-world images.",
+      "updated_definition_en": "A technology that overlays digital information on real-world images.",
+      "official_term_en": "AR (Augmented Reality)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 8,
+        "printed_page": 7,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-015",
+      "term_en": "VR (Virtual Reality)",
+      "current_definition_en": "A technology that allows users to immerse themselves in a virtual space generated by a computer.",
+      "updated_definition_en": "A technology that allows users to immerse themselves in a virtual space generated by a computer.",
+      "official_term_en": "VR (Virtual Reality)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 8,
+        "printed_page": 7,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-016",
+      "term_en": "Quantum computing",
+      "current_definition_en": "A technology expected to dramatically speed up computations that are difficult or impossible for traditional computers, by using the principles of quantum mechanics.",
+      "updated_definition_en": "A technology expected to dramatically speed up computations that are difficult or impossible for traditional computers, by using the principles of quantum mechanics.",
+      "official_term_en": "Quantum computing",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 8,
+        "printed_page": 7,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-017",
+      "term_en": "Cloud computing",
+      "current_definition_en": "IT delivered as a service over the Internet.",
+      "updated_definition_en": "IT delivered as a service over the Internet.",
+      "official_term_en": "Cloud computing",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 11,
+        "printed_page": 10,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

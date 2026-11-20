@@ -1,0 +1,152 @@
+{
+  "unit_number": 4,
+  "unit_title_en": "Unit 4: Web and Media Design",
+  "unit_title_ar": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 12,
+  "lesson_title_en": "Lesson 4-2: Information Design and User Experience for Websites",
+  "lesson_title_ar": "الدرس الثاني: تصميم المعلومات وتجربة المستخدم للمواقع الإلكترونية",
+  "total_definitions": 10,
+  "approved_definitions_count": 10,
+  "definitions": [
+    {
+      "id": "DEF-140",
+      "term_en": "Persona",
+      "current_definition_en": "A typical user image of those who will use the website, set up as a concrete person. Details such as age, occupation, purpose, and challenges are selected.",
+      "updated_definition_en": "A typical user image of those who will use the website, set up as a concrete person. Details such as age, occupation, purpose, and challenges are selected.",
+      "official_term_en": "Persona",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 83,
+        "printed_page": 82,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-141",
+      "term_en": "Wireframe",
+      "current_definition_en": "A rough blueprint of the layout of a web page. It does not include color or design decoration and is created to determine the placement and priority of information.",
+      "updated_definition_en": "A rough blueprint of the layout of a web page. It does not include color or design decoration and is created to determine the placement and priority of information.",
+      "official_term_en": "Wireframe",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 83,
+        "printed_page": 82,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-142",
+      "term_en": "Four principles of design (CRAP)",
+      "current_definition_en": "Contrast, Repetition, Alignment, and Proximity: four principles followed by designs that are easy to view and understand.",
+      "updated_definition_en": "Contrast, Repetition, Alignment, and Proximity: four principles followed by designs that are easy to view and understand.",
+      "official_term_en": "Four principles of design (CRAP)",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "defined_in_explanation"
+      }
+    },
+    {
+      "id": "DEF-143",
+      "term_en": "Contrast",
+      "current_definition_en": "Make the priority of information clear and immediately highlight the most important elements.",
+      "updated_definition_en": "Make the priority of information clear and immediately highlight the most important elements.",
+      "official_term_en": "Contrast",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-144",
+      "term_en": "Repetition",
+      "current_definition_en": "Repeat specific characteristics so that the whole design has consistency, allowing users to navigate without getting lost.",
+      "updated_definition_en": "Repeat specific characteristics so that the whole design has consistency, allowing users to navigate without getting lost.",
+      "official_term_en": "Repetition",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-145",
+      "term_en": "Alignment",
+      "current_definition_en": "Align the position of each element to a common baseline, giving order to the entire screen.",
+      "updated_definition_en": "Align the position of each element to a common baseline, giving order to the entire screen.",
+      "official_term_en": "Alignment",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-146",
+      "term_en": "Proximity",
+      "current_definition_en": "Place related information close together so that it can be perceived as a single group at a glance.",
+      "updated_definition_en": "Place related information close together so that it can be perceived as a single group at a glance.",
+      "official_term_en": "Proximity",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "table_description"
+      }
+    },
+    {
+      "id": "DEF-147",
+      "term_en": "User-Centered Design (UCD)",
+      "current_definition_en": "A design approach that designs websites and services from the perspective of the user, rather than the convenience of the creator.",
+      "updated_definition_en": "A design approach that designs websites and services from the perspective of the user, rather than the convenience of the creator.",
+      "official_term_en": "User-Centered Design (UCD)",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 84,
+        "printed_page": 83,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-148",
+      "term_en": "Usability",
+      "current_definition_en": "How easily users can navigate a website and achieve their goals.",
+      "updated_definition_en": "How easily users can navigate a website and achieve their goals.",
+      "official_term_en": "Usability",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 69,
+        "printed_page": 69,
+        "basis": "assessment_supported_definition"
+      }
+    },
+    {
+      "id": "DEF-149",
+      "term_en": "Accessibility",
+      "current_definition_en": "Designing content and interfaces so that people with disabilities can use and interact with the website.",
+      "updated_definition_en": "Designing content and interfaces so that people with disabilities can use and interact with the website.",
+      "official_term_en": "Accessibility",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 69,
+        "printed_page": 69,
+        "basis": "assessment_supported_definition"
+      }
+    }
+  ]
+}

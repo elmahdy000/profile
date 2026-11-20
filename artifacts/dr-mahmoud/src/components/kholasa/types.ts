@@ -38,6 +38,8 @@ export interface KholasaCommonMistake {
 }
 
 export interface KholasaSummaryData {
+  explanation?: string;
+  explanationText?: string;
   keyConcepts?: KholasaKeyConcept[];
   definitions?: KholasaDefinition[];
   formulas?: KholasaFormula[];
@@ -75,6 +77,7 @@ export interface KholasaMaterial {
   lessonOrder: number;
   durationMinutes: number;
   objectives: string[];
+  explanation?: string;
   summaryData: KholasaSummaryData;
   mindmapTitle: string | null;
   mindmapImages: string[];

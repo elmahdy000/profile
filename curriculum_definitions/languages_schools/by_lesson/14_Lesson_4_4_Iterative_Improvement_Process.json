@@ -1,0 +1,68 @@
+{
+  "unit_number": 4,
+  "unit_title_en": "Unit 4: Web and Media Design",
+  "unit_title_ar": "الوحدة الرابعة: تصميم الويب والوسائط",
+  "lesson_number": 14,
+  "lesson_title_en": "Lesson 4-4: The Iterative Improvement Process for Websites",
+  "lesson_title_ar": "الدرس الرابع: عملية التحسين التكراري للمواقع",
+  "total_definitions": 4,
+  "approved_definitions_count": 4,
+  "definitions": [
+    {
+      "id": "DEF-162",
+      "term_en": "PDCA cycle",
+      "current_definition_en": "A method that continuously advances improvement by repeating four steps: Plan, Do, Check, Act.",
+      "updated_definition_en": "A method that continuously advances improvement by repeating four steps: Plan, Do, Check, Act.",
+      "official_term_en": "PDCA cycle",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 97,
+        "printed_page": 96,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-163",
+      "term_en": "Continuous improvement",
+      "current_definition_en": "Getting better a little at a time.",
+      "updated_definition_en": "Getting better a little at a time.",
+      "official_term_en": "Continuous improvement",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 97,
+        "printed_page": 96,
+        "basis": "key_term"
+      }
+    },
+    {
+      "id": "DEF-164",
+      "term_en": "Design thinking",
+      "current_definition_en": "A way of thinking that leads to discovering problems and generating solutions from the perspective of the user.",
+      "updated_definition_en": "A way of thinking that leads to discovering problems and generating solutions from the perspective of the user.",
+      "official_term_en": "Design thinking",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 98,
+        "printed_page": 97,
+        "basis": "direct_definition"
+      }
+    },
+    {
+      "id": "DEF-165",
+      "term_en": "A/B testing",
+      "current_definition_en": "A method in which two patterns (option A and option B) are prepared, each is shown to actual users, and data is examined to determine which is more effective.",
+      "updated_definition_en": "A method in which two patterns (option A and option B) are prepared, each is shown to actual users, and data is examined to determine which is more effective.",
+      "official_term_en": "A/B testing",
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 98,
+        "printed_page": 97,
+        "basis": "direct_definition"
+      }
+    }
+  ]
+}

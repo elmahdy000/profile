@@ -1,0 +1,188 @@
+{
+  "unit_number": 3,
+  "unit_title_en": "Unit 3: Web Applications",
+  "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+  "lesson_number": 10,
+  "lesson_title_en": "Lesson 3-3: Fundamentals of Frontend Technology",
+  "lesson_title_ar": "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية",
+  "total_definitions": 11,
+  "approved_definitions_count": 11,
+  "definitions": [
+    {
+      "id": "DEF-119",
+      "term_en": "HTML",
+      "current_definition_en": "Defines the structure (skeleton) of a web page. Describes elements such as headings, paragraphs, images, and links.",
+      "updated_definition_en": "Defines the structure (skeleton) of a web page. Describes elements such as headings, paragraphs, images, and links.",
+      "official_term_en": "HTML",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 70,
+        "printed_page": 69,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-120",
+      "term_en": "CSS",
+      "current_definition_en": "Specifies the appearance of a web page (colors, layout, size, fonts, etc.).",
+      "updated_definition_en": "Specifies the appearance of a web page (colors, layout, size, fonts, etc.).",
+      "official_term_en": "CSS",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 70,
+        "printed_page": 69,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-121",
+      "term_en": "JavaScript",
+      "current_definition_en": "Adds behavior and interactivity to a web page. Activates responses when buttons are pressed and updates only part of the screen.",
+      "updated_definition_en": "Adds behavior and interactivity to a web page. Activates responses when buttons are pressed and updates only part of the screen.",
+      "official_term_en": "JavaScript",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 70,
+        "printed_page": 69,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-122",
+      "term_en": "Semantic HTML",
+      "current_definition_en": "The concept of describing each part of a web page using element names (tags) that indicate their meaning.",
+      "updated_definition_en": "The concept of describing each part of a web page using element names (tags) that indicate their meaning.",
+      "official_term_en": "Semantic HTML",
+      "term_corrected": false,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-127",
+      "term_en": "Accessibility",
+      "current_definition_en": "Making websites usable by people with disabilities.",
+      "updated_definition_en": "Making websites usable by people with disabilities.",
+      "official_term_en": "Accessibility",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 69,
+        "printed_page": 69,
+        "basis": "assessment_supported_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-131",
+      "term_en": "Responsive design",
+      "current_definition_en": "A design concept in which the layout is automatically adjusted according to different screen sizes such as PCs, smartphones, and tablets.",
+      "updated_definition_en": "A design concept in which the layout is automatically adjusted according to different screen sizes such as PCs, smartphones, and tablets.",
+      "official_term_en": "Responsive design",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-132",
+      "term_en": "Mobile-first",
+      "current_definition_en": "Prioritizing small screens such as smartphones from the design stage.",
+      "updated_definition_en": "Prioritizing small screens such as smartphones from the design stage.",
+      "official_term_en": "Mobile-first",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "defined_in_explanation"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-133",
+      "term_en": "Framework",
+      "current_definition_en": "A structure that provides commonly used functions and components in advance, in order to make web application development more efficient.",
+      "updated_definition_en": "A structure that provides commonly used functions and components in advance, in order to make web application development more efficient.",
+      "official_term_en": "Framework",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-134",
+      "term_en": "React",
+      "current_definition_en": "A frontend framework developed by Meta (formerly Facebook). It efficiently updates part of the screen and is suited to large-scale web applications.",
+      "updated_definition_en": "A frontend framework developed by Meta (formerly Facebook). It efficiently updates part of the screen and is suited to large-scale web applications.",
+      "official_term_en": "React",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-136",
+      "term_en": "Vue",
+      "current_definition_en": "A frontend framework with a simple structure that allows web applications to be built incrementally from small features.",
+      "updated_definition_en": "A frontend framework with a simple structure that allows web applications to be built incrementally from small features.",
+      "official_term_en": "Vue",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-137",
+      "term_en": "Next.js",
+      "current_definition_en": "A frontend framework that adds mechanisms for faster page display to React features.",
+      "updated_definition_en": "A frontend framework that adds mechanisms for faster page display to React features.",
+      "official_term_en": "Next.js",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 71,
+        "printed_page": 70,
+        "basis": "table_description"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

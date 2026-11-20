@@ -1,0 +1,140 @@
+{
+  "unit_number": 1,
+  "unit_title_en": "Unit 1: Information Technology and Society",
+  "unit_title_ar": "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع",
+  "lesson_number": 2,
+  "lesson_title_en": "Lesson 1-2: How AI Works",
+  "lesson_title_ar": "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
+  "total_definitions": 8,
+  "approved_definitions_count": 8,
+  "definitions": [
+    {
+      "id": "DEF-020",
+      "term_en": "AI (Artificial Intelligence)",
+      "current_definition_en": "A general term for technologies that reproduce or perform intelligent human behavior (learning, reasoning, judgment, etc.) on a computer.",
+      "updated_definition_en": "A general term for technologies that reproduce or perform intelligent human behavior (learning, reasoning, judgment, etc.) on a computer.",
+      "official_term_en": "AI (Artificial Intelligence)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 14,
+        "printed_page": 13,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-021",
+      "term_en": "Machine Learning",
+      "current_definition_en": "One of the learning technologies that makes AI work. It learns patterns from data to make predictions and judgments.",
+      "updated_definition_en": "One of the learning technologies that makes AI work. It learns patterns from data to make predictions and judgments.",
+      "official_term_en": "Machine Learning",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 15,
+        "printed_page": 14,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-022",
+      "term_en": "Deep Learning",
+      "current_definition_en": "An advanced technology within machine learning that uses neural networks. It learns complex patterns using large-scale data.",
+      "updated_definition_en": "An advanced technology within machine learning that uses neural networks. It learns complex patterns using large-scale data.",
+      "official_term_en": "Deep Learning",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 15,
+        "printed_page": 14,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-023",
+      "term_en": "Neural network",
+      "current_definition_en": "A system modeled after the workings of the nerve cells (neurons) of the human brain. By connecting many components, it learns from data and becomes capable of making complex judgments.",
+      "updated_definition_en": "A system modeled after the workings of the nerve cells (neurons) of the human brain. By connecting many components, it learns from data and becomes capable of making complex judgments.",
+      "official_term_en": "Neural network",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 15,
+        "printed_page": 14,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-025",
+      "term_en": "Hidden layers",
+      "current_definition_en": "Layers between the input layer and the output layer of an artificial neural network.",
+      "updated_definition_en": "Layers between the input layer and the output layer of an artificial neural network.",
+      "official_term_en": "Hidden layers",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+        "pdf_page": 15,
+        "printed_page": 15,
+        "basis": "assessment_supported_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-026",
+      "term_en": "Generative AI",
+      "current_definition_en": "AI technology that uses deep learning to generate new data (text, images, audio, programs, etc.).",
+      "updated_definition_en": "AI technology that uses deep learning to generate new data (text, images, audio, programs, etc.).",
+      "official_term_en": "Generative AI",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 15,
+        "printed_page": 14,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-027",
+      "term_en": "Narrow AI",
+      "current_definition_en": "An AI system specialized in one task or a limited set of tasks.",
+      "updated_definition_en": "An AI system specialized in one task or a limited set of tasks.",
+      "official_term_en": "Narrow AI",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 14,
+        "printed_page": 13,
+        "basis": "key_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-028",
+      "term_en": "Hallucination",
+      "current_definition_en": "When generative AI produces text that sounds plausible but is factually incorrect.",
+      "updated_definition_en": "When generative AI produces text that sounds plausible but is factually incorrect.",
+      "official_term_en": "Hallucination",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 17,
+        "printed_page": 16,
+        "basis": "explained_term"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}

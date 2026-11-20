@@ -1,0 +1,524 @@
+{
+  "unit_number": 3,
+  "unit_title_en": "Unit 3: Web Applications",
+  "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+  "total_definitions": 30,
+  "lessons": [
+    {
+      "unit_number": 3,
+      "unit_title_en": "Unit 3: Web Applications",
+      "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson_number": 8,
+      "lesson_title_en": "Lesson 3-1: The Overall Structure of Web Applications",
+      "lesson_title_ar": "الدرس الأول: البنية العامة لتطبيقات الويب",
+      "total_definitions": 5,
+      "approved_definitions_count": 5,
+      "definitions": [
+        {
+          "id": "DEF-097",
+          "term_en": "Web application",
+          "current_definition_en": "An application used through a web browser. It can be used as long as you have a browser, without needing to install dedicated software.",
+          "updated_definition_en": "An application used through a web browser. It can be used as long as you have a browser, without needing to install dedicated software.",
+          "official_term_en": "Web application",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 57,
+            "printed_page": 56,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-098",
+          "term_en": "Frontend",
+          "current_definition_en": "The screen component that users see directly. It runs on the browser and accepts user input.",
+          "updated_definition_en": "The screen component that users see directly. It runs on the browser and accepts user input.",
+          "official_term_en": "Frontend",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 57,
+            "printed_page": 56,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-099",
+          "term_en": "Backend",
+          "current_definition_en": "The server-side processing that users do not see. It processes data and makes decisions.",
+          "updated_definition_en": "The server-side processing that users do not see. It processes data and makes decisions.",
+          "official_term_en": "Backend",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 57,
+            "printed_page": 56,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-100",
+          "term_en": "Database",
+          "current_definition_en": "A system that organizes, stores, and manages data. It retrieves data when needed and records new data.",
+          "updated_definition_en": "A system that organizes, stores, and manages data. It retrieves data when needed and records new data.",
+          "official_term_en": "Database",
+          "term_corrected": false,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 57,
+            "printed_page": 56,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-101",
+          "term_en": "Three-tier architecture",
+          "current_definition_en": "A web application architecture composed of three cooperating tiers: frontend, backend, and database.",
+          "updated_definition_en": "A web application architecture composed of three cooperating tiers: frontend, backend, and database.",
+          "official_term_en": "Three-tier architecture",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 57,
+            "printed_page": 56,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    },
+    {
+      "unit_number": 3,
+      "unit_title_en": "Unit 3: Web Applications",
+      "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson_number": 9,
+      "lesson_title_en": "Lesson 3-2: Web Application Communication Methods",
+      "lesson_title_ar": "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+      "total_definitions": 14,
+      "approved_definitions_count": 14,
+      "definitions": [
+        {
+          "id": "DEF-102",
+          "term_en": "Client",
+          "current_definition_en": "The side that requests data or processing from the server. Web browsers and smartphone apps fall into this category.",
+          "updated_definition_en": "The side that requests data or processing from the server. Web browsers and smartphone apps fall into this category.",
+          "official_term_en": "Client",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-103",
+          "term_en": "Server",
+          "current_definition_en": "The side that receives requests from clients, processes them, and returns responses.",
+          "updated_definition_en": "The side that receives requests from clients, processes them, and returns responses.",
+          "official_term_en": "Server",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-104",
+          "term_en": "Client-server communication",
+          "current_definition_en": "A web application operates by the client sending a request and the server returning a response.",
+          "updated_definition_en": "A web application operates by the client sending a request and the server returning a response.",
+          "official_term_en": "Client-server communication",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-105",
+          "term_en": "HTTP (HyperText Transfer Protocol)",
+          "current_definition_en": "A communication protocol for exchanging data between clients (browsers and apps) and servers.",
+          "updated_definition_en": "A communication protocol for exchanging data between clients (browsers and apps) and servers.",
+          "official_term_en": "HTTP (HyperText Transfer Protocol)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-106",
+          "term_en": "HTTPS (HTTP Secure)",
+          "current_definition_en": "A communication protocol that adds TLS encryption to HTTP, reducing the risk of communication content being read by third parties.",
+          "updated_definition_en": "A communication protocol that adds TLS encryption to HTTP, reducing the risk of communication content being read by third parties.",
+          "official_term_en": "HTTPS (HTTP Secure)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-107",
+          "term_en": "HTTP method",
+          "current_definition_en": "Information included in an HTTP request that indicates what kind of operation is desired.",
+          "updated_definition_en": "Information included in an HTTP request that indicates what kind of operation is desired.",
+          "official_term_en": "HTTP method",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 64,
+            "printed_page": 63,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-108",
+          "term_en": "GET",
+          "current_definition_en": "Retrieve data from the server.",
+          "updated_definition_en": "Retrieve data from the server.",
+          "official_term_en": "GET",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-109",
+          "term_en": "POST",
+          "current_definition_en": "Send data to the server.",
+          "updated_definition_en": "Send data to the server.",
+          "official_term_en": "POST",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-112",
+          "term_en": "Status code",
+          "current_definition_en": "A number included in a server response that indicates the result of processing.",
+          "updated_definition_en": "A number included in a server response that indicates the result of processing.",
+          "official_term_en": "Status code",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-113",
+          "term_en": "Status code 200",
+          "current_definition_en": "Success: the request was processed successfully.",
+          "updated_definition_en": "Success: the request was processed successfully.",
+          "official_term_en": "Status code 200",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-114",
+          "term_en": "Status code 404",
+          "current_definition_en": "Page not found: the specified URL does not exist.",
+          "updated_definition_en": "Page not found: the specified URL does not exist.",
+          "official_term_en": "Status code 404",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-115",
+          "term_en": "Status code 500",
+          "current_definition_en": "Server error: a problem occurred on the server side.",
+          "updated_definition_en": "Server error: a problem occurred on the server side.",
+          "official_term_en": "Status code 500",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-116",
+          "term_en": "API (Application Programming Interface)",
+          "current_definition_en": "A system for exchanging data between different pieces of software.",
+          "updated_definition_en": "A system for exchanging data between different pieces of software.",
+          "official_term_en": "API (Application Programming Interface)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-118",
+          "term_en": "JSON (JavaScript Object Notation)",
+          "current_definition_en": "A data format that is easy for humans to read and for computers to process.",
+          "updated_definition_en": "A data format that is easy for humans to read and for computers to process.",
+          "official_term_en": "JSON (JavaScript Object Notation)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 65,
+            "printed_page": 64,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    },
+    {
+      "unit_number": 3,
+      "unit_title_en": "Unit 3: Web Applications",
+      "unit_title_ar": "الوحدة الثالثة: تطبيقات الويب",
+      "lesson_number": 10,
+      "lesson_title_en": "Lesson 3-3: Fundamentals of Frontend Technology",
+      "lesson_title_ar": "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية",
+      "total_definitions": 11,
+      "approved_definitions_count": 11,
+      "definitions": [
+        {
+          "id": "DEF-119",
+          "term_en": "HTML",
+          "current_definition_en": "Defines the structure (skeleton) of a web page. Describes elements such as headings, paragraphs, images, and links.",
+          "updated_definition_en": "Defines the structure (skeleton) of a web page. Describes elements such as headings, paragraphs, images, and links.",
+          "official_term_en": "HTML",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 70,
+            "printed_page": 69,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-120",
+          "term_en": "CSS",
+          "current_definition_en": "Specifies the appearance of a web page (colors, layout, size, fonts, etc.).",
+          "updated_definition_en": "Specifies the appearance of a web page (colors, layout, size, fonts, etc.).",
+          "official_term_en": "CSS",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 70,
+            "printed_page": 69,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-121",
+          "term_en": "JavaScript",
+          "current_definition_en": "Adds behavior and interactivity to a web page. Activates responses when buttons are pressed and updates only part of the screen.",
+          "updated_definition_en": "Adds behavior and interactivity to a web page. Activates responses when buttons are pressed and updates only part of the screen.",
+          "official_term_en": "JavaScript",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 70,
+            "printed_page": 69,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-122",
+          "term_en": "Semantic HTML",
+          "current_definition_en": "The concept of describing each part of a web page using element names (tags) that indicate their meaning.",
+          "updated_definition_en": "The concept of describing each part of a web page using element names (tags) that indicate their meaning.",
+          "official_term_en": "Semantic HTML",
+          "term_corrected": false,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-127",
+          "term_en": "Accessibility",
+          "current_definition_en": "Making websites usable by people with disabilities.",
+          "updated_definition_en": "Making websites usable by people with disabilities.",
+          "official_term_en": "Accessibility",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+            "pdf_page": 69,
+            "printed_page": 69,
+            "basis": "assessment_supported_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-131",
+          "term_en": "Responsive design",
+          "current_definition_en": "A design concept in which the layout is automatically adjusted according to different screen sizes such as PCs, smartphones, and tablets.",
+          "updated_definition_en": "A design concept in which the layout is automatically adjusted according to different screen sizes such as PCs, smartphones, and tablets.",
+          "official_term_en": "Responsive design",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-132",
+          "term_en": "Mobile-first",
+          "current_definition_en": "Prioritizing small screens such as smartphones from the design stage.",
+          "updated_definition_en": "Prioritizing small screens such as smartphones from the design stage.",
+          "official_term_en": "Mobile-first",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-133",
+          "term_en": "Framework",
+          "current_definition_en": "A structure that provides commonly used functions and components in advance, in order to make web application development more efficient.",
+          "updated_definition_en": "A structure that provides commonly used functions and components in advance, in order to make web application development more efficient.",
+          "official_term_en": "Framework",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-134",
+          "term_en": "React",
+          "current_definition_en": "A frontend framework developed by Meta (formerly Facebook). It efficiently updates part of the screen and is suited to large-scale web applications.",
+          "updated_definition_en": "A frontend framework developed by Meta (formerly Facebook). It efficiently updates part of the screen and is suited to large-scale web applications.",
+          "official_term_en": "React",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-136",
+          "term_en": "Vue",
+          "current_definition_en": "A frontend framework with a simple structure that allows web applications to be built incrementally from small features.",
+          "updated_definition_en": "A frontend framework with a simple structure that allows web applications to be built incrementally from small features.",
+          "official_term_en": "Vue",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-137",
+          "term_en": "Next.js",
+          "current_definition_en": "A frontend framework that adds mechanisms for faster page display to React features.",
+          "updated_definition_en": "A frontend framework that adds mechanisms for faster page display to React features.",
+          "official_term_en": "Next.js",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 71,
+            "printed_page": 70,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    }
+  ]
+}

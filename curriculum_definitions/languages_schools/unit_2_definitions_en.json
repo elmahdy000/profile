@@ -1,0 +1,492 @@
+{
+  "unit_number": 2,
+  "unit_title_en": "Unit 2: Cybersecurity",
+  "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+  "total_definitions": 28,
+  "lessons": [
+    {
+      "unit_number": 2,
+      "unit_title_en": "Unit 2: Cybersecurity",
+      "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+      "lesson_number": 5,
+      "lesson_title_en": "Lesson 2-1: Cryptographic Technologies and Authentication",
+      "lesson_title_ar": "الدرس الأول: تقنيات التشفير والمصادقة",
+      "total_definitions": 14,
+      "approved_definitions_count": 14,
+      "definitions": [
+        {
+          "id": "DEF-050",
+          "term_en": "HTTPS (HTTP Secure)",
+          "current_definition_en": "A communication protocol that adds TLS encryption to HTTP. It provides encryption, tamper detection, and verification of the communication partner.",
+          "updated_definition_en": "A communication protocol that adds TLS encryption to HTTP. It provides encryption, tamper detection, and verification of the communication partner.",
+          "official_term_en": "HTTPS (HTTP Secure)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 35,
+            "printed_page": 34,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-051",
+          "term_en": "TLS handshake",
+          "current_definition_en": "The procedure for establishing secure HTTPS communication.",
+          "updated_definition_en": "The procedure for establishing secure HTTPS communication.",
+          "official_term_en": "TLS handshake",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 35,
+            "printed_page": 34,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-052",
+          "term_en": "Public-key cryptography",
+          "current_definition_en": "Cryptography using public and private keys to safely share a common key for communication.",
+          "updated_definition_en": "Cryptography using public and private keys to safely share a common key for communication.",
+          "official_term_en": "Public-key cryptography",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 35,
+            "printed_page": 34,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-053",
+          "term_en": "Common-key (symmetric-key) cryptography",
+          "current_definition_en": "Cryptography that uses a shared common key to encrypt and exchange data quickly.",
+          "updated_definition_en": "Cryptography that uses a shared common key to encrypt and exchange data quickly.",
+          "official_term_en": "Common-key (symmetric-key) cryptography",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 35,
+            "printed_page": 34,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-054",
+          "term_en": "Public key and private key",
+          "current_definition_en": "A public key locks; a different private key unlocks. For digital signatures, the private key signs and the public key verifies.",
+          "updated_definition_en": "A public key locks; a different private key unlocks. For digital signatures, the private key signs and the public key verifies.",
+          "official_term_en": "Public key and private key",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 35,
+            "printed_page": 34,
+            "basis": "key_term"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-058",
+          "term_en": "Encryption",
+          "current_definition_en": "Prevents communication content from being read by third parties.",
+          "updated_definition_en": "Prevents communication content from being read by third parties.",
+          "official_term_en": "Encryption",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 37,
+            "printed_page": 36,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-059",
+          "term_en": "Digital signature",
+          "current_definition_en": "Detects data tampering or impersonation of the sender, and provides non-repudiation.",
+          "updated_definition_en": "Detects data tampering or impersonation of the sender, and provides non-repudiation.",
+          "official_term_en": "Digital signature",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 37,
+            "printed_page": 36,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-060",
+          "term_en": "Digital certificate",
+          "current_definition_en": "Verifies that the communication partner is authentic.",
+          "updated_definition_en": "Verifies that the communication partner is authentic.",
+          "official_term_en": "Digital certificate",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 37,
+            "printed_page": 36,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-061",
+          "term_en": "Certificate authority (CA)",
+          "current_definition_en": "A trusted authority that vouches that a site is genuine when the browser verifies its certificate.",
+          "updated_definition_en": "A trusted authority that vouches that a site is genuine when the browser verifies its certificate.",
+          "official_term_en": "Certificate authority (CA)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 37,
+            "printed_page": 36,
+            "basis": "key_term"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-062",
+          "term_en": "Multi-factor authentication",
+          "current_definition_en": "Combining two or more of the three factors of authentication: knowledge, possession, and biometric.",
+          "updated_definition_en": "Combining two or more of the three factors of authentication: knowledge, possession, and biometric.",
+          "official_term_en": "Multi-factor authentication",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 36,
+            "printed_page": 35,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-063",
+          "term_en": "Two-factor authentication (2FA)",
+          "current_definition_en": "Using two independent factors from different categories to verify identity.",
+          "updated_definition_en": "Using two independent factors from different categories to verify identity.",
+          "official_term_en": "Two-factor authentication (2FA)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-Assessments-1.pdf",
+            "pdf_page": 33,
+            "printed_page": 33,
+            "basis": "assessment_supported_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-064",
+          "term_en": "Knowledge factor",
+          "current_definition_en": "An authentication factor based on knowledge, such as a password.",
+          "updated_definition_en": "An authentication factor based on knowledge, such as a password.",
+          "official_term_en": "Knowledge factor",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 36,
+            "printed_page": 35,
+            "basis": "defined_in_example"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-065",
+          "term_en": "Possession factor",
+          "current_definition_en": "An authentication factor based on possession, such as a smartphone receiving a one-time password or a smart card.",
+          "updated_definition_en": "An authentication factor based on possession, such as a smartphone receiving a one-time password or a smart card.",
+          "official_term_en": "Possession factor",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 36,
+            "printed_page": 35,
+            "basis": "defined_in_example"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-066",
+          "term_en": "Biometric factor",
+          "current_definition_en": "An authentication factor based on biometric traits, such as a fingerprint.",
+          "updated_definition_en": "An authentication factor based on biometric traits, such as a fingerprint.",
+          "official_term_en": "Biometric factor",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 36,
+            "printed_page": 35,
+            "basis": "defined_in_example"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    },
+    {
+      "unit_number": 2,
+      "unit_title_en": "Unit 2: Cybersecurity",
+      "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+      "lesson_number": 6,
+      "lesson_title_en": "Lesson 2-2: Network Security Design",
+      "lesson_title_ar": "الدرس الثاني: تصميم أمن الشبكات",
+      "total_definitions": 5,
+      "approved_definitions_count": 5,
+      "definitions": [
+        {
+          "id": "DEF-067",
+          "term_en": "Firewall",
+          "current_definition_en": "A system installed at the entry/exit point of a network that allows or denies communication based on rules set in advance.",
+          "updated_definition_en": "A system installed at the entry/exit point of a network that allows or denies communication based on rules set in advance.",
+          "official_term_en": "Firewall",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 43,
+            "printed_page": 42,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-068",
+          "term_en": "VPN (Virtual Private Network)",
+          "current_definition_en": "A technology that creates an encrypted virtual private line (tunnel) over the Internet, allowing safe connection to a network from a remote location.",
+          "updated_definition_en": "A technology that creates an encrypted virtual private line (tunnel) over the Internet, allowing safe connection to a network from a remote location.",
+          "official_term_en": "VPN (Virtual Private Network)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 43,
+            "printed_page": 42,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-071",
+          "term_en": "DMZ (Demilitarized Zone)",
+          "current_definition_en": "An area where servers exposed to the external network (web servers, mail servers, etc.) are placed separately from the internal network.",
+          "updated_definition_en": "An area where servers exposed to the external network (web servers, mail servers, etc.) are placed separately from the internal network.",
+          "official_term_en": "DMZ (Demilitarized Zone)",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 43,
+            "printed_page": 42,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-072",
+          "term_en": "Defense in depth",
+          "current_definition_en": "The concept of layering multiple security measures so that, even if one measure is breached, the next can still protect the system.",
+          "updated_definition_en": "The concept of layering multiple security measures so that, even if one measure is breached, the next can still protect the system.",
+          "official_term_en": "Defense in depth",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 44,
+            "printed_page": 43,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-077",
+          "term_en": "Zero trust",
+          "current_definition_en": "A security concept that means the system does not trust any communication, including from within the organization's network, and always verifies it.",
+          "updated_definition_en": "A security concept that means the system does not trust any communication, including from within the organization's network, and always verifies it.",
+          "official_term_en": "Zero trust",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 44,
+            "printed_page": 43,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    },
+    {
+      "unit_number": 2,
+      "unit_title_en": "Unit 2: Cybersecurity",
+      "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+      "lesson_number": 7,
+      "lesson_title_en": "Lesson 2-3: Incident Response and Risk Management",
+      "lesson_title_ar": "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
+      "total_definitions": 9,
+      "approved_definitions_count": 9,
+      "definitions": [
+        {
+          "id": "DEF-080",
+          "term_en": "Security incident",
+          "current_definition_en": "A situation in which actual damage occurs due to an information security problem.",
+          "updated_definition_en": "A situation in which actual damage occurs due to an information security problem.",
+          "official_term_en": "Security incident",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 50,
+            "printed_page": 49,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-081",
+          "term_en": "Information leak",
+          "current_definition_en": "Personal information or confidential information is leaked to the outside.",
+          "updated_definition_en": "Personal information or confidential information is leaked to the outside.",
+          "official_term_en": "Information leak",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 50,
+            "printed_page": 49,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-082",
+          "term_en": "Data tampering",
+          "current_definition_en": "Data within a system is altered without authorization.",
+          "updated_definition_en": "Data within a system is altered without authorization.",
+          "official_term_en": "Data tampering",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 50,
+            "printed_page": 49,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-083",
+          "term_en": "Service outage",
+          "current_definition_en": "A service becomes unavailable due to attacks on the server, etc.",
+          "updated_definition_en": "A service becomes unavailable due to attacks on the server, etc.",
+          "official_term_en": "Service outage",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 50,
+            "printed_page": 49,
+            "basis": "table_description"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-084",
+          "term_en": "Incident response",
+          "current_definition_en": "A six-stage process for responding to a security incident: preparation, detection, containment, eradication, recovery, and prevention of recurrence.",
+          "updated_definition_en": "A six-stage process for responding to a security incident: preparation, detection, containment, eradication, recovery, and prevention of recurrence.",
+          "official_term_en": "Incident response",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 50,
+            "printed_page": 49,
+            "basis": "defined_in_explanation"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-091",
+          "term_en": "Risk",
+          "current_definition_en": "The possibility of an information security problem occurring in the future, and its impact.",
+          "updated_definition_en": "The possibility of an information security problem occurring in the future, and its impact.",
+          "official_term_en": "Risk",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 51,
+            "printed_page": 50,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-092",
+          "term_en": "Impact",
+          "current_definition_en": "How much damage occurs if the risk actually materializes.",
+          "updated_definition_en": "How much damage occurs if the risk actually materializes.",
+          "official_term_en": "Impact",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 51,
+            "printed_page": 50,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-093",
+          "term_en": "Likelihood",
+          "current_definition_en": "How high the probability is that the risk will actually materialize.",
+          "updated_definition_en": "How high the probability is that the risk will actually materialize.",
+          "official_term_en": "Likelihood",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 51,
+            "printed_page": 50,
+            "basis": "direct_definition"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        },
+        {
+          "id": "DEF-096",
+          "term_en": "Risk evaluation matrix",
+          "current_definition_en": "A matrix for evaluating and prioritizing risks based on impact and likelihood. Risks high in both factors are addressed first.",
+          "updated_definition_en": "A matrix for evaluating and prioritizing risks based on impact and likelihood. Risks high in both factors are addressed first.",
+          "official_term_en": "Risk evaluation matrix",
+          "term_corrected": true,
+          "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+          "source": {
+            "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+            "pdf_page": 51,
+            "printed_page": 50,
+            "basis": "figure_explained_concept"
+          },
+          "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+        }
+      ]
+    }
+  ]
+}

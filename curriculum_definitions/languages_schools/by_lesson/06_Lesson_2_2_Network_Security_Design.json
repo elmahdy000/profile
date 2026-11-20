@@ -1,0 +1,92 @@
+{
+  "unit_number": 2,
+  "unit_title_en": "Unit 2: Cybersecurity",
+  "unit_title_ar": "الوحدة الثانية: الأمن السيبراني",
+  "lesson_number": 6,
+  "lesson_title_en": "Lesson 2-2: Network Security Design",
+  "lesson_title_ar": "الدرس الثاني: تصميم أمن الشبكات",
+  "total_definitions": 5,
+  "approved_definitions_count": 5,
+  "definitions": [
+    {
+      "id": "DEF-067",
+      "term_en": "Firewall",
+      "current_definition_en": "A system installed at the entry/exit point of a network that allows or denies communication based on rules set in advance.",
+      "updated_definition_en": "A system installed at the entry/exit point of a network that allows or denies communication based on rules set in advance.",
+      "official_term_en": "Firewall",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 43,
+        "printed_page": 42,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-068",
+      "term_en": "VPN (Virtual Private Network)",
+      "current_definition_en": "A technology that creates an encrypted virtual private line (tunnel) over the Internet, allowing safe connection to a network from a remote location.",
+      "updated_definition_en": "A technology that creates an encrypted virtual private line (tunnel) over the Internet, allowing safe connection to a network from a remote location.",
+      "official_term_en": "VPN (Virtual Private Network)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 43,
+        "printed_page": 42,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-071",
+      "term_en": "DMZ (Demilitarized Zone)",
+      "current_definition_en": "An area where servers exposed to the external network (web servers, mail servers, etc.) are placed separately from the internal network.",
+      "updated_definition_en": "An area where servers exposed to the external network (web servers, mail servers, etc.) are placed separately from the internal network.",
+      "official_term_en": "DMZ (Demilitarized Zone)",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 43,
+        "printed_page": 42,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-072",
+      "term_en": "Defense in depth",
+      "current_definition_en": "The concept of layering multiple security measures so that, even if one measure is breached, the next can still protect the system.",
+      "updated_definition_en": "The concept of layering multiple security measures so that, even if one measure is breached, the next can still protect the system.",
+      "official_term_en": "Defense in depth",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 44,
+        "printed_page": 43,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    },
+    {
+      "id": "DEF-077",
+      "term_en": "Zero trust",
+      "current_definition_en": "A security concept that means the system does not trust any communication, including from within the organization's network, and always verifies it.",
+      "updated_definition_en": "A security concept that means the system does not trust any communication, including from within the organization's network, and always verifies it.",
+      "official_term_en": "Zero trust",
+      "term_corrected": true,
+      "review_status": "APPROVED_TEXTBOOK_DEFINITION",
+      "source": {
+        "file": "Programming-ArtificialIntelligence-En-EB-part1.pdf",
+        "pdf_page": 44,
+        "printed_page": 43,
+        "basis": "direct_definition"
+      },
+      "review_note": "Use official_term_en + updated_definition_en in the definitions bank; preserve original fields for audit."
+    }
+  ]
+}
