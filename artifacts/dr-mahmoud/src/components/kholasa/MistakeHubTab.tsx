@@ -146,7 +146,7 @@ export function MistakeHubTab({
     try {
       setResolvingId(mistakeId);
       await studentApi(`/api/learning/mistakes/${mistakeId}/resolve`, { method: "POST" });
-      toast({ title: "عاش يا بطل! السؤال بقى متقن خلاص ✓" });
+      toast({ title: "عاش يا بطل! كده السؤال تمام واتشال من غلطاتك ✓" });
       await loadMistakes();
       window.dispatchEvent(new Event("kholasa:mistakes-updated"));
     } catch (err: any) {
@@ -246,7 +246,7 @@ export function MistakeHubTab({
               <div>
                 <h2 className="text-sm sm:text-base font-black">غلطاتك اللي محتاجة تراجعها</h2>
                 <p className="text-xs text-muted-foreground">
-                  أي سؤال تحله صح سيتم إتقانه وإزالته تلقائياً من قائمة الأخطاء.
+                  أي سؤال هتحله صح هيتشال أوتوماتيك من قايمة غلطاتك.
                 </p>
               </div>
             </div>
@@ -272,7 +272,7 @@ export function MistakeHubTab({
                 النتيجة: {practiceResult.correctCount} من {practiceResult.total} ({practiceResult.score}%)
               </h3>
               <p className="text-xs text-muted-foreground">
-                تم تحديث رصيد إتقانك تلقائياً وإزالة الأسئلة التي أجبت عليها بشكل صحيح!
+                عاش! الأسئلة اللي حليتها صح اتشالت من قايمة غلطاتك خلاص.
               </p>
             </div>
             <Button
@@ -313,15 +313,15 @@ export function MistakeHubTab({
                     {rev ? (
                       rev.isCorrect ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 font-bold">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> تم إتقان السؤال ✓
+                          <CheckCircle2 className="h-3.5 w-3.5" /> حليتها صح ✓
                         </span>
                       ) : wasSkipped ? (
                         <span className="rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 font-bold">
-                          لم يتم حله (ما زال في المراجعة)
+                          متحلتش (لسه في المراجعة)
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2.5 py-0.5 font-bold">
-                          <XCircle className="h-3.5 w-3.5" /> إجابة غير صحيحة
+                          <XCircle className="h-3.5 w-3.5" /> إجابة مش صح
                         </span>
                       )
                     ) : (
@@ -435,7 +435,7 @@ export function MistakeHubTab({
               className="h-11 px-8 rounded-xl font-black text-sm cursor-pointer"
             >
               {submittingPractice ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : null}
-              تصحيح وحفظ الإتقان ✓
+              صحّح واحفظ النتيجة ✓
             </Button>
           </div>
         )}
@@ -455,7 +455,7 @@ export function MistakeHubTab({
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            أي سؤال تخطئ فيه في الاختبارات أو التقييم الذاتي أو التحدي اليومي يُسجل هنا تلقائياً لتراجعه وتتقنه قبل الامتحان.
+            أي سؤال تغلط فيه في الاختبارات أو التقييم الذاتي أو التحدي اليومي بيتسجل هنا أوتوماتيك عشان تراجعه قبل الامتحان.
           </p>
         </div>
 
@@ -490,7 +490,7 @@ export function MistakeHubTab({
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block">أسئلة بقيت بتحلها صح</span>
             <strong className="text-2xl font-black font-mono tabular-nums text-emerald-600 dark:text-emerald-400 block leading-tight">{data?.resolvedCount || 0}</strong>
             <span className="inline-block text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/40">
-              أتقنتها بنجاح 🎯
+              حليتها صح وبقت تمام 🎯
             </span>
           </div>
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500 border border-emerald-200/60 dark:border-emerald-900/40 shadow-inner">
@@ -522,7 +522,7 @@ export function MistakeHubTab({
               <Sparkles className="h-4 w-4 text-primary" /> امتحن نفسك في الأسئلة اللي غلطت فيها
             </h3>
             <p className="text-xs text-muted-foreground">
-              اختبر نفسك الآن في الأسئلة اللي غلطت فيها قبل كده؛ وأول ما تحل السؤال صح هيتشال تلقائياً من قائمة الأخطاء وتتقنه.
+              جرب تحل تاني الأسئلة اللي غلطت فيها قبل كده؛ وأول ما تحل السؤال صح هيتشال أوتوماتيك من غلطاتك.
             </p>
           </div>
           <Button
@@ -574,7 +574,7 @@ export function MistakeHubTab({
           <Target className="h-10 w-10 text-emerald-500 mx-auto" />
           <h3 className="text-base font-black">سجلك نظيف تماماً! 🎉</h3>
           <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-            مفيش أي أخطاء محتاجة مراجعة دلوقتي. كل ما تحل امتحانات أو تدريبات، أي سؤال تغلط فيه هيتسجل هنا تلقائياً عشان تراجعه وتتقنه.
+            مفيش أي غلطات محتاجة مراجعة دلوقتي. كل ما تحل امتحانات أو تدريبات، أي سؤال تغلط فيه هيتسجل هنا أوتوماتيك عشان تراجعه براحتك.
           </p>
         </div>
       ) : (

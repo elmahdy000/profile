@@ -195,7 +195,7 @@ export function KholasaFlashcardsView({
             <Layers className="h-3.5 w-3.5" /> التسميع {safeIndex + 1} من {orderedCards.length}
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-500 px-2.5 py-1 text-xs font-bold">
-            <CheckCircle2 className="h-3.5 w-3.5" /> أتقنت {masteredCount} / {totalCards}
+            <CheckCircle2 className="h-3.5 w-3.5" /> فهمت {masteredCount} / {totalCards}
           </span>
         </div>
 
@@ -418,7 +418,7 @@ export function KholasaFlashcardsView({
             }}
             className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold gap-1.5 cursor-pointer"
           >
-            <CheckCircle2 className="h-4 w-4" /> أتقنتها ✓
+            <CheckCircle2 className="h-4 w-4" /> فهمتها تمام ✓
           </Button>
         </div>
       </div>

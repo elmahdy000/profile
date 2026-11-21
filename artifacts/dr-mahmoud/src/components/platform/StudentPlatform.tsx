@@ -528,7 +528,7 @@ export function StudentPlatform() {
       toast({
         variant: "destructive",
         title: "تعذر تفعيل الإشعارات",
-        description: "يرجى السماح بالإشعارات من إعدادات المتصفح أو أيقونة القفل بجانب رابط الموقع.",
+        description: "اسمح بالإشعارات من إعدادات المتصفح أو علامة القفل اللي جنب رابط الموقع.",
       });
     }
   };
@@ -876,9 +876,9 @@ export function StudentPlatform() {
       // Play completion chime & trigger instant notification toast
       try { playNotificationSound(); } catch (e) {}
       toast({
-        title: res.passed ? "مبروك! تم اجتياز الاختبار بنجاح 🎓" : "تم تسليم الاختبار وتوثيق محاولتك 📝",
-        description: `النتيجة النهائية: ${res.score}% (${res.correct} من ${res.total} إجابة صحيحة) — ${
-          res.passed ? "أداء ممتاز جداً! تم تسجيل النتيجة بنجاح." : "لم تتخطَ درجة النجاح، يمكنك مراجعة الإجابات بالأسفل."
+        title: res.passed ? "مبروك يا بطل! نجحت في الاختبار 🎓" : "تم تسليم الاختبار وحفظ درجتك 📝",
+        description: `النتيجة النهائية: ${res.score}% (${res.correct} من ${res.total} إجابة صح) — ${
+          res.passed ? "عاش بجد! نتيجتك اتسجلت خلاص." : "ولا يهمك، راجع الإجابات تحت وجرب تاني."
         }`,
       });
 
@@ -2235,13 +2235,13 @@ export function StudentPlatform() {
                     </div>
 
                     <strong className="block text-2xl md:text-3xl font-black tracking-tight">
-                      {quizResult.passed ? "مبروك! تم الاجتياز بنجاح 🎉" : "للأسف لم تتخطَ درجة النجاح 💔"}
+                      {quizResult.passed ? "مبروك يا بطل! نجحت في الاختبار 🎉" : "معلش يا بطل، لسه محتاج تراجع شوية 💪"}
                     </strong>
 
                     <p className="mt-1.5 text-xs md:text-sm font-semibold opacity-90 max-w-md mx-auto">
                       {quizResult.passed
-                        ? "أداء ممتاز! تم توثيق نتيجتك وحفظ المحاولة بنجاح."
-                        : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، ادرس الأسئلة الموضحة بالأسفل وحاول مجدداً.`}
+                        ? "عاش جداً! نتيجتك اتحفظت في حسابك خلاص."
+                        : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، راجع الأسئلة اللي تحت وجرب تاني.`}
                     </p>
 
                     {/* Progress Bar for Score */}
@@ -2451,7 +2451,7 @@ export function StudentPlatform() {
                                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                                 : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"
                             }`}>
-                              {isEssay ? "✍️ سؤال مقالي (تم التوثيق)" : isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
+                              {isEssay ? "✍️ سؤال مقالي (اتحفظ)" : isCorrect ? "✓ إجابة صح" : "✗ إجابة غلط"}
                             </span>
                           )}
                         </div>
@@ -2667,7 +2667,7 @@ export function StudentPlatform() {
                       )}
                     </Button>
                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      تأكد من الإجابة على جميع الأسئلة قبل التسليم. سيتم توثيق نتيجتك وحفظ المحاولة فوراً.
+                      اتأكد إنك جاوبت على كل الأسئلة قبل ما تسلم، ونتيجتك هتتحفظ على طول.
                     </p>
                   </div>
                 ) : (
@@ -2816,7 +2816,7 @@ export function StudentPlatform() {
                 تأكيد كود الدخول لتسليم الاختبار
               </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                إجاباتك محفوظة بالكامل ولم تفقد أي شيء! حدث انقطاع في الاتصال بالسيرفر، يرجى كتابة كود الدخول لتجديد الجلسة وتوثيق درجتك فوراً:
+                متقلقش، إجاباتك كلها محفوظة ومضاعش حاجة! النت فصل لحظة، اكتب كود الدخول بتاعك عشان نحفظ درجتك على طول:
               </p>
               <div className="space-y-2">
                 <input

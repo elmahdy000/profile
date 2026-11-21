@@ -893,7 +893,7 @@ export function EssayExamsTab({
                           }`}
                         >
                           <CheckCircle2 className={`h-3.5 w-3.5 ${isMastered ? "text-emerald-600" : "text-slate-400"}`} />
-                          {isMastered ? "أتقنت السؤال ✓" : "علّم كمتقن"}
+                          {isMastered ? "فهمت السؤال ✓" : "فهمته تمام"}
                         </button>
                       </div>
 
@@ -1428,7 +1428,7 @@ export function EssayExamsTab({
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                           <ImageIcon className="h-4 w-4 text-primary" />
-                          <span>توثيق صورة ورقة الحل بالكاميرا (اختياري تماماً - لتوثيق حلك إن رغبت):</span>
+                          <span>صوّر ورقة حلك بالكاميرا (اختياري تماماً لو حابب تحفظها):</span>
                         </div>
 
                         {/* File input button */}
@@ -1679,7 +1679,7 @@ export function EssayExamsTab({
                   <div className="flex justify-between items-center text-[11px] text-slate-300 font-semibold">
                     <span>
                       {percentScore >= 90
-                        ? "🌟 إتقان ممتاز"
+                        ? "🌟 ممتاز جداً"
                         : percentScore >= 75
                         ? "👏 مستوى متميز وجيد جداً"
                         : percentScore >= 50

@@ -394,7 +394,7 @@ export function SelfAssessmentTab({
         setEligibilityChecked(true);
         toast({ title: "تم التفعيل! 🎉", description: data.message });
       } else {
-        toast({ variant: "destructive", title: "الكود غير صالح أو منتهي", description: data.message || "يرجى التحقق من الكود أو رفع إيصال جديد." });
+        toast({ variant: "destructive", title: "الكود مش شغال أو انتهى", description: data.message || "اتأكد من الكود أو ارفع إيصال جديد." });
       }
     } catch {
       toast({ variant: "destructive", description: "تعذر التحقق من الكود" });
@@ -408,7 +408,7 @@ export function SelfAssessmentTab({
     if (!receiptFile) return;
     const phone = student?.phone || guestPhone;
     if (!phone || phone.length < 10) {
-      toast({ variant: "destructive", description: "يرجى إدخال رقم الهاتف أولاً" });
+      toast({ variant: "destructive", description: "اكتب رقم الموبايل الأول" });
       return;
     }
     setReceiptUploading(true);
@@ -558,12 +558,12 @@ export function SelfAssessmentTab({
   // Start Exam
   const handleStartExam = async () => {
     if (!selectedUnitName) {
-      toast({ variant: "destructive", description: "يرجى اختيار الوحدة أولاً" });
+      toast({ variant: "destructive", description: "اختار الوحدة الأول" });
       return;
     }
 
     if (!isEnrolled && (!guestPhone || guestPhone.trim().length < 10)) {
-      toast({ variant: "destructive", description: "يرجى كتابة رقم الهاتف للمتابعة" });
+      toast({ variant: "destructive", description: "اكتب رقم الموبايل عشان نكمل" });
       return;
     }
 

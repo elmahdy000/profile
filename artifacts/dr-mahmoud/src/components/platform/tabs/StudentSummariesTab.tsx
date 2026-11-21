@@ -213,11 +213,11 @@ export function StudentSummariesTab({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!lessonTitle.trim()) {
-      toast({ variant: "destructive", title: "تنبيه", description: "يرجى اختيار أو كتابة اسم الدرس." });
+      toast({ variant: "destructive", title: "تنبيه", description: "اختار أو اكتب اسم الدرس الأول." });
       return;
     }
     if (selectedFiles.length === 0) {
-      toast({ variant: "destructive", title: "تنبيه", description: "يرجى اختيار صورة واحدة على الأقل." });
+      toast({ variant: "destructive", title: "تنبيه", description: "اختار صورة واحدة على الأقل." });
       return;
     }
     setSubmitting(true);

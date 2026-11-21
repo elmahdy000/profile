@@ -115,7 +115,7 @@ export function CommandPaletteModal({
       id: "nav-mistakes",
       category: "أقسام المنصة",
       title: "ركن غلطاتي والتشخيص الذكي",
-      subtitle: "مراجعة الأسئلة التي أخطأت بها وإجراء امتحان فوري لإتقانها",
+      subtitle: "راجع الأسئلة اللي غلطت فيها وحلها تاني عشان تثبّتها",
       badge: "غلطاتي",
       icon: Target,
       onSelect: () => {

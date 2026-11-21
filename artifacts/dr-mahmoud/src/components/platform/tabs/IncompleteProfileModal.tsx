@@ -47,7 +47,7 @@ export function IncompleteProfileModal({
           toast({
             variant: "destructive",
             title: "رقم ولي الأمر غير صحيح",
-            description: "يرجى كتابة رقم موبايل صحيح لولي الأمر (11 رقم).",
+            description: "اكتب رقم موبايل صح لولي الأمر (11 رقم).",
           });
           setSaving(false);
           return;
@@ -102,7 +102,7 @@ export function IncompleteProfileModal({
               ⚠️ استكمال البيانات الشخصية الناقصة
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              مرحباً بك يا {student.name}! يرجى كتابة البيانات التالية لتفعيل حسابك ومتابعة الحضور والاشتراكات.
+              أهلاً بيك يا {student.name}! كمّل البيانات دي عشان نفعّل حسابك وتتابع حضورك واشتراكاتك.
             </p>
           </div>
         </div>
