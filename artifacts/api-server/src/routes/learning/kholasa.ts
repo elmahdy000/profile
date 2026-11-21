@@ -77,7 +77,7 @@ function sanitizeQuestionForStudent(q: QuizQuestion | undefined | null) {
 router.get("/learning/kholasa/media/:filename", async (req, res, next) => {
   try {
     let isAdmin = isAdminRequest(req);
-    if (!isAdmin) {
+    if (!isAdmin && (req.headers["x-admin-password"] || req.cookies?.admin_session)) {
       await getDynamicAdminPassword().catch(() => {});
       isAdmin = isAdminRequest(req);
     }
@@ -112,7 +112,7 @@ router.get("/learning/kholasa/media/:filename", async (req, res, next) => {
     }
 
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Cache-Control", "private, max-age=86400");
+    res.setHeader("Cache-Control", "private, max-age=604800, immutable");
     res.sendFile(fullPath);
   } catch (error) {
     next(error);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ZoomIn } from "lucide-react";
 import { buildKholasaMediaUrl } from "./kholasa-api";
 import { PremiumImageLightbox } from "@/components/ui/PremiumImageLightbox";
@@ -28,6 +28,7 @@ export function ProtectedKholasaImage({
   const [attemptedBlob, setAttemptedBlob] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   const isThumbnailOrCustomClick =
     disableLightbox || Boolean(onClick) || className.includes("object-cover");
@@ -37,6 +38,13 @@ export function ProtectedKholasaImage({
     setAttemptedBlob(false);
     setLoaded(false);
   }, [src]);
+
+  // If browser already has the image cached, mark loaded immediately
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [resolvedSrc]);
 
   useEffect(() => {
     return () => {
@@ -79,7 +87,10 @@ export function ProtectedKholasaImage({
   if (isThumbnailOrCustomClick) {
     return (
       <img
+        loading="lazy"
+        decoding="async"
         {...rest}
+        ref={imgRef}
         className={className}
         draggable={false}
         onClick={onClick}
@@ -117,7 +128,10 @@ export function ProtectedKholasaImage({
           <div className="h-44 w-64 max-w-full rounded-xl bg-slate-200/70 dark:bg-slate-800/70 animate-pulse" />
         )}
         <img
+          loading="lazy"
+          decoding="async"
           {...rest}
+          ref={imgRef}
           draggable={false}
           onLoad={(e) => {
             setLoaded(true);
