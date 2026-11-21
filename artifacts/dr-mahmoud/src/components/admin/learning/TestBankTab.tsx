@@ -244,6 +244,10 @@ export function TestBankTab({
   const [loadingQuestions, setLoadingQuestions] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [diffFilter, setDiffFilter] = useState<string>("all");
+  const [onlyAssessmentFilter, setOnlyAssessmentFilter] = useState<boolean>(false);
+  const [onlyWithImageFilter, setOnlyWithImageFilter] = useState<boolean>(false);
+  const [questionsPage, setQuestionsPage] = useState<number>(1);
+  const [treeCollapsed, setTreeCollapsed] = useState<boolean>(false);
 
   // Question Edit/Create Modal
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
@@ -620,7 +624,12 @@ export function TestBankTab({
         params.append("lesson", lesson);
       }
       const res = await adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
-      setLessonQuestions(res || []);
+      // Exclude essay rows from the MCQ/True-False list (essays have their own dedicated tab)
+      const mcqOnly = (res || []).filter(
+        (r) => !String(r?.id ?? "").startsWith("essay-") && String(r?.type || "").toUpperCase() !== "ESSAY",
+      );
+      setLessonQuestions(mcqOnly);
+      setQuestionsPage(1);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message || "تعذر تحميل الأسئلة" });
     } finally {
@@ -674,9 +683,9 @@ export function TestBankTab({
   // Filtered questions in explorer
   const filteredQuestions = useMemo(() => {
     return lessonQuestions.filter((q) => {
+      const qData = q.question || {};
       // Type Filter (All, MCQ, True/False)
       if (typeFilter !== "all") {
-        const qData = q.question || {};
         const isTf =
           q.questionType === "true_false" ||
           qData.questionType === "true_false" ||
@@ -685,15 +694,40 @@ export function TestBankTab({
         if (typeFilter === "mcq" && isTf) return false;
       }
       if (diffFilter !== "all" && q.difficulty !== diffFilter) return false;
+      if (onlyAssessmentFilter) {
+        const tagsArr: string[] = Array.isArray(q.tags) ? q.tags : Array.isArray(qData.tags) ? qData.tags : [];
+        const isAssessment = Boolean(
+          q.isAssessment ||
+            qData.isAssessment ||
+            tagsArr.some((t) => String(t).includes("تقييم") || String(t).toLowerCase().includes("assessment") || String(t).includes("وزارة")),
+        );
+        if (!isAssessment) return false;
+      }
+      if (onlyWithImageFilter) {
+        const hasImg = Boolean(q.imageUrl || qData.imageUrl);
+        if (!hasImg) return false;
+      }
       if (searchQuery.trim()) {
-        const p = (q.question?.prompt || "").toLowerCase();
-        const o = (q.question?.options || []).join(" ").toLowerCase();
+        const p = (qData.prompt || "").toLowerCase();
+        const o = (qData.options || []).join(" ").toLowerCase();
         const s = searchQuery.toLowerCase();
         return p.includes(s) || o.includes(s);
       }
       return true;
     });
-  }, [lessonQuestions, typeFilter, diffFilter, searchQuery]);
+  }, [lessonQuestions, typeFilter, diffFilter, onlyAssessmentFilter, onlyWithImageFilter, searchQuery]);
+
+  const QUESTIONS_PER_PAGE = 25;
+  const totalQuestionPages = Math.max(1, Math.ceil(filteredQuestions.length / QUESTIONS_PER_PAGE));
+  const safeQuestionsPage = Math.min(questionsPage, totalQuestionPages);
+  const paginatedQuestions = useMemo(() => {
+    const start = (safeQuestionsPage - 1) * QUESTIONS_PER_PAGE;
+    return filteredQuestions.slice(start, start + QUESTIONS_PER_PAGE);
+  }, [filteredQuestions, safeQuestionsPage]);
+
+  useEffect(() => {
+    setQuestionsPage(1);
+  }, [searchQuery, diffFilter, typeFilter, onlyAssessmentFilter, onlyWithImageFilter, selectedUnit, selectedLesson]);
 
   // Clear entire lesson questions or entire unit
   const handleClearLesson = async () => {
@@ -1595,39 +1629,37 @@ export function TestBankTab({
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/30">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>نظام بنك الأسئلة الشامل والامتحانات الذكية</span>
+      {/* Compact Modern Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-slate-900 via-slate-900 to-teal-950 p-4 sm:p-5 text-white shadow-md border border-slate-800">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-black tracking-tight flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-emerald-400 shrink-0" />
+                <span>بنك الأسئلة والمولد الذكي</span>
+              </h2>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-black text-emerald-300 border border-emerald-500/30 font-mono tabular-nums">
+                {totalQuestions.toLocaleString("en-US")} سؤال
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-bold text-sky-300 border border-sky-500/30 font-mono tabular-nums">
+                {treeData.length} مراحل
+              </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              بنك أسئلة المراحل والدروس (Test Bank)
-            </h2>
-            <p className="text-xs sm:text-sm text-emerald-100/80 max-w-2xl leading-relaxed">
-              ارفع مذكراتك وبنوك أسئلتك لكل درس مقسماً حسب المرحلة والوحدة، ثم ولّد امتحانات جاهزة للطلاب بضغطة زر وتوزيع صعوبة عشوائي أو مخصص.
+            <p className="text-xs text-slate-300/85 max-w-2xl">
+              استعراض وتعديل الأسئلة حسب المرحلة والوحدة والدرس، استيراد الملفات، وتوليد الامتحانات الذكية.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 px-5 border border-white/15 text-center">
-              <span className="block text-2xl font-black text-emerald-400">{totalQuestions}</span>
-              <span className="text-[11px] font-bold text-slate-300">سؤال في البنك</span>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 px-5 border border-white/15 text-center">
-              <span className="block text-2xl font-black text-sky-400">{treeData.length}</span>
-              <span className="text-[11px] font-bold text-slate-300">مراحل دراسية</span>
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               type="button"
               onClick={loadTree}
               variant="outline"
-              className="h-12 rounded-xl bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs cursor-pointer"
+              size="sm"
+              className="h-9 rounded-xl bg-white/10 hover:bg-white/20 border-white/20 text-white font-bold text-xs cursor-pointer"
             >
-              <RefreshCw className={`h-4 w-4 ml-1.5 ${loadingTree ? "animate-spin" : ""}`} />
-              تحديث
+              <RefreshCw className={`h-3.5 w-3.5 ml-1.5 ${loadingTree ? "animate-spin" : ""}`} />
+              تحديث البنك
             </Button>
           </div>
         </div>
@@ -1636,58 +1668,58 @@ export function TestBankTab({
       {/* GLOBAL MASTER EXAMS TOGGLE */}
       <GlobalExamsMasterToggle adminApi={adminApi} />
 
-      {/* Navigation Sub-Tabs */}
-      <div className="flex border-b border-border bg-card rounded-2xl p-1 shadow-sm gap-1">
+      {/* Clean Segmented Sub-Tabs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-border bg-card rounded-2xl p-1 shadow-2xs gap-1">
         <button
           type="button"
           onClick={() => setActiveTab("explorer")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === "explorer"
-              ? "bg-primary text-white shadow-md"
+              ? "bg-primary text-white shadow-xs"
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
           }`}
         >
-          <Layers className="h-4 w-4" />
-          <span>١. استعراض وإدارة بنك الأسئلة</span>
+          <Layers className="h-4 w-4 shrink-0" />
+          <span className="truncate">استعراض البنك</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("upload")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === "upload"
-              ? "bg-emerald-600 text-white shadow-md"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
           }`}
         >
-          <UploadCloud className="h-4 w-4" />
-          <span>٢. رفع واستيراد بنك أسئلة درس</span>
+          <UploadCloud className="h-4 w-4 shrink-0" />
+          <span className="truncate">رفع واستيراد أسئلة</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("generate")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === "generate"
-              ? "bg-violet-600 text-white shadow-md"
+              ? "bg-violet-600 text-white shadow-xs"
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
           }`}
         >
-          <Sparkles className="h-4 w-4" />
-          <span>٣. توليد اختبار ذكي من البنك 🚀</span>
+          <Sparkles className="h-4 w-4 shrink-0" />
+          <span className="truncate">مولد الامتحانات الذكي</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("auto_daily")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === "auto_daily"
-              ? "bg-amber-600 text-white shadow-md"
+              ? "bg-amber-600 text-white shadow-xs"
               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
           }`}
         >
-          <Bot className="h-4 w-4" />
-          <span>٤. التوليد اليومي والإشعار الذكي 🤖</span>
+          <Bot className="h-4 w-4 shrink-0" />
+          <span className="truncate">التوليد اليومي الآلي</span>
         </button>
       </div>
 
@@ -1736,9 +1768,10 @@ export function TestBankTab({
           </div>
 
           {/* Units & Lessons Grid for Selected Stage */}
-          <div className="grid gap-6 lg:grid-cols-12">
-            {/* Left/Sidebar: Units & Lessons List */}
-            <div className="lg:col-span-5 space-y-4">
+          <div className="grid gap-5 lg:grid-cols-12 items-start">
+            {/* Right/Sidebar (RTL): Collapsible Units & Lessons Tree */}
+            {!treeCollapsed && (
+              <div className="lg:col-span-4 space-y-3 lg:sticky lg:top-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="text-sm font-black text-foreground flex items-center gap-2">
                   <FolderOpen className="h-4 w-4 text-primary" />
@@ -1926,60 +1959,62 @@ export function TestBankTab({
                                   </span>
                                 )}
                                 <span
-                                  className={`px-1.5 py-0.5 rounded ${
+                                  className={`px-1.5 py-0.5 rounded font-mono ${
                                     isSelected
                                       ? "bg-white/20 text-white"
                                       : "bg-muted text-muted-foreground font-extrabold"
                                   }`}
                                 >
-                                  {lessonObj.totalQuestions} س
+                                  {lessonObj.totalQuestions}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLessonModalMode("rename");
-                                    setTargetLessonData({
-                                      unit: unitObj.unit,
-                                      lesson: lessonObj.lesson,
-                                      videoId: lessonObj.lessonId,
-                                    });
-                                    setShowLessonModal(true);
-                                  }}
-                                  className={`p-1 rounded hover:bg-black/10 transition-colors cursor-pointer ${
-                                    isSelected ? "text-white/80 hover:text-white" : "text-muted-foreground hover:text-foreground"
-                                  }`}
-                                  title="تعديل الدرس"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExportModalTarget({ unit: unitObj.unit, lesson: lessonObj.lesson });
-                                    setShowExportModal(true);
-                                  }}
-                                  className={`p-1 rounded hover:bg-blue-500/10 transition-colors cursor-pointer ${
-                                    isSelected ? "text-white/80 hover:text-blue-200" : "text-muted-foreground hover:text-blue-600"
-                                  }`}
-                                  title="تصدير أسئلة هذا الدرس (نماذج وورد / طلاب / JSON)"
-                                >
-                                  <Download className="h-3 w-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteLesson(selectedStage, unitObj.unit, lessonObj.lesson);
-                                  }}
-                                  className={`p-1 rounded hover:bg-rose-500/20 transition-colors cursor-pointer ${
-                                    isSelected ? "text-white/80 hover:text-rose-200" : "text-muted-foreground hover:text-rose-500"
-                                  }`}
-                                  title="حذف الدرس"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
+                                <div className="hidden group-hover:flex group-focus-within:flex items-center gap-0.5">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setLessonModalMode("rename");
+                                      setTargetLessonData({
+                                        unit: unitObj.unit,
+                                        lesson: lessonObj.lesson,
+                                        videoId: lessonObj.lessonId,
+                                      });
+                                      setShowLessonModal(true);
+                                    }}
+                                    className={`p-1 rounded hover:bg-black/10 transition-colors cursor-pointer ${
+                                      isSelected ? "text-white/85 hover:text-white" : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                    title="تعديل الدرس"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setExportModalTarget({ unit: unitObj.unit, lesson: lessonObj.lesson });
+                                      setShowExportModal(true);
+                                    }}
+                                    className={`p-1 rounded hover:bg-blue-500/10 transition-colors cursor-pointer ${
+                                      isSelected ? "text-white/85 hover:text-blue-200" : "text-muted-foreground hover:text-blue-600"
+                                    }`}
+                                    title="تصدير أسئلة هذا الدرس"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteLesson(selectedStage, unitObj.unit, lessonObj.lesson);
+                                    }}
+                                    className={`p-1 rounded hover:bg-rose-500/20 transition-colors cursor-pointer ${
+                                      isSelected ? "text-white/85 hover:text-rose-200" : "text-muted-foreground hover:text-rose-500"
+                                    }`}
+                                    title="حذف الدرس"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           );
@@ -1989,37 +2024,54 @@ export function TestBankTab({
                   ))}
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
-            {/* Right: Selected Lesson Questions Viewer */}
-            <div className="lg:col-span-7 space-y-4">
+            {/* Left (RTL): Selected Lesson Questions Viewer (Expands to 12 cols when tree collapsed) */}
+            <div className={`${treeCollapsed ? "lg:col-span-12" : "lg:col-span-8"} space-y-4 transition-all`}>
               {selectedLesson ? (
                 <>
                   {/* Lesson Header Actions */}
-                  <div className="rounded-2xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                    <div>
-                      <div className="text-[11px] text-muted-foreground font-bold">
-                        {selectedStage} • {selectedUnit}
+                  <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-bold">
+                          <button
+                            type="button"
+                            onClick={() => setTreeCollapsed((c) => !c)}
+                            className="hidden lg:inline-flex items-center gap-1 rounded-lg border border-border bg-muted/50 px-2 py-0.5 text-[10px] font-black text-foreground hover:bg-muted transition cursor-pointer"
+                            title={treeCollapsed ? "إظهار شجرة الدروس" : "توسيع مساحة الأسئلة"}
+                          >
+                            <Layers className="h-3 w-3 text-primary" />
+                            <span>{treeCollapsed ? "إظهار الشجرة" : "توسيع العرض"}</span>
+                          </button>
+                          <span className="truncate">{selectedStage} • {selectedUnit}</span>
+                        </div>
+                        <h4 className="text-base font-black text-foreground flex items-center gap-2 mt-1">
+                          {selectedLesson === "all" ? (
+                            <>
+                              <FolderOpen className="h-4 w-4 text-emerald-600 shrink-0" />
+                              <span className="truncate">كل أسئلة الوحدة: {selectedUnit}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Video className="h-4 w-4 text-primary shrink-0" />
+                              <span className="truncate">{selectedLesson}</span>
+                            </>
+                          )}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground font-semibold">
+                          <span>الإجمالي: <strong className="font-mono text-foreground">{lessonQuestions.length}</strong> سؤال</span>
+                          {filteredQuestions.length !== lessonQuestions.length && (
+                            <>
+                              <span>•</span>
+                              <span className="text-primary">المطابق للفلتر: <strong className="font-mono">{filteredQuestions.length}</strong></span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <h4 className="text-base font-black text-foreground flex items-center gap-2">
-                        {selectedLesson === "all" ? (
-                          <>
-                            <FolderOpen className="h-4 w-4 text-emerald-600" />
-                            <span>كل أسئلة الوحدة: {selectedUnit}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Video className="h-4 w-4 text-primary" />
-                            <span>{selectedLesson}</span>
-                          </>
-                        )}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-                        <span>إجمالي الأسئلة: {lessonQuestions.length}</span>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                       <Button
                         type="button"
                         onClick={() => {
@@ -2100,6 +2152,7 @@ export function TestBankTab({
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+                    </div>
                   </div>
 
                   {/* Workspace Tabs: MCQ, Essays, Quizzes */}
@@ -2171,40 +2224,91 @@ export function TestBankTab({
                   ) : (
                     <>
                   {/* Filters & Search Bar */}
-                  <div className="flex flex-col sm:flex-row gap-2 items-center">
-                    <div className="relative flex-1 w-full">
-                      <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="ابحث في نص السؤال أو الخيارات..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-9 pr-9 pl-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                    </div>
-                    <select
-                      value={typeFilter}
-                      onChange={(e) => setTypeFilter(e.target.value as any)}
-                      className="h-9 px-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
-                    >
-                      <option value="all">كل أنواع الأسئلة</option>
-                      <option value="mcq">اختيار من متعدد (MCQ)</option>
-                      <option value="true_false">صواب وخطأ (True/False)</option>
-                    </select>
+                  <div className="space-y-2.5 rounded-2xl border border-border bg-card p-3 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row gap-2 items-center">
+                      <div className="relative flex-1 w-full">
+                        <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="ابحث في نص السؤال أو الخيارات..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full h-9 pr-9 pl-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                      <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value as any)}
+                        className="h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                      >
+                        <option value="all">كل الأنواع</option>
+                        <option value="mcq">اختيار من متعدد (MCQ)</option>
+                        <option value="true_false">صواب وخطأ (T/F)</option>
+                      </select>
 
-                    <select
-                      value={diffFilter}
-                      onChange={(e) => setDiffFilter(e.target.value)}
-                      className="h-9 px-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
-                    >
-                      <option value="all">كل الصعوبات</option>
-                      <option value="easy">سهل 🟢</option>
-                      <option value="medium">متوسط 🟡</option>
-                      <option value="hard">صعب 🔴</option>
-                    </select>
+                      <select
+                        value={diffFilter}
+                        onChange={(e) => setDiffFilter(e.target.value)}
+                        className="h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                      >
+                        <option value="all">كل الصعوبات</option>
+                        <option value="easy">سهل</option>
+                        <option value="medium">متوسط</option>
+                        <option value="hard">صعب</option>
+                      </select>
+                    </div>
+
+                    {/* Quick Toggle Filter Chips + Pagination Summary */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-border/60">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setOnlyAssessmentFilter((v) => !v)}
+                          className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition cursor-pointer ${
+                            onlyAssessmentFilter
+                              ? "border-amber-500 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                              : "border-border bg-background text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          أسئلة التقييمات فقط
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOnlyWithImageFilter((v) => !v)}
+                          className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition cursor-pointer ${
+                            onlyWithImageFilter
+                              ? "border-blue-500 bg-blue-500/15 text-blue-700 dark:text-blue-300"
+                              : "border-border bg-background text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          الأسئلة المصورة فقط
+                        </button>
+                        {(searchQuery || typeFilter !== "all" || diffFilter !== "all" || onlyAssessmentFilter || onlyWithImageFilter) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery("");
+                              setTypeFilter("all");
+                              setDiffFilter("all");
+                              setOnlyAssessmentFilter(false);
+                              setOnlyWithImageFilter(false);
+                            }}
+                            className="rounded-lg px-2 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          >
+                            مسح الفلاتر
+                          </button>
+                        )}
+                      </div>
+
+                      {filteredQuestions.length > 0 && (
+                        <span className="text-[11px] font-bold text-muted-foreground font-mono">
+                          عرض {(safeQuestionsPage - 1) * QUESTIONS_PER_PAGE + 1}–{Math.min(safeQuestionsPage * QUESTIONS_PER_PAGE, filteredQuestions.length)} من {filteredQuestions.length}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Questions List */}
+                  {/* Questions List (Natural Page Scroll + Paginated 25/page for silky speed) */}
                   {loadingQuestions ? (
                     <div className="p-12 text-center text-xs font-bold text-muted-foreground animate-pulse">
                       جارٍ تحميل أسئلة الدرس...
@@ -2217,8 +2321,10 @@ export function TestBankTab({
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
-                      {filteredQuestions.map((q, qIndex) => {
+                    <>
+                    <div className="space-y-3">
+                      {paginatedQuestions.map((q, pageIdx) => {
+                        const qIndex = (safeQuestionsPage - 1) * QUESTIONS_PER_PAGE + pageIdx;
                         const questionData = q.question || {};
                         const isEnglish = isEnglishQuestion(questionData.prompt, questionData.options);
                         const diffBadge =
@@ -2368,6 +2474,44 @@ export function TestBankTab({
                         );
                       })}
                     </div>
+
+                    {/* Clean Pagination Controls */}
+                    {totalQuestionPages > 1 && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-xs shadow-2xs">
+                        <span className="font-bold text-muted-foreground">
+                          صفحة <strong className="font-mono text-foreground">{safeQuestionsPage}</strong> من <strong className="font-mono text-foreground">{totalQuestionPages}</strong> ({filteredQuestions.length} سؤال)
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={safeQuestionsPage <= 1}
+                            onClick={() => {
+                              setQuestionsPage((p) => Math.max(1, p - 1));
+                              window.scrollTo({ top: 180, behavior: "smooth" });
+                            }}
+                            className="h-8 rounded-xl text-xs font-bold cursor-pointer"
+                          >
+                            السابق
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={safeQuestionsPage >= totalQuestionPages}
+                            onClick={() => {
+                              setQuestionsPage((p) => Math.min(totalQuestionPages, p + 1));
+                              window.scrollTo({ top: 180, behavior: "smooth" });
+                            }}
+                            className="h-8 rounded-xl text-xs font-bold cursor-pointer"
+                          >
+                            التالي
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    </>
                   )}
                   </>
                 )}
