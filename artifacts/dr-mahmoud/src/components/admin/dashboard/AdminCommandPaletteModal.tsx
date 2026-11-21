@@ -47,16 +47,28 @@ interface AdminCommandPaletteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: AdminTopTab, subTab?: AdminLearningTab, mode?: string) => void;
+  adminRole?: "superadmin" | "subadmin";
   openCourseModal?: (mode: "add" | "edit", course?: any) => void;
   openVideoModal?: (mode: "add" | "edit", video?: any) => void;
   openPodcastModal?: (mode: "add" | "edit", podcast?: any) => void;
   openCurriculumModal?: (mode: "add" | "edit", curriculum?: any) => void;
 }
 
+const SUPERADMIN_ONLY_IDS = new Set([
+  "settings",
+  "courses",
+  "curriculums",
+  "videos",
+  "podcasts",
+  "quick-new-course",
+  "quick-upload-video",
+]);
+
 export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> = ({
   isOpen,
   onClose,
   onNavigate,
+  adminRole = "superadmin",
   openCourseModal,
   openVideoModal,
   openPodcastModal,
@@ -426,11 +438,15 @@ export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> =
     ];
   }, [onNavigate, onClose, openCourseModal, openVideoModal, openPodcastModal, openCurriculumModal]);
 
-  // Filter commands by search query
+  // Filter commands by role & search query
   const filteredCommands = useMemo(() => {
+    const roleAllowed =
+      adminRole === "superadmin"
+        ? commands
+        : commands.filter((cmd) => !SUPERADMIN_ONLY_IDS.has(cmd.id));
     const q = query.trim().toLowerCase();
-    if (!q) return commands;
-    return commands.filter((cmd) => {
+    if (!q) return roleAllowed;
+    return roleAllowed.filter((cmd) => {
       return (
         cmd.title.toLowerCase().includes(q) ||
         cmd.subtitle.toLowerCase().includes(q) ||
@@ -438,7 +454,7 @@ export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> =
         cmd.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  }, [commands, query]);
+  }, [commands, query, adminRole]);
 
   // Handle keyboard navigation
   useEffect(() => {

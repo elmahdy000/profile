@@ -448,15 +448,20 @@ export default function AdminDashboard() {
 
   const handleCommandPaletteNavigate = useCallback(
     (tab: AdminTopTab, subTab?: AdminLearningTab, mode?: string) => {
-      if (mode && typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.set("mode", mode);
-        window.history.replaceState(null, "", url.toString());
-      }
       if (tab === "learning" && subTab) {
         handleLearningSubTabChange(subTab);
       } else {
         handleTabChange(tab);
+      }
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (mode) {
+          url.searchParams.set("mode", mode);
+        } else {
+          url.searchParams.delete("mode");
+        }
+        window.history.replaceState(null, "", url.toString());
+        window.dispatchEvent(new Event("popstate"));
       }
     },
     [handleLearningSubTabChange, handleTabChange],
@@ -2231,6 +2236,7 @@ export default function AdminDashboard() {
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         onNavigate={handleCommandPaletteNavigate}
+        adminRole={adminRole}
         openCourseModal={openCourseModal}
         openVideoModal={openVideoModal}
         openPodcastModal={openPodcastModal}

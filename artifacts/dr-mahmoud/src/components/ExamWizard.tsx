@@ -55,7 +55,7 @@ export type QuizFormState = {
   title: string;
   courseId: string;
   videoId: string;
-  scope: "course" | "lesson";
+  scope: "course" | "lesson" | "homework";
   category: string;
   stage: string;
   stages: string[];
@@ -76,7 +76,7 @@ export type QuizItem = {
   title: string;
   courseId?: number | null;
   videoId?: number | null;
-  scope: "course" | "lesson";
+  scope: "course" | "lesson" | "homework";
   category: string;
   stage?: string | null;
   stages?: string[];
