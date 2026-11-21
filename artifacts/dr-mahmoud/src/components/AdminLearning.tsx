@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
@@ -43,24 +43,83 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { ExamWizard } from "./ExamWizard";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import type { Student as PlatformStudent } from "@/types/platform";
-import { StudentsTab } from "./admin/learning/StudentsTab";
-import { CenterBookingsTab } from "./admin/learning/CenterBookingsTab";
-import { PaymentsTab, type PaymentReceipt } from "./admin/learning/PaymentsTab";
-import { NotificationsTab } from "./admin/learning/NotificationsTab";
-import { MonthlyPaymentsTab } from "./admin/learning/MonthlyPaymentsTab";
-import { OverviewSection } from "./admin/learning/OverviewSection";
-import { ReportsTab } from "./admin/learning/ReportsTab";
-import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdminTab";
-import { StudentQuizGradesSheet } from "./platform/tabs/StudentQuizGradesSheet";
-import { AttendanceScannerTab } from "./admin/attendance/AttendanceScannerTab";
-import { TestBankTab } from "./admin/learning/TestBankTab";
-import { SelfAssessmentAdminTab } from "./admin/learning/SelfAssessmentAdminTab";
-import { EssayExamsAdminTab } from "./admin/learning/EssayExamsAdminTab";
-import { KholasaAdminTab } from "./kholasa/KholasaAdminTab";
-import { MemoStudioTab } from "./admin/learning/MemoStudioTab";
+import type { PaymentReceipt } from "./admin/learning/PaymentsTab";
+
+// Lazy-loaded heavy admin modules to drastically reduce initial AdminLearning bundle size
+const ExamWizard = lazy(() => import("./ExamWizard").then((m) => ({ default: m.ExamWizard })));
+const StudentsTab = lazy(() => import("./admin/learning/StudentsTab").then((m) => ({ default: m.StudentsTab })));
+const CenterBookingsTab = lazy(() => import("./admin/learning/CenterBookingsTab").then((m) => ({ default: m.CenterBookingsTab })));
+const PaymentsTab = lazy(() => import("./admin/learning/PaymentsTab").then((m) => ({ default: m.PaymentsTab })));
+const NotificationsTab = lazy(() => import("./admin/learning/NotificationsTab").then((m) => ({ default: m.NotificationsTab })));
+const MonthlyPaymentsTab = lazy(() => import("./admin/learning/MonthlyPaymentsTab").then((m) => ({ default: m.MonthlyPaymentsTab })));
+const OverviewSection = lazy(() => import("./admin/learning/OverviewSection").then((m) => ({ default: m.OverviewSection })));
+const ReportsTab = lazy(() => import("./admin/learning/ReportsTab").then((m) => ({ default: m.ReportsTab })));
+const StudentSummariesAdminTab = lazy(() => import("./admin/learning/StudentSummariesAdminTab").then((m) => ({ default: m.StudentSummariesAdminTab })));
+const StudentQuizGradesSheet = lazy(() => import("./platform/tabs/StudentQuizGradesSheet").then((m) => ({ default: m.StudentQuizGradesSheet })));
+const AttendanceScannerTab = lazy(() => import("./admin/attendance/AttendanceScannerTab").then((m) => ({ default: m.AttendanceScannerTab })));
+const TestBankTab = lazy(() => import("./admin/learning/TestBankTab").then((m) => ({ default: m.TestBankTab })));
+const SelfAssessmentAdminTab = lazy(() => import("./admin/learning/SelfAssessmentAdminTab").then((m) => ({ default: m.SelfAssessmentAdminTab })));
+const EssayExamsAdminTab = lazy(() => import("./admin/learning/EssayExamsAdminTab").then((m) => ({ default: m.EssayExamsAdminTab })));
+const KholasaAdminTab = lazy(() => import("./kholasa/KholasaAdminTab").then((m) => ({ default: m.KholasaAdminTab })));
+const MemoStudioTab = lazy(() => import("./admin/learning/MemoStudioTab").then((m) => ({ default: m.MemoStudioTab })));
+
+const SELF_CONTAINED_ADMIN_TABS = new Set<string>([
+  "attendance",
+  "testbank",
+  "essay-exams",
+  "self-assessment-packs",
+  "subscriptions",
+  "summaries",
+]);
+
+const WORKSPACE_SUBNAV_GROUPS: Array<{
+  tabs: Array<{ id: AdminLearningTab; label: string }>;
+}> = [
+  {
+    tabs: [
+      { id: "students", label: "قائمة الطلاب" },
+      { id: "attendance", label: "حضور السنتر QR" },
+      { id: "center-bookings", label: "جدول السناتر" },
+      { id: "summaries", label: "كشكول التلخيصات" },
+    ],
+  },
+  {
+    tabs: [
+      { id: "payments", label: "إيصالات الدفع" },
+      { id: "subscriptions", label: "الاشتراكات الشهرية" },
+    ],
+  },
+  {
+    tabs: [
+      { id: "testbank", label: "بنك الأسئلة والمولد" },
+      { id: "quizzes", label: "الاختبارات والواجبات" },
+      { id: "essay-exams", label: "تصحيح المقالي" },
+      { id: "grades-sheet", label: "شيت الدرجات" },
+      { id: "memo-studio", label: "استوديو A4" },
+      { id: "self-assessment-packs", label: "باقات التقييم الذاتي" },
+    ],
+  },
+  {
+    tabs: [
+      { id: "overview", label: "اللوحة التشغيلية" },
+      { id: "reports", label: "التقارير والتحليلات" },
+      { id: "notifications", label: "الإشعارات والرسائل" },
+    ],
+  },
+];
+
+function AdminTabFallback() {
+  return (
+    <div className="grid place-items-center py-20">
+      <div className="flex flex-col items-center gap-2.5 text-slate-500">
+        <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
+        <span className="text-xs font-bold">جارٍ تحميل القسم...</span>
+      </div>
+    </div>
+  );
+}
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -1459,12 +1518,40 @@ export function AdminLearning({
           </div>
         );
       })()}
-      {loading ? (
+
+      {/* Contextual Workspace Sub-Tabs Bar (1-click switching between related tools) */}
+      {(() => {
+        const activeGroup = WORKSPACE_SUBNAV_GROUPS.find((g) => g.tabs.some((t) => t.id === tab));
+        if (!activeGroup) return null;
+        return (
+          <div className="no-print flex flex-wrap items-center gap-1.5 rounded-2xl border border-[#E2E8F0] bg-white/90 p-1.5 shadow-2xs">
+            {activeGroup.tabs.map((t) => {
+              const isCurrent = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
+                    isCurrent
+                      ? "bg-[#2563EB] text-white shadow-xs"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {loading && !SELF_CONTAINED_ADMIN_TABS.has(tab) ? (
         <div className="grid place-items-center py-24">
           <Loader2 className="animate-spin text-primary" />
         </div>
       ) : (
-        <>
+        <Suspense fallback={<AdminTabFallback />}>
           {tab === "overview" && (
             <OverviewSection
               students={students as any}
@@ -2403,7 +2490,7 @@ export function AdminLearning({
           {tab === "self-assessment-packs" && (
             <SelfAssessmentAdminTab role={role} />
           )}
-        </>
+        </Suspense>
       )}
 
       <AnimatePresence>

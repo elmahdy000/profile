@@ -117,6 +117,33 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           badge: bookingsCount && bookingsCount > 0 ? bookingsCount : undefined,
         },
         {
+          id: "summaries",
+          label: "تدقيق كشكول التلخيصات",
+          icon: FileEdit,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("summaries" as any);
+          },
+          active: activeTab === "learning" && (learningSubTab as string) === "summaries",
+        },
+        {
+          id: "parents",
+          label: "حسابات أولياء الأمور",
+          icon: ShieldCheck,
+          onClick: () => setActiveTab("parents"),
+          active: activeTab === "parents",
+        },
+      ],
+    },
+
+    // -------------------------------------------------------------
+    // HUB 1.5: المالية والاشتراكات (Finance & Subscriptions)
+    // -------------------------------------------------------------
+    {
+      id: "hub-finance",
+      title: "المالية والاشتراكات",
+      items: [
+        {
           id: "payments",
           label: "إيصالات الدفع والتحويلات",
           icon: FileCheck2,
@@ -137,23 +164,6 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("subscriptions");
           },
           active: activeTab === "learning" && learningSubTab === "subscriptions",
-        },
-        {
-          id: "summaries",
-          label: "تدقيق كشكول التلخيصات",
-          icon: FileEdit,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("summaries" as any);
-          },
-          active: activeTab === "learning" && (learningSubTab as string) === "summaries",
-        },
-        {
-          id: "parents",
-          label: "حسابات أولياء الأمور",
-          icon: ShieldCheck,
-          onClick: () => setActiveTab("parents"),
-          active: activeTab === "parents",
         },
       ],
     },
