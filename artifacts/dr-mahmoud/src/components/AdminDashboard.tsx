@@ -76,12 +76,17 @@ import {
   ClipboardCheck,
   FileCheck2,
   LayoutGrid,
+  Search,
+  Zap,
+  QrCode,
+  Printer,
 } from "lucide-react";
 import { AdminLaunchpadView } from "./admin/dashboard/AdminLaunchpadView";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { AdminSidebarNav } from "./admin/dashboard/AdminSidebarNav";
+import { AdminCommandPaletteModal } from "./admin/dashboard/AdminCommandPaletteModal";
 import { AdminNotificationsCenter } from "./admin/dashboard/AdminNotificationsCenter";
 import { PodcastsTab } from "./admin/dashboard/PodcastsTab";
 import { CoursesTab } from "./admin/dashboard/CoursesTab";
@@ -427,6 +432,35 @@ export default function AdminDashboard() {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [isMobileSidebarOpen]);
+
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
+
+  const handleCommandPaletteNavigate = useCallback(
+    (tab: AdminTopTab, subTab?: AdminLearningTab, mode?: string) => {
+      if (mode && typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("mode", mode);
+        window.history.replaceState(null, "", url.toString());
+      }
+      if (tab === "learning" && subTab) {
+        handleLearningSubTabChange(subTab);
+      } else {
+        handleTabChange(tab);
+      }
+    },
+    [handleLearningSubTabChange, handleTabChange],
+  );
 
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
@@ -1889,6 +1923,7 @@ export default function AdminDashboard() {
         setLearningSubTab={handleLearningSubTabChange}
         isMobileSidebarOpen={isMobileSidebarOpen}
         setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         openVideoModal={openVideoModal}
         handleLogout={handleLogout}
         bookingsCount={
@@ -1909,9 +1944,9 @@ export default function AdminDashboard() {
         <div className="w-full max-w-[1400px] mx-auto">
 
             {/* Top Desktop Executive Header */}
-            <div className="no-print hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="no-print hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#0B63CE] text-white flex items-center justify-center font-black text-sm shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-xs">
                   د.م
                 </div>
                 <div>
@@ -1921,61 +1956,112 @@ export default function AdminDashboard() {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> السيرفر نشط
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى المنصة</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم المركزية وإدارة المنظومة التعليمية</p>
                 </div>
               </div>
 
+              {/* Central Global Search (Command Palette Trigger) */}
+              <button
+                type="button"
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="flex items-center justify-between gap-3 px-3.5 py-2 w-72 xl:w-88 rounded-xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200/80 text-slate-500 hover:text-slate-800 transition-all text-xs cursor-pointer group shadow-2xs"
+                title="افتح البحث السريع أو اضغط Ctrl+K"
+              >
+                <div className="flex items-center gap-2">
+                  <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                  <span className="truncate">بحث شامل في المنصة والأقسام...</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 text-slate-500 rounded shadow-2xs">Ctrl</kbd>
+                  <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 text-slate-500 rounded shadow-2xs">K</kbd>
+                </div>
+              </button>
+
               {/* Action shortcuts */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                {/* 1. Instant Exam Generator */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandPaletteNavigate("learning", "testbank", "generate");
+                  }}
+                  className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="توليد امتحان فوري ذكي من بنك الأسئلة"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                  <span>توليد امتحان</span>
+                </button>
+
+                {/* 2. QR Attendance */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandPaletteNavigate("learning", "attendance");
+                  }}
+                  className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200/80 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="كشكول حضور الطلاب بالسنتر"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-blue-600" />
+                  <span>حضور السنتر</span>
+                </button>
+
+                {/* 3. A4 Studio */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandPaletteNavigate("learning", "memo-studio");
+                  }}
+                  className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/80 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="استوديو المذكرات وطباعة A4"
+                >
+                  <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>طباعة A4</span>
+                </button>
+
+                {/* 4. Students Quick Tab */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCommandPaletteNavigate("learning", "students");
+                  }}
+                  className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200/80 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="إدارة وتفعيل الطلاب"
+                >
+                  <Users className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>الطلاب</span>
+                </button>
+
+                <div className="h-5 w-[1px] bg-slate-200 mx-1" />
+
+                <AdminNotificationsCenter
+                  onNavigate={handleNavigateFromNotification}
+                  bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
+                />
+
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTabState("hub");
                     setLocation("/admin");
                   }}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                  className={`p-2 rounded-xl text-xs font-black transition-all flex items-center justify-center cursor-pointer border ${
                     activeTab === "hub"
-                      ? "bg-slate-900 text-white shadow-md ring-2 ring-blue-500/30"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
                   }`}
+                  title="بوابة البطاقات الرئيسية"
                 >
-                  <LayoutGrid className="w-3.5 h-3.5" /> بوابة البطاقات 🏠
+                  <LayoutGrid className="w-4 h-4" />
                 </button>
-                <AdminNotificationsCenter
-                  onNavigate={handleNavigateFromNotification}
-                  bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
-                />
-                <button
-                  type="button"
-                  onClick={() => openCourseModal("add")}
-                  className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B63CE] text-xs font-bold transition-all flex items-center gap-1.5 border border-blue-200/60"
-                >
-                  <Plus className="w-3.5 h-3.5" /> كورس جديد
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    openVideoModal("add");
-                    setActiveTab("upload-video");
-                  }}
-                  className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-emerald-200/60"
-                >
-                  <Upload className="w-3.5 h-3.5" /> رفع فيديو
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openPodcastModal("add")}
-                  className="px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-purple-200/60"
-                >
-                  <Mic className="w-3.5 h-3.5" /> بودكاست
-                </button>
+
                 <a
                   href="/"
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-200"
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center border border-slate-200"
+                  title="عرض واجهة الموقع الخارجية"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" /> الموقع
+                  <ExternalLink className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -2139,6 +2225,16 @@ export default function AdminDashboard() {
         onClose={() => setPreviewVideo(null)}
         getYouTubeVideoId={getYouTubeVideoId}
         getYouTubePlaylistId={getYouTubePlaylistId}
+      />
+
+      <AdminCommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onNavigate={handleCommandPaletteNavigate}
+        openCourseModal={openCourseModal}
+        openVideoModal={openVideoModal}
+        openPodcastModal={openPodcastModal}
+        openCurriculumModal={openCurriculumModal}
       />
     </div>
   );

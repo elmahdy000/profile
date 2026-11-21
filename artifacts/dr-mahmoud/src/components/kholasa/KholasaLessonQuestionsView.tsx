@@ -299,18 +299,23 @@ export function KholasaLessonQuestionsView({
       ) : qType === "essay" ? (
         <div className="space-y-3.5">
           {(items as EssayItem[]).map((item, idx) => {
+            if (!item) return null;
             const diffInfo = DIFF_LABELS[item.difficulty] || DIFF_LABELS.medium;
             const revealed = Boolean(revealedEssays[item.id]);
             const qNum = (page - 1) * 12 + idx + 1;
+            const promptText = item.prompt || (item as any)?.question?.prompt || "";
+            const isPromptEng = isPrimarilyEnglish(promptText);
+            const imageUrl = item.imageUrl || (item as any)?.question?.imageUrl || null;
+
             return (
               <div key={item.id} className={cardClass}>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-black text-primary">سؤال مقالي #{qNum}</span>
                   <div className="flex items-center gap-2">
-                    {isPrimarilyEnglish(item.prompt) && isSpeechSupported() && (
+                    {isPromptEng && isSpeechSupported() && (
                       <button
                         type="button"
-                        onClick={() => speakEnglishText(item.prompt)}
+                        onClick={() => speakEnglishText(promptText)}
                         title="الاستماع للسؤال"
                         className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold hover:bg-primary/20 cursor-pointer"
                       >
@@ -320,25 +325,20 @@ export function KholasaLessonQuestionsView({
                     <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${diffInfo.color}`}>
                       {diffInfo.label}
                     </span>
-                    <span className={`text-[11px] font-bold ${mutedClass}`}>{item.points} درجات</span>
+                    <span className={`text-[11px] font-bold ${mutedClass}`}>{item.points || 5} درجات</span>
                   </div>
                 </div>
 
-                {(() => {
-                  const isPromptEng = isPrimarilyEnglish(item.prompt);
-                  return (
-                    <div
-                      dir={isPromptEng ? "ltr" : "rtl"}
-                      className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left font-sans" : "text-right"}`}
-                    >
-                      <BidiStatement text={item.prompt} />
-                    </div>
-                  );
-                })()}
+                <div
+                  dir={isPromptEng ? "ltr" : "rtl"}
+                  className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left font-sans" : "text-right"}`}
+                >
+                  <BidiStatement text={promptText} />
+                </div>
 
-                {item.imageUrl && (
+                {imageUrl && (
                   <ProtectedKholasaImage
-                    src={item.imageUrl}
+                    src={imageUrl}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />
@@ -430,12 +430,22 @@ export function KholasaLessonQuestionsView({
       ) : (
         <div className="space-y-3.5">
           {(items as McqOrTfItem[]).map((item, idx) => {
+            if (!item) return null;
             const diffInfo = DIFF_LABELS[item.difficulty] || DIFF_LABELS.medium;
             const res = results[item.id];
             const isChecking = checkingId === item.id;
             const qNum = (page - 1) * 12 + idx + 1;
             const showTrans = Boolean(showTransMap[item.id]);
-            const isPromptEng = isPrimarilyEnglish(item.question.prompt);
+            const qObj = item.question || (item as any);
+            const promptText = qObj?.prompt || (item as any)?.prompt || "";
+            const isPromptEng = isPrimarilyEnglish(promptText);
+            const optionsList: string[] = Array.isArray(qObj?.options)
+              ? qObj.options
+              : Array.isArray((item as any)?.options)
+              ? (item as any).options
+              : [];
+            const imageUrl = qObj?.imageUrl || (item as any)?.imageUrl || null;
+            const translationText = item.translation || qObj?.translation || (item as any)?.translation || null;
 
             return (
               <div key={item.id} className={cardClass}>
@@ -452,14 +462,14 @@ export function KholasaLessonQuestionsView({
                     {isPromptEng && isSpeechSupported() && (
                       <button
                         type="button"
-                        onClick={() => speakEnglishText(item.question.prompt)}
+                        onClick={() => speakEnglishText(promptText)}
                         title="الاستماع للسؤال"
                         className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold hover:bg-primary/20 cursor-pointer"
                       >
                         <Volume2 className="h-3 w-3" /> استماع
                       </button>
                     )}
-                    {item.translation && (
+                    {translationText && (
                       <button
                         type="button"
                         onClick={() => setShowTransMap((p) => ({ ...p, [item.id]: !showTrans }))}
@@ -478,25 +488,25 @@ export function KholasaLessonQuestionsView({
                   dir={isPromptEng ? "ltr" : "rtl"}
                   className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left" : "text-right"}`}
                 >
-                  <BidiStatement text={item.question.prompt} />
+                  <BidiStatement text={promptText} />
                 </div>
 
-                {showTrans && item.translation && (
+                {showTrans && translationText && (
                   <p dir="rtl" className="rounded-xl bg-sky-500/10 border border-sky-500/20 px-3 py-2 text-xs text-sky-400 font-semibold text-right">
-                    {item.translation}
+                    {translationText}
                   </p>
                 )}
 
-                {item.question.imageUrl && (
+                {imageUrl && (
                   <ProtectedKholasaImage
-                    src={item.question.imageUrl}
+                    src={imageUrl}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />
                 )}
 
                 <div className={`grid gap-2 ${qType === "true_false" ? "sm:grid-cols-2" : ""}`}>
-                  {item.question.options.map((opt, oi) => {
+                  {optionsList.map((opt, oi) => {
                     const isPicked = res?.selectedOption === oi;
                     const isCorrectOpt = res?.correctOption === oi;
                     const isWrongPicked = res && isPicked && !res.isCorrect;

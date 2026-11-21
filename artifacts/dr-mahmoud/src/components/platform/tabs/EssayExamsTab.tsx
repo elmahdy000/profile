@@ -50,6 +50,7 @@ import {
 } from "../../kholasa/kholasa-speech";
 import { AssessmentQuestionBadge } from "../AssessmentQuestionBadge";
 import { BidiStatement } from "../../kholasa/BidiStatement";
+import { ProtectedKholasaImage } from "../../kholasa/ProtectedKholasaImage";
 
 interface EssayBankQuestion {
   id: number;
@@ -946,11 +947,10 @@ export function EssayExamsTab({
                         {/* Optional Question Image */}
                         {q.imageUrl && (
                           <div className="pt-2">
-                            <img
+                            <ProtectedKholasaImage
                               src={q.imageUrl}
                               alt="توضيح السؤال"
-                              className="max-h-72 rounded-xl border border-slate-200 dark:border-slate-800 object-contain cursor-pointer hover:opacity-90"
-                              onClick={() => setPreviewImageUrl(q.imageUrl || null)}
+                              className="max-h-72 rounded-xl object-contain"
                             />
                           </div>
                         )}
@@ -1391,12 +1391,11 @@ export function EssayExamsTab({
 
                   {/* Question Image (if any) */}
                   {q.imageUrl && (
-                    <div className="mt-2 rounded-2xl overflow-hidden border border-border bg-muted/30 max-w-lg">
-                      <img
+                    <div className="mt-2 max-w-lg">
+                      <ProtectedKholasaImage
                         src={q.imageUrl}
                         alt={`شكل السؤال ${idx + 1}`}
-                        className="w-full object-contain max-h-72 cursor-pointer hover:opacity-95 transition-opacity"
-                        onClick={() => setPreviewImageUrl(q.imageUrl!)}
+                        className="w-full object-contain max-h-72 rounded-xl"
                       />
                     </div>
                   )}
@@ -1774,12 +1773,11 @@ export function EssayExamsTab({
                     {q.prompt}
                   </p>
                   {q.imageUrl && (
-                    <div className="rounded-2xl overflow-hidden border border-border bg-muted/30 max-w-md">
-                      <img
+                    <div className="max-w-md">
+                      <ProtectedKholasaImage
                         src={q.imageUrl}
                         alt="صورة السؤال"
-                        className="w-full object-contain max-h-60 cursor-pointer"
-                        onClick={() => setPreviewImageUrl(q.imageUrl!)}
+                        className="w-full object-contain max-h-60 rounded-xl"
                       />
                     </div>
                   )}

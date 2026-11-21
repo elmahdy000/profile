@@ -162,10 +162,17 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
               )}
 
               {ch.questions.map((q, idx) => {
+                if (!q) return null;
                 const picked = ch.completed ? ch.answers[idx] : answers[idx];
-                const isPromptEng = isPrimarilyEnglish(q.prompt);
+                const promptText = q.prompt || (q as any)?.question?.prompt || "";
+                const isPromptEng = isPrimarilyEnglish(promptText);
                 const expParts = q.explanation ? splitModelAnswerTranslation(q.explanation) : null;
                 const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+                const optionsList: string[] = Array.isArray(q.options)
+                  ? q.options
+                  : Array.isArray((q as any)?.question?.options)
+                  ? (q as any).question.options
+                  : [];
 
                 return (
                   <div key={idx} className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
@@ -174,10 +181,10 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
                       dir={isPromptEng ? "ltr" : "rtl"}
                       className={`text-sm font-bold text-foreground ${isPromptEng ? "text-left" : "text-right"}`}
                     >
-                      <BidiStatement text={q.prompt} />
+                      <BidiStatement text={promptText} />
                     </div>
                     <div className="grid gap-2">
-                      {q.options.map((opt, oi) => {
+                      {optionsList.map((opt, oi) => {
                         const isPicked = picked === oi;
                         const isCorrectOpt = ch.completed && q.correctIndex === oi;
                         const isWrongPicked = ch.completed && isPicked && q.correctIndex !== oi;

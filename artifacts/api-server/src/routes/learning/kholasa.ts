@@ -67,7 +67,8 @@ const mindmapUpload = multer({
   },
 });
 
-function sanitizeQuestionForStudent(q: QuizQuestion) {
+function sanitizeQuestionForStudent(q: QuizQuestion | undefined | null) {
+  if (!q) return { prompt: "", options: [] };
   const { correctIndex: _ci, correctAnswer: _ca, ...rest } = q;
   return rest;
 }
@@ -384,8 +385,8 @@ router.get("/learning/kholasa/materials/:id/questions", requireStudent, async (r
       items: rows.map((r) => ({
         id: r.id,
         difficulty: r.difficulty,
-        concept: r.concept || r.question.concept || null,
-        translation: r.translation || r.question.translation || null,
+        concept: r.concept || r.question?.concept || null,
+        translation: r.translation || r.question?.translation || null,
         question: sanitizeQuestionForStudent(r.question),
       })),
     });
@@ -601,17 +602,30 @@ router.get("/learning/mistakes", requireStudent, async (_req, res, next) => {
       totalCount: rows.length,
       topWeakness: breakdown[0] ?? null,
       breakdown,
-      mistakes: unresolved.map((m) => ({
-        id: m.id,
-        unit: m.unit,
-        lesson: m.lesson,
-        concept: m.concept,
-        sourceType: m.sourceType,
-        wrongCount: m.wrongCount,
-        lastWrongAt: m.lastWrongAt,
-        question: m.questionSnapshot,
-        lastWrongOption: m.lastWrongOption,
-      })),
+      mistakes: unresolved.map((m) => {
+        const snap = m.questionSnapshot && typeof m.questionSnapshot === "object"
+          ? m.questionSnapshot
+          : ({ prompt: "", options: [], correctIndex: 0 } as QuizQuestion);
+        const safeOptions = Array.isArray(snap.options) ? snap.options : [];
+        const resolvedIdx = resolveCorrectOptionIndex({ ...snap, options: safeOptions });
+        return {
+          id: m.id,
+          unit: m.unit,
+          lesson: m.lesson,
+          concept: m.concept,
+          sourceType: m.sourceType,
+          wrongCount: m.wrongCount,
+          lastWrongAt: m.lastWrongAt,
+          question: {
+            ...snap,
+            prompt: typeof snap.prompt === "string" ? snap.prompt : "",
+            options: safeOptions,
+            correctIndex: resolvedIdx,
+            correctAnswer: safeOptions[resolvedIdx] || snap.correctAnswer || "",
+          },
+          lastWrongOption: m.lastWrongOption,
+        };
+      }),
     });
   } catch (error) {
     next(error);
@@ -641,14 +655,23 @@ router.post("/learning/mistakes/practice", requireStudent, async (req, res, next
       .orderBy(desc(studentMistakesTable.wrongCount), desc(studentMistakesTable.lastWrongAt))
       .limit(limitCount);
 
-    if (rows.length === 0) {
+    const validRows = rows.filter(
+      (r) =>
+        r.questionSnapshot &&
+        typeof r.questionSnapshot === "object" &&
+        typeof r.questionSnapshot.prompt === "string" &&
+        Array.isArray(r.questionSnapshot.options) &&
+        r.questionSnapshot.options.length >= 2,
+    );
+
+    if (validRows.length === 0) {
       res.status(404).json({ error: "لا توجد أخطاء متبقية ضمن هذا النطاق حالياً!" });
       return;
     }
 
     res.json({
-      total: rows.length,
-      items: rows.map((r) => ({
+      total: validRows.length,
+      items: validRows.map((r) => ({
         mistakeId: r.id,
         unit: r.unit,
         lesson: r.lesson,
@@ -699,23 +722,29 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
 
       const selectedRaw = Number(ans?.selectedOption);
       const q = row.questionSnapshot;
+      if (!q || !Array.isArray(q.options) || q.options.length === 0) continue;
+
       const { isCorrect, resolvedCorrectOption, normalizedOption } = gradeQuestionOption(q, selectedRaw);
 
       if (isCorrect) correctCount++;
 
-      recordingItems.push({
-        question: q,
-        questionBankId: row.questionBankId,
-        selectedOption: normalizedOption,
-        isCorrect,
-        unit: row.unit,
-        lesson: row.lesson,
-        concept: row.concept,
-      });
+      // Only update mistake counters for questions the student actually answered;
+      // never penalize or overwrite lastWrongOption for skipped questions.
+      if (normalizedOption >= 0) {
+        recordingItems.push({
+          question: q,
+          questionBankId: row.questionBankId,
+          selectedOption: normalizedOption,
+          isCorrect,
+          unit: row.unit,
+          lesson: row.lesson,
+          concept: row.concept,
+        });
+      }
 
       review.push({
         mistakeId: row.id,
-        prompt: q.prompt,
+        prompt: q.prompt || "",
         options: q.options,
         selectedOption: normalizedOption,
         correctOption: resolvedCorrectOption,
@@ -725,12 +754,14 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
       });
     }
 
-    await recordSubmissionMistakes({
-      studentId: student.id,
-      stage: rows[0]?.stage ?? null,
-      sourceType: "mistakes_practice",
-      items: recordingItems,
-    });
+    if (recordingItems.length > 0) {
+      await recordSubmissionMistakes({
+        studentId: student.id,
+        stage: rows[0]?.stage ?? null,
+        sourceType: "mistakes_practice",
+        items: recordingItems,
+      });
+    }
 
     const total = review.length;
     const score = total > 0 ? Math.round((correctCount / total) * 100) : 0;

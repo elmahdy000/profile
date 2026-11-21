@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -43,6 +43,7 @@ import {
   Target,
   QrCode,
   FolderDown,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -63,22 +64,76 @@ import { QuizzesTab } from "./tabs/QuizzesTab";
 import { HomeworkTab } from "./tabs/HomeworkTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
-import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { MonthlyPaymentReminderModal } from "./tabs/MonthlyPaymentReminderModal";
-import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
-import { EssayExamsTab } from "./tabs/EssayExamsTab";
 import { AssessmentQuestionBadge } from "./AssessmentQuestionBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 import { LockedContentNotice } from "./tabs/LockedContentNotice";
 import { CommandPaletteModal } from "./CommandPaletteModal";
-import { KholasaLessonsTab } from "@/components/kholasa/KholasaLessonsTab";
-import { MistakeHubTab } from "@/components/kholasa/MistakeHubTab";
-import { OfflineVaultTab } from "./tabs/OfflineVaultTab";
 import { OfflineModeBanner } from "./OfflineModeBanner";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
 import { splitModelAnswerTranslation, isPrimarilyEnglish } from "@/components/kholasa/kholasa-speech";
+import { PremiumImageLightbox } from "@/components/ui/PremiumImageLightbox";
+
+// Lazy-loaded heavy student tabs for faster initial load
+const StudentSummariesTab = lazy(() =>
+  import("./tabs/StudentSummariesTab").then((m) => ({ default: m.StudentSummariesTab })),
+);
+const SelfAssessmentTab = lazy(() =>
+  import("./tabs/SelfAssessmentTab").then((m) => ({ default: m.SelfAssessmentTab })),
+);
+const EssayExamsTab = lazy(() =>
+  import("./tabs/EssayExamsTab").then((m) => ({ default: m.EssayExamsTab })),
+);
+const KholasaLessonsTab = lazy(() =>
+  import("@/components/kholasa/KholasaLessonsTab").then((m) => ({ default: m.KholasaLessonsTab })),
+);
+const MistakeHubTab = lazy(() =>
+  import("@/components/kholasa/MistakeHubTab").then((m) => ({ default: m.MistakeHubTab })),
+);
+const OfflineVaultTab = lazy(() =>
+  import("./tabs/OfflineVaultTab").then((m) => ({ default: m.OfflineVaultTab })),
+);
+
+function TabSuspenseFallback() {
+  return (
+    <div className="grid place-items-center py-20" dir="rtl">
+      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-xs font-bold">جارٍ تحميل القسم...</span>
+      </div>
+    </div>
+  );
+}
+
+function PaidGate({
+  isUnpaid,
+  title,
+  description,
+  onGoToPreview,
+  onOpenPayment,
+  children,
+}: {
+  isUnpaid: boolean;
+  title: string;
+  description: string;
+  onGoToPreview: () => void;
+  onOpenPayment: () => void;
+  children: React.ReactNode;
+}) {
+  if (isUnpaid) {
+    return (
+      <LockedContentNotice
+        title={title}
+        description={description}
+        onGoToPreview={onGoToPreview}
+        onOpenPayment={onOpenPayment}
+      />
+    );
+  }
+  return <>{children}</>;
+}
 
 import type {
   Student,
@@ -427,6 +482,9 @@ export function StudentPlatform() {
   const [dataError, setDataError] = useState("");
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const [initialVideoId, setInitialVideoId] = useState<number | null>(null);
+  const [kholasaTarget, setKholasaTarget] = useState<{ unit: string | null; lesson: string | null } | null>(null);
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Record<number, boolean>>({});
+  const [showSubmitConfirmModal, setShowSubmitConfirmModal] = useState(false);
   const [unresolvedMistakesCount, setUnresolvedMistakesCount] = useState(0);
   const [copiedCode, setCopiedCode] = useState(false);
   const latestNotificationIdRef = useRef(0);
@@ -548,6 +606,10 @@ export function StudentPlatform() {
 
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  useEffect(() => {
+    setFlaggedQuestions({});
+    setShowSubmitConfirmModal(false);
+  }, [activeQuiz?.id]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
   const [essayTextAnswers, setEssayTextAnswers] = useState<Record<number, string>>({});
@@ -725,13 +787,13 @@ export function StudentPlatform() {
     }
   };
 
-  const submitQuiz = async (isAuto = false) => {
+  const submitQuiz = async (isAuto = false, skipConfirm = false) => {
     // Guard against double/late submission: timer expiry, anti-cheat auto-submit,
     // and the manual button can all fire close together. Only submit once.
     if (!activeQuiz || quizResult || quizSubmitting || quizSubmitInFlightRef.current) return;
 
     // Check if there are unanswered questions when manually submitted
-    if (!isAuto) {
+    if (!isAuto && !skipConfirm) {
       const answeredCount = activeQuiz.questions.filter((q: any, i: number) => {
         const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
         if (isEssay) {
@@ -744,13 +806,11 @@ export function StudentPlatform() {
 
       const totalQuestions = activeQuiz.questions.length;
       if (answeredCount < totalQuestions) {
-        const remaining = totalQuestions - answeredCount;
-        const confirmMsg = `تنبيه: لديك ${remaining} ${remaining === 1 ? "سؤال" : "أسئلة"} دون إجابة (أجبت على ${answeredCount} من أصل ${totalQuestions}).\n\nهل أنت متأكد من رغبتك في تسليم وتصحيح الاختبار الآن؟`;
-        if (!window.confirm(confirmMsg)) {
-          return;
-        }
+        setShowSubmitConfirmModal(true);
+        return;
       }
     }
+    setShowSubmitConfirmModal(false);
 
     quizSubmitInFlightRef.current = true;
     setQuizSubmitting(true);
@@ -1212,28 +1272,28 @@ export function StudentPlatform() {
 
   const navSections = [
     {
-      title: "المسار التعليمي",
+      title: "المذاكرة والمنهج",
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
         { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
-        { id: "homework" as const, label: "الواجب المنزلي 📚", icon: BookCheck },
-        { id: "offline-vault" as const, label: "محفظة الأوفلاين ⚡", icon: FolderDown },
-        { id: "kholasa" as const, label: "الخلاصة", icon: Sparkles },
-        { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
+        { id: "kholasa" as const, label: "الخلاصة والخرائط", icon: Sparkles },
+        { id: "homework" as const, label: "الواجب المنزلي", icon: BookCheck },
         { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
+        { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
+        { id: "offline-vault" as const, label: "محفظة الأوفلاين", icon: FolderDown },
       ],
     },
     {
-      title: "الاختبارات والتقييم",
+      title: "الامتحانات والتقييم",
       items: [
         { id: "quizzes" as const, label: "الاختبارات الدورية", icon: ClipboardCheck },
-        { id: "mistakes" as const, label: "ركن غلطاتي 🎯", icon: Target },
         { id: "essay-exams" as const, label: "الامتحانات المقالية", icon: FileEdit },
         { id: "self-assessment" as const, label: "التقييم الذاتي", icon: Sparkles },
+        { id: "mistakes" as const, label: "ركن غلطاتي", icon: Target },
       ],
     },
     {
-      title: "الحساب والتفوق",
+      title: "الحساب والسنتر",
       items: [
         { id: "card" as const, label: "بطاقة الحضور QR", icon: QrCode },
         { id: "profile" as const, label: "بيانات حسابي", icon: User },
@@ -1409,7 +1469,7 @@ export function StudentPlatform() {
                     </button>
                   );
                 })}
-                {section.title === "الحساب والتفوق" && (
+                {section.title === "الحساب والسنتر" && (
                   <a
                     href="/honor-board"
                     target="_blank"
@@ -1741,118 +1801,131 @@ export function StudentPlatform() {
               onInitialVideoHandled={() => setInitialVideoId(null)}
             />
           ) : tab === "offline-vault" ? (
-            <OfflineVaultTab
-              onBackToDashboard={() => setTab("dashboard")}
-              onNavigateToLessons={() => setTab("lessons")}
-            />
+            <Suspense fallback={<TabSuspenseFallback />}>
+              <OfflineVaultTab
+                onBackToDashboard={() => setTab("dashboard")}
+                onNavigateToLessons={() => setTab("lessons")}
+              />
+            </Suspense>
           ) : tab === "kholasa" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="الخلاصة والخرائط الذهنية"
-                description="تم قفل الخلاصة والخرائط الذهنية والتسميع لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <KholasaLessonsTab
-                student={student}
-                onPlayVideo={(videoId) => {
-                  setInitialVideoId(videoId);
-                  setTab("lessons");
-                }}
-              />
-            )
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="الخلاصة والخرائط الذهنية"
+              description="تم قفل الخلاصة والخرائط الذهنية والتسميع لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
+              <Suspense fallback={<TabSuspenseFallback />}>
+                <KholasaLessonsTab
+                  student={student}
+                  initialUnit={kholasaTarget?.unit}
+                  initialLesson={kholasaTarget?.lesson}
+                  onInitialTargetHandled={() => setKholasaTarget(null)}
+                  onPlayVideo={(videoId) => {
+                    setInitialVideoId(videoId);
+                    setTab("lessons");
+                  }}
+                />
+              </Suspense>
+            </PaidGate>
           ) : tab === "mistakes" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="ركن غلطاتي والتشخيص الذكي"
-                description="تم قفل ركن غلطاتي وامتحانات المراجعة الذكية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <MistakeHubTab onMistakeCountChange={setUnresolvedMistakesCount} />
-            )
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="ركن غلطاتي والتشخيص الذكي"
+              description="تم قفل ركن غلطاتي وامتحانات المراجعة الذكية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
+              <Suspense fallback={<TabSuspenseFallback />}>
+                <MistakeHubTab
+                  onMistakeCountChange={setUnresolvedMistakesCount}
+                  onOpenLessonInKholasa={(unit, lesson) => {
+                    setKholasaTarget({ unit, lesson });
+                    setTab("kholasa");
+                  }}
+                />
+              </Suspense>
+            </PaidGate>
           ) : tab === "essay-exams" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="الامتحانات المقالية"
-                description="تم قفل الامتحانات المقالية ونماذج الإجابة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <EssayExamsTab student={student} onBackToDashboard={() => setTab("dashboard")} />
-            )
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="الامتحانات المقالية"
+              description="تم قفل الامتحانات المقالية ونماذج الإجابة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
+              <Suspense fallback={<TabSuspenseFallback />}>
+                <EssayExamsTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+              </Suspense>
+            </PaidGate>
           ) : tab === "summaries" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="ملخصات الطلاب ومذكرات الشرح"
-                description="تم قفل قسم ملخصات الطلاب والمذكرات لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <StudentSummariesTab
-                student={student}
-                courses={videos.map((v) => ({ id: v.id, title: v.title }))}
-                lessons={videos.map((v) => ({ id: v.id, title: v.title, courseId: v.courseId }))}
-                autoOpenUpload={autoOpenSummaryUpload}
-                onModalClosed={() => setAutoOpenSummaryUpload(false)}
-              />
-            )
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="ملخصات الطلاب ومذكرات الشرح"
+              description="تم قفل قسم ملخصات الطلاب والمذكرات لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
+              <Suspense fallback={<TabSuspenseFallback />}>
+                <StudentSummariesTab
+                  student={student}
+                  courses={videos.map((v) => ({ id: v.id, title: v.title }))}
+                  lessons={videos.map((v) => ({ id: v.id, title: v.title, courseId: v.courseId }))}
+                  autoOpenUpload={autoOpenSummaryUpload}
+                  onModalClosed={() => setAutoOpenSummaryUpload(false)}
+                />
+              </Suspense>
+            </PaidGate>
           ) : tab === "files" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="المذكرات والملفات التعليمية"
-                description="تم قفل المذكرات والملفات التعليمية الخاصة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="المذكرات والملفات التعليمية"
+              description="تم قفل المذكرات والملفات التعليمية الخاصة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
               <FilesTab files={files} />
-            )
+            </PaidGate>
           ) : tab === "homework" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="الواجبات والمهام المنزلية"
-                description="تم قفل الواجبات والمهام المنزلية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="الواجبات والمهام المنزلية"
+              description="تم قفل الواجبات والمهام المنزلية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
               <HomeworkTab
                 homework={homeworkQuizzes}
                 onStartHomework={startQuiz}
                 onReviewHomework={startQuizReview}
               />
-            )
+            </PaidGate>
           ) : tab === "quizzes" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="الاختبارات الدورية والإلكترونية"
-                description="تم قفل الاختبارات والامتحانات التراكمية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="الاختبارات الدورية والإلكترونية"
+              description="تم قفل الاختبارات والامتحانات التراكمية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
               <QuizzesTab
                 quizzes={examQuizzes}
                 onStartQuiz={startQuiz}
                 onReviewQuiz={startQuizReview}
               />
-            )
+            </PaidGate>
           ) : tab === "self-assessment" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="تقييم القدرات الذاتي وبنك الأسئلة"
-                description="تم قفل اختبارات تقييم القدرات وتحديد المستوى لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
-            )
+            <PaidGate
+              isUnpaid={isUnpaid}
+              title="تقييم القدرات الذاتي وبنك الأسئلة"
+              description="تم قفل اختبارات تقييم القدرات وتحديد المستوى لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+              onGoToPreview={() => setTab("lessons")}
+              onOpenPayment={() => setShowPaymentModal(true)}
+            >
+              <Suspense fallback={<TabSuspenseFallback />}>
+                <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+              </Suspense>
+            </PaidGate>
           ) : tab === "card" ? (
             <StudentCardTab student={student} onBackToDashboard={() => setTab("dashboard")} />
           ) : (
@@ -2081,6 +2154,58 @@ export function StudentPlatform() {
                     />
                   </div>
                 )}
+
+                {/* Interactive Question Navigator Strip */}
+                {!isHomework && activeQuiz.questions.length > 1 && (
+                  <div className="border-t border-slate-200/60 dark:border-slate-800/80 bg-slate-50/70 dark:bg-[#0A1324]/70">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none" dir="rtl">
+                      <span className="text-[10px] font-black text-slate-400 shrink-0 ml-1">الأسئلة:</span>
+                      {activeQuiz.questions.map((navQ: any, nIdx: number) => {
+                        const navOrigIdx = navQ._originalIndex !== undefined ? navQ._originalIndex : nIdx;
+                        const navIsEssay = navQ.questionType === "essay" || !navQ.options || navQ.options.length === 0;
+                        const navAnswered = navIsEssay
+                          ? Boolean((essayTextAnswers[navOrigIdx] ?? essayTextAnswers[nIdx] ?? "").trim())
+                          : (quizAnswers[nIdx] ?? -1) >= 0;
+                        const navFlagged = Boolean(flaggedQuestions[nIdx]);
+                        const navDetail = (quizResult as any)?.details?.find((d: any) => d.questionIndex === navOrigIdx);
+                        const navCorrect = quizResult
+                          ? navDetail
+                            ? navDetail.isCorrect
+                            : navQ.correctIndex !== undefined && quizAnswers[nIdx] === navQ.correctIndex
+                          : false;
+
+                        let pillClass =
+                          "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400";
+                        if (quizResult) {
+                          pillClass = navIsEssay
+                            ? "bg-purple-500/15 border-purple-400 text-purple-700 dark:text-purple-300"
+                            : navCorrect
+                            ? "bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                            : "bg-rose-500/20 border-rose-500 text-rose-700 dark:text-rose-300";
+                        } else if (navFlagged) {
+                          pillClass = "bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 ring-1 ring-amber-400/40";
+                        } else if (navAnswered) {
+                          pillClass = "bg-blue-600 border-blue-600 text-white shadow-2xs";
+                        }
+
+                        return (
+                          <button
+                            key={nIdx}
+                            type="button"
+                            onClick={() => {
+                              document.getElementById(`quiz-q-${nIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }}
+                            title={`الانتقال للسؤال ${nIdx + 1}${navFlagged ? " (معلّم للمراجعة)" : ""}`}
+                            className={`h-7 min-w-[28px] px-2 rounded-lg border text-[11px] font-mono font-black transition shrink-0 cursor-pointer flex items-center justify-center gap-0.5 ${pillClass}`}
+                          >
+                            <span>{nIdx + 1}</span>
+                            {!quizResult && navFlagged && <Flag className="h-2.5 w-2.5 fill-current" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </header>
 
             {/* ── 2. Full-Screen Scrollable Content (Takes 100% Height, Comfortable Reading) ── */}
@@ -2214,6 +2339,7 @@ export function StudentPlatform() {
 
                   return (
                     <div
+                      id={`quiz-q-${qi}`}
                       key={qi}
                       className={`relative overflow-hidden space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
                         quizResult
@@ -2222,11 +2348,30 @@ export function StudentPlatform() {
                             : isWrong
                             ? "border-red-500/40 bg-red-500/5 dark:bg-red-950/20"
                             : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0A101D]"
+                          : flaggedQuestions[qi]
+                          ? "border-amber-400/70 bg-amber-50/30 dark:bg-amber-950/15 ring-1 ring-amber-400/25 shadow-xs"
                           : isSelected
                           ? "border-blue-500/50 bg-white dark:bg-[#0A101D] ring-1 ring-blue-500/15 shadow-xs"
                           : "border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0A101D] hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
+                      {/* Flag for Review button during active quiz */}
+                      {!isHomework && !quizResult && (
+                        <div className="flex justify-end" dir="rtl">
+                          <button
+                            type="button"
+                            onClick={() => setFlaggedQuestions((prev) => ({ ...prev, [qi]: !prev[qi] }))}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition cursor-pointer ${
+                              flaggedQuestions[qi]
+                                ? "border-amber-400 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                : "border-slate-200 dark:border-slate-700 text-slate-500 hover:border-amber-400/60 hover:text-amber-600"
+                            }`}
+                          >
+                            <Flag className={`h-3 w-3 ${flaggedQuestions[qi] ? "fill-current" : ""}`} />
+                            <span>{flaggedQuestions[qi] ? "معلّم للمراجعة" : "علّم للمراجعة"}</span>
+                          </button>
+                        </div>
+                      )}
                       {/* Question Header & Prompt */}
                       <div className="w-full space-y-3">
                         <div className={`flex items-start justify-between gap-3 w-full ${isEng ? "flex-row" : "flex-row-reverse"}`}>
@@ -2542,46 +2687,88 @@ export function StudentPlatform() {
             </div>
           </motion.div>
         ); })()}
-        {lightboxImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[160] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-2 sm:p-6 select-none"
-          >
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-              <a
-                href={lightboxImage}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20 transition"
-                title="فتح في نافذة مستقلة"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span className="hidden sm:inline">نافذة مستقلة</span>
-              </a>
-              <button
-                type="button"
-                onClick={() => setLightboxImage(null)}
-                className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-white hover:bg-red-500/30 hover:text-red-300 transition"
-                aria-label="إغلاق"
-                title="إغلاق"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        <PremiumImageLightbox
+          src={lightboxImage}
+          alt="تكبير صورة السؤال"
+          onClose={() => setLightboxImage(null)}
+        />
+
+        {/* Custom Unanswered-Questions Confirmation Modal */}
+        {showSubmitConfirmModal && activeQuiz && !quizResult && (() => {
+          const unansweredIndices = activeQuiz.questions
+            .map((q: any, i: number) => {
+              const isEssayQ = q.questionType === "essay" || !q.options || q.options.length === 0;
+              const origIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+              const answered = isEssayQ
+                ? Boolean((essayTextAnswers[origIdx] ?? essayTextAnswers[i] ?? "").trim())
+                : (quizAnswers[i] ?? -1) >= 0;
+              return answered ? -1 : i;
+            })
+            .filter((idx) => idx >= 0);
+
+          return (
             <div
-              className="max-h-[90vh] max-w-[95vw] overflow-auto flex items-center justify-center p-2"
-              onClick={() => setLightboxImage(null)}
+              className="fixed inset-0 z-[210] grid place-items-center bg-black/75 backdrop-blur-sm p-4"
+              onClick={() => setShowSubmitConfirmModal(false)}
+              dir="rtl"
             >
-              <img
-                src={lightboxImage}
-                alt="تكبير السؤال"
-                className="max-h-[85vh] max-w-full object-contain rounded-xl shadow-2xl cursor-zoom-out"
-              />
+              <div
+                className="w-full max-w-md rounded-3xl border border-amber-500/30 bg-white dark:bg-[#0B1528] p-6 shadow-2xl space-y-4 text-right"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      لديك {unansweredIndices.length} {unansweredIndices.length === 1 ? "سؤال" : "أسئلة"} بدون إجابة
+                    </h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      يمكنك الضغط على رقم أي سؤال ناقص للرجوع إليه فوراً، أو تسليم الاختبار وتصحيحه الآن.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 p-3 max-h-36 overflow-y-auto">
+                  {unansweredIndices.map((uIdx) => (
+                    <button
+                      key={uIdx}
+                      type="button"
+                      onClick={() => {
+                        setShowSubmitConfirmModal(false);
+                        setTimeout(() => {
+                          document.getElementById(`quiz-q-${uIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 60);
+                      }}
+                      className="h-8 min-w-[36px] px-2.5 rounded-xl border border-amber-400/60 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-mono font-black hover:bg-amber-500/20 transition cursor-pointer"
+                    >
+                      #{uIdx + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSubmitConfirmModal(false)}
+                    className="rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    الرجوع للمراجعة
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void submitQuiz(false, true)}
+                    className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black cursor-pointer"
+                  >
+                    تسليم وتصحيح الآن 🏁
+                  </Button>
+                </div>
+              </div>
             </div>
-          </motion.div>
-        )}
+          );
+        })()}
         {student && (
           <IncompleteProfileModal
             student={student}

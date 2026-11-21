@@ -41,6 +41,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
+import { ProtectedKholasaImage } from "@/components/kholasa/ProtectedKholasaImage";
 import { isPrimarilyEnglish, splitModelAnswerTranslation } from "@/components/kholasa/kholasa-speech";
 import { AssessmentQuestionBadge } from "../AssessmentQuestionBadge";
 
@@ -1844,8 +1845,12 @@ export function SelfAssessmentTab({
                   )}
 
                   {currentQ.imageUrl && (
-                    <div className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 max-w-md mx-auto my-3 shadow-xs">
-                      <img src={currentQ.imageUrl} alt="سؤال" className="w-full h-auto object-contain" />
+                    <div className="my-3 flex justify-center">
+                      <ProtectedKholasaImage
+                        src={currentQ.imageUrl}
+                        alt="صورة السؤال"
+                        className="max-h-72 w-auto max-w-full rounded-xl object-contain"
+                      />
                     </div>
                   )}
                 </div>

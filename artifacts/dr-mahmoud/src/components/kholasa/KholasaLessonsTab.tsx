@@ -38,6 +38,9 @@ interface KholasaLessonsTabProps {
   onPlayVideo?: (videoId: number) => void;
   student?: Student | null;
   isLanguages?: boolean;
+  initialUnit?: string | null;
+  initialLesson?: string | null;
+  onInitialTargetHandled?: () => void;
 }
 
 type LessonStudyTab =
@@ -50,7 +53,14 @@ type LessonStudyTab =
   | "questions"
   | "sections";
 
-export function KholasaLessonsTab({ onPlayVideo, student, isLanguages }: KholasaLessonsTabProps) {
+export function KholasaLessonsTab({
+  onPlayVideo,
+  student,
+  isLanguages,
+  initialUnit,
+  initialLesson,
+  onInitialTargetHandled,
+}: KholasaLessonsTabProps) {
   const { toast } = useToast();
   const [materials, setMaterials] = useState<KholasaMaterial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +112,42 @@ export function KholasaLessonsTab({ onPlayVideo, student, isLanguages }: Kholasa
   useEffect(() => {
     void loadMaterials();
   }, []);
+
+  useEffect(() => {
+    if (loading || materials.length === 0 || (!initialLesson && !initialUnit)) return;
+    const norm = (s?: string | null) => String(s || "").trim().toLowerCase();
+    const targetLesson = norm(initialLesson);
+    const targetUnit = norm(initialUnit);
+
+    const exact = targetLesson
+      ? materials.find(
+          (m) =>
+            norm(m.lesson) === targetLesson ||
+            norm(m.lesson).includes(targetLesson) ||
+            targetLesson.includes(norm(m.lesson)),
+        )
+      : undefined;
+
+    if (exact) {
+      setActiveMaterial(exact);
+      setSelectedUnit(exact.unit);
+      const hasExplanation = Boolean(
+        exact.explanation?.trim() ||
+          exact.summaryData?.explanation?.trim() ||
+          exact.summaryData?.explanationText?.trim(),
+      );
+      setStudyTab(hasExplanation ? "explanation" : "summary");
+    } else if (targetUnit) {
+      const unitMatch = materials.find(
+        (m) => norm(m.unit) === targetUnit || norm(m.unit).includes(targetUnit),
+      );
+      if (unitMatch) {
+        setSelectedUnit(unitMatch.unit);
+        setActiveMaterial(null);
+      }
+    }
+    onInitialTargetHandled?.();
+  }, [loading, materials, initialUnit, initialLesson, onInitialTargetHandled]);
 
   const toggleBookmark = async (material: KholasaMaterial, e?: React.MouseEvent) => {
     e?.stopPropagation();
