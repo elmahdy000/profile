@@ -2237,6 +2237,7 @@ export default function AdminDashboard() {
         onClose={() => setIsCommandPaletteOpen(false)}
         onNavigate={handleCommandPaletteNavigate}
         adminRole={adminRole}
+        openExpressExam={() => setIsExpressExamOpen(true)}
         openCourseModal={openCourseModal}
         openVideoModal={openVideoModal}
         openPodcastModal={openPodcastModal}

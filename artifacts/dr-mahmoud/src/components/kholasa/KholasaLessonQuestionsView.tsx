@@ -445,7 +445,7 @@ export function KholasaLessonQuestionsView({
               ? (item as any).options
               : [];
             const imageUrl = qObj?.imageUrl || (item as any)?.imageUrl || null;
-            const translationText = item.translation || qObj?.translation || (item as any)?.translation || null;
+            const translationText = item.translation || (qObj as any)?.translation || (item as any)?.translation || null;
 
             return (
               <div key={item.id} className={cardClass}>

@@ -48,6 +48,7 @@ interface AdminCommandPaletteModalProps {
   onClose: () => void;
   onNavigate: (tab: AdminTopTab, subTab?: AdminLearningTab, mode?: string) => void;
   adminRole?: "superadmin" | "subadmin";
+  openExpressExam?: () => void;
   openCourseModal?: (mode: "add" | "edit", course?: any) => void;
   openVideoModal?: (mode: "add" | "edit", video?: any) => void;
   openPodcastModal?: (mode: "add" | "edit", podcast?: any) => void;
@@ -69,6 +70,7 @@ export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> =
   onClose,
   onNavigate,
   adminRole = "superadmin",
+  openExpressExam,
   openCourseModal,
   openVideoModal,
   openPodcastModal,
@@ -93,15 +95,19 @@ export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> =
       // Quick Actions
       {
         id: "quick-exam",
-        title: "توليد امتحان فوري (المولد الذكي)",
-        subtitle: "سحب أسئلة عشوائية من بنك الأسئلة حسب الدرس والمواصفات",
+        title: "امتحان سريع بضغطة واحدة (Express Exam)",
+        subtitle: "اختار الوحدة والدرس ونوع وعدد الأسئلة وانشر فوراً في ثوانٍ",
         category: "إجراءات سريعة",
         icon: Zap,
         badge: "سريع",
-        keywords: ["امتحان", "توليد", "اختبار", "اسئلة", "كويز", "exam", "quiz", "generate"],
+        keywords: ["امتحان", "توليد", "اختبار", "اسئلة", "كويز", "سريع", "exam", "quiz", "express", "generate"],
         action: () => {
-          onNavigate("learning", "testbank", "generate");
           onClose();
+          if (openExpressExam) {
+            openExpressExam();
+          } else {
+            onNavigate("learning", "testbank", "generate");
+          }
         },
       },
       {

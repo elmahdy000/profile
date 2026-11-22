@@ -256,9 +256,9 @@ export function StudentSummariesTab({
             try { reject(new Error(JSON.parse(xhr.responseText).error || "تعذر رفع الملخص")); } catch { reject(new Error("تعذر رفع الملخص")); }
           }
         };
-        xhr.onerror = () => reject(new Error("خطأ في الاتصال، يرجى الفحص وإعادة المحاولة"));
+        xhr.onerror = () => reject(new Error("في مشكلة في الاتصال، تأكد من النت وجرّب تاني"));
         xhr.timeout = 180000;
-        xhr.ontimeout = () => reject(new Error("انتهت مهلة الرفع، يرجى المحاولة مرة أخرى أو فحص سرعة الإنترنت."));
+        xhr.ontimeout = () => reject(new Error("الرفع أخد وقت طويل، جرّب تاني أو تأكد من سرعة النت."));
         xhr.send(formData);
       });
 
@@ -612,7 +612,7 @@ export function StudentSummariesTab({
                 <div className="shrink-0 bg-card p-4 border-t border-border sticky bottom-0 shadow-lg z-20 flex flex-col gap-2">
                   {!lessonTitle.trim() && (
                     <p className="text-[11px] font-bold text-amber-500 flex items-center gap-1">
-                      <span>⚠️ تنبيه: يرجى اختيار اسم الدرس من الخطوة (١) لتأكيد الرفع.</span>
+                      <span>⚠️ تنبيه: اختار اسم الدرس من الخطوة (١) عشان نكمل الرفع.</span>
                     </p>
                   )}
                   <div className="flex items-center gap-2">

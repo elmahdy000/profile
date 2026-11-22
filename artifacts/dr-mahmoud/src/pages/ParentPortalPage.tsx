@@ -311,7 +311,7 @@ export function ParentPortal() {
     const cleanPhone = normalizeArabicDigits(regPhone).trim();
     const cleanQuery = normalizeArabicDigits(regStudentQuery).trim();
     if (!regName.trim() || !cleanPhone || !cleanQuery) {
-      toast({ title: "بيانات غير مكتملة", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      toast({ title: "بيانات ناقصة", description: "كمّل كل البيانات المطلوبة الأول", variant: "destructive" });
       return;
     }
 
@@ -331,8 +331,8 @@ export function ParentPortal() {
       if (!res.ok) throw new Error(data.error || "فشل التسجيل");
 
       toast({
-        title: "تم التسجيل والتوثيق بنجاح",
-        description: `كود ولي الأمر الخاص بك هو: ${data.parentCode}`,
+        title: "تم التسجيل بنجاح",
+        description: `كود ولي الأمر الخاص بيك هو: ${data.parentCode}`,
       });
 
       fetchReport();
@@ -349,7 +349,7 @@ export function ParentPortal() {
     const cleanCode = normalizeArabicDigits(loginCode).trim();
 
     if (!cleanPhone || !cleanCode) {
-      toast({ title: "بيانات غير مكتملة", description: "يرجى إدخال رقم الهاتف وكود ولي الأمر أو كود الطالب", variant: "destructive" });
+      toast({ title: "بيانات ناقصة", description: "اكتب رقم الهاتف وكود ولي الأمر أو كود الطالب", variant: "destructive" });
       return;
     }
 
@@ -382,7 +382,7 @@ export function ParentPortal() {
     const cleanQuery = normalizeArabicDigits(recoverStudentQuery).trim();
 
     if (!cleanPhone || !cleanQuery) {
-      toast({ title: "بيانات غير مكتملة", description: "يرجى كتابة رقم هاتفك ورقم هاتف الطالب/كوده", variant: "destructive" });
+      toast({ title: "بيانات ناقصة", description: "اكتب رقم هاتفك ورقم هاتف الطالب أو كوده", variant: "destructive" });
       return;
     }
 
