@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { BookOpen, Layers, Sparkles, UploadCloud, Plus, Trash2, Edit, CheckCircle2, FileText, Search, Filter, RefreshCw, Eye, HelpCircle, Check, FolderOpen, GraduationCap, Video, Lock, Bot, ClipboardCheck, Download, Printer } from "lucide-react";
+import { BookOpen, Layers, Sparkles, UploadCloud, Plus, Trash2, Edit, CheckCircle2, FileText, Search, Filter, RefreshCw, Eye, HelpCircle, Check, FolderOpen, GraduationCap, Video, Lock, Bot, ClipboardCheck, Download, Printer, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { GlobalExamsMasterToggle } from "./GlobalExamsMasterToggle";
@@ -32,6 +32,7 @@ export {
 const UploadQuestionsTab = lazy(() => import("./test-bank/UploadQuestionsTab"));
 const AutoDailyTab = lazy(() => import("./test-bank/AutoDailyTab"));
 const QuizReviewModal = lazy(() => import("./test-bank/QuizReviewModal"));
+const ExpressExamModal = lazy(() => import("./test-bank/ExpressExamModal"));
 
 export function TestBankTab({
   adminApi,
@@ -152,6 +153,7 @@ export function TestBankTab({
 
   // Preset passed to UploadQuestionsTab when triggered from Explorer
   const [uploadPreset, setUploadPreset] = useState<UploadPreset | null>(null);
+  const [showExpressExamModal, setShowExpressExamModal] = useState<boolean>(false);
 
   // Generator Tab State
   const [genScope, setGenScope] = useState<"lesson" | "multi_lessons" | "unit" | "stage">("lesson");
@@ -756,6 +758,15 @@ export function TestBankTab({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              onClick={() => setShowExpressExamModal(true)}
+              size="sm"
+              className="h-9 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs shadow-sm cursor-pointer"
+            >
+              <Zap className="h-3.5 w-3.5 ml-1.5 fill-slate-950" />
+              امتحان سريع
+            </Button>
             <Button
               type="button"
               onClick={loadTree}
@@ -1840,6 +1851,25 @@ export function TestBankTab({
               if (generatedQuizSuccess && generatedQuizSuccess.id === updated.id) {
                 setGeneratedQuizSuccess(updated);
               }
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* ── Express Instant Exam Modal (Lazy) ── */}
+      {showExpressExamModal && (
+        <Suspense fallback={null}>
+          <ExpressExamModal
+            isOpen={showExpressExamModal}
+            onClose={() => setShowExpressExamModal(false)}
+            adminApi={adminApi}
+            treeData={treeData}
+            initialStage={selectedStage}
+            initialUnit={selectedUnit || undefined}
+            initialLesson={selectedLesson || undefined}
+            onCreated={(quiz) => {
+              setGeneratedQuizSuccess(quiz);
+              loadTree();
             }}
           />
         </Suspense>

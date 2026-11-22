@@ -1,7 +1,7 @@
 import { ParentsTab } from "./admin/dashboard/ParentsTab";
 import { SubscriptionsTab } from "./admin/SubscriptionsTab";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { Suspense, lazy, useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -87,6 +87,7 @@ import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { AdminSidebarNav } from "./admin/dashboard/AdminSidebarNav";
 import { AdminCommandPaletteModal } from "./admin/dashboard/AdminCommandPaletteModal";
+const ExpressExamModal = lazy(() => import("./admin/learning/test-bank/ExpressExamModal"));
 import { AdminNotificationsCenter } from "./admin/dashboard/AdminNotificationsCenter";
 import { PodcastsTab } from "./admin/dashboard/PodcastsTab";
 import { CoursesTab } from "./admin/dashboard/CoursesTab";
@@ -300,6 +301,7 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTabState] = useState<AdminTopTab>(initialRoute?.activeTab || "hub");
   const [learningSubTab, setLearningSubTabState] = useState<AdminLearningTab>(initialRoute?.learningSubTab || "students");
+  const [isExpressExamOpen, setIsExpressExamOpen] = useState(false);
 
   useEffect(() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -1984,17 +1986,15 @@ export default function AdminDashboard() {
 
               {/* Action shortcuts */}
               <div className="flex items-center gap-1.5">
-                {/* 1. Instant Exam Generator */}
+                {/* 1. Express Instant Exam Modal */}
                 <button
                   type="button"
-                  onClick={() => {
-                    handleCommandPaletteNavigate("learning", "testbank", "generate");
-                  }}
-                  className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                  title="توليد امتحان فوري ذكي من بنك الأسئلة"
+                  onClick={() => setIsExpressExamOpen(true)}
+                  className="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 border border-amber-500/80 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="إنشاء ونشر امتحان سريع من بنك الأسئلة في ثوانٍ"
                 >
-                  <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-                  <span>توليد امتحان</span>
+                  <Zap className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
+                  <span>امتحان سريع</span>
                 </button>
 
                 {/* 2. QR Attendance */}
@@ -2242,6 +2242,15 @@ export default function AdminDashboard() {
         openPodcastModal={openPodcastModal}
         openCurriculumModal={openCurriculumModal}
       />
+
+      {isExpressExamOpen && (
+        <Suspense fallback={null}>
+          <ExpressExamModal
+            isOpen={isExpressExamOpen}
+            onClose={() => setIsExpressExamOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
