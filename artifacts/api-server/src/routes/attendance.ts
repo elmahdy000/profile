@@ -68,6 +68,19 @@ function normalizeArabicText(str?: string | null): string {
     .trim();
 }
 
+function matchesCenterQuery(centerValue: string | null | undefined, query: string): boolean {
+  const normQuery = normalizeArabicText(query);
+  if (!normQuery) return true;
+  const c = normalizeArabicText(centerValue);
+  if (!c) return false;
+  if (c === normQuery || c.includes(normQuery) || normQuery.includes(c)) return true;
+  const queryKeywords = normQuery
+    .split(" ")
+    .filter((w) => w.length >= 3 && w !== "سنتر" && w !== "لغات" && w !== "عربي");
+  if (queryKeywords.length > 0 && queryKeywords.some((kw) => c.includes(kw))) return true;
+  return false;
+}
+
 // ─── 1. POST /api/admin/attendance/scan ───────────────────────────────────────
 // Rapid QR Code Scanner Attendance Endpoint
 router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, next) => {
@@ -79,6 +92,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
     }
 
     const date = String(req.body.date || getTodayCairoDate()).trim();
+    const requestedStatus: "present" | "late" = req.body.status === "late" ? "late" : "present";
     const centerOverride = req.body.centerName ? String(req.body.centerName).trim() : null;
     const slotOverride = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : null;
     const notes = req.body.notes ? String(req.body.notes).trim() : null;
@@ -179,15 +193,15 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
     let attendanceRecord = existingRecord;
     let alreadyRecorded = false;
 
-    if (existingRecord && existingRecord.status === "present") {
+    if (existingRecord && existingRecord.status === requestedStatus) {
       alreadyRecorded = true;
     } else {
       if (existingRecord) {
-        // Update from absent/late to present
+        // Update status (e.g. absent -> present/late or present <-> late)
         const [updated] = await db
           .update(studentAttendanceTable)
           .set({
-            status: "present",
+            status: requestedStatus,
             attendedAt: now,
             recordedBy,
             centerName,
@@ -200,13 +214,13 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
           .returning();
         attendanceRecord = updated;
       } else {
-        // Insert new present record
+        // Insert new present/late record
         const [inserted] = await db
           .insert(studentAttendanceTable)
           .values({
             studentId: student.id,
             date,
-            status: "present",
+            status: requestedStatus,
             attendedAt: now,
             recordedBy,
             centerName,
@@ -277,28 +291,29 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       .where(eq(parentsTable.studentId, student.id))
       .limit(1);
 
-    let parentNotified = attendanceRecord?.parentNotified ?? false;
+    const hasParentAccount = Boolean(parent);
+    let parentNotified = Boolean(attendanceRecord?.parentNotified && hasParentAccount);
 
-    // If parent exists and not yet notified for this session, notify parent
-    if (!alreadyRecorded && notifyParent && (!attendanceRecord?.parentNotified)) {
+    // Notify student inbox (and flag parentNotified truthfully only when a parent account exists)
+    if (!alreadyRecorded && notifyParent && !attendanceRecord?.parentNotified) {
       const timeStr = getCairoTimeFormatted();
       try {
         await db.insert(studentNotificationsTable).values({
           studentId: student.id,
-          title: "تسجيل حضور الحصة 📍",
-          message: `تم تسجيل حضور الطالب (${student.name}) لحصة اليوم (${date}) في تمام الساعة ${timeStr}. نتمنى له دوام التوفيق والتميز.`,
+          title: requestedStatus === "late" ? "تسجيل حضور متأخر ⏰" : "تسجيل حضور الحصة 📍",
+          message: `تم تسجيل ${requestedStatus === "late" ? "حضور متأخر للطالب" : "حضور الطالب"} (${student.name}) لحصة اليوم (${date}) الساعة ${timeStr}.`,
           type: "attendance",
         });
 
         await db
           .update(studentAttendanceTable)
           .set({
-            parentNotified: true,
-            parentNotifiedAt: new Date(),
+            parentNotified: hasParentAccount,
+            parentNotifiedAt: hasParentAccount ? new Date() : null,
           })
           .where(eq(studentAttendanceTable.id, attendanceRecord.id));
 
-        parentNotified = true;
+        parentNotified = hasParentAccount;
       } catch (err) {
         console.error("Failed to insert attendance notification:", err);
       }
@@ -346,6 +361,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
           : getCairoTimeFormatted(),
       },
       parentNotified,
+      hasParentAccount,
       parent: parent ? { id: parent.id, name: parent.name, phone: parent.phone, parentCode: parent.parentCode } : null,
       message: scanMessage,
     });
@@ -627,7 +643,8 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
     const statusFilter = req.query.status ? String(req.query.status).trim() : null;
     const searchFilter = req.query.search ? String(req.query.search).trim() : null;
 
-    // Fetch all active/approved students
+    // Fetch ONLY approved center/offline students OR students who actually have an attendance record on this date
+    // (Prevents online-only students from polluting center rosters and crushing attendance rates)
     const students = await db
       .select({
         id: studentsTable.id,
@@ -643,7 +660,13 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       })
       .from(studentsTable)
       .where(
-        sql`${studentsTable.status} = 'approved' OR ${studentsTable.id} IN (
+        sql`(
+          ${studentsTable.status} = 'approved'
+          AND (
+            (${studentsTable.centerName} IS NOT NULL AND TRIM(${studentsTable.centerName}) != '' AND LOWER(${studentsTable.centerName}) != 'null')
+            OR (${studentsTable.appointmentSlot} IS NOT NULL AND TRIM(${studentsTable.appointmentSlot}) != '' AND LOWER(${studentsTable.appointmentSlot}) != 'null')
+          )
+        ) OR ${studentsTable.id} IN (
           SELECT student_id FROM student_attendance WHERE date = ${date}
         )`
       )
@@ -699,37 +722,65 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       return groupStatsMap.get(key)!;
     };
 
-    // 1. Tally enrolled students
+    // 1. Tally enrolled students & their own attendance status cleanly (no cross-group inflation!)
+    const studentMap = new Map(students.map((s) => [s.id, s]));
+    const enrolledMarkedByGroup = new Map<string, number>();
+
     students.forEach((st) => {
       if (st.centerName || st.appointmentSlot) {
-        const entry = getOrCreateGroupEntry(st.centerName || "بدون سنتر محدد", st.appointmentSlot || "بدون موعد محدد");
+        const homeCenter = st.centerName || "بدون سنتر محدد";
+        const homeSlot = st.appointmentSlot || "بدون موعد محدد";
+        const homeKey = getGroupKey(homeCenter, homeSlot);
+        const entry = getOrCreateGroupEntry(homeCenter, homeSlot);
         entry.totalEnrolled += 1;
+
+        const att = attendanceMap.get(st.id);
+        if (att) {
+          // Student was marked today (either in home group or as makeup in another group)
+          enrolledMarkedByGroup.set(homeKey, (enrolledMarkedByGroup.get(homeKey) || 0) + 1);
+          const attendedInOtherGroup =
+            Boolean(att.appointmentSlot && st.appointmentSlot && normalizeSlot(att.appointmentSlot) !== normalizeSlot(st.appointmentSlot)) ||
+            Boolean(att.centerName && st.centerName && !matchesCenterQuery(att.centerName, st.centerName));
+
+          if (!attendedInOtherGroup) {
+            if (att.status === "present") entry.presentCount += 1;
+            else if (att.status === "absent") entry.absentCount += 1;
+            else if (att.status === "late") entry.lateCount += 1;
+          } else {
+            // Count student as attended in their home group's stats AND record makeup in the visited group
+            if (att.status === "present") entry.presentCount += 1;
+            else if (att.status === "late") entry.lateCount += 1;
+            else if (att.status === "absent") entry.absentCount += 1;
+
+            const visitedEntry = getOrCreateGroupEntry(
+              att.centerName || homeCenter,
+              att.appointmentSlot || homeSlot
+            );
+            visitedEntry.makeupCount += 1;
+          }
+        }
       }
     });
 
-    // 2. Tally attendance records
+    // 2. Also include walk-in / unattached attendance rows (students without an enrolled group)
     attendanceRows.forEach((att) => {
+      const st = studentMap.get(att.studentId);
+      if (st && (st.centerName || st.appointmentSlot)) return; // Already tallied above
       const attCenter = att.centerName || "بدون سنتر محدد";
       const attSlot = att.appointmentSlot || "بدون موعد محدد";
       const entry = getOrCreateGroupEntry(attCenter, attSlot);
       if (att.status === "present") entry.presentCount += 1;
       else if (att.status === "absent") entry.absentCount += 1;
       else if (att.status === "late") entry.lateCount += 1;
-
-      // Check if student was enrolled in another group (makeup session)
-      const st = students.find((s) => s.id === att.studentId);
-      if (st && st.appointmentSlot && att.appointmentSlot && normalizeSlot(st.appointmentSlot) !== normalizeSlot(att.appointmentSlot)) {
-        entry.makeupCount += 1;
-      }
     });
 
-    // 3. Finalize rates and unmarked
-    groupStatsMap.forEach((g) => {
-      const marked = g.presentCount + g.absentCount + g.lateCount;
-      g.unmarkedCount = Math.max(0, g.totalEnrolled - marked);
+    // 3. Finalize rates and unmarked accurately (never > 100% and never hides absent home-group students)
+    groupStatsMap.forEach((g, key) => {
+      const homeMarked = enrolledMarkedByGroup.get(key) || 0;
+      g.unmarkedCount = Math.max(0, g.totalEnrolled - homeMarked);
       g.attendanceRate = g.totalEnrolled > 0
-        ? Math.round(((g.presentCount + g.lateCount) / g.totalEnrolled) * 100)
-        : (g.presentCount > 0 ? 100 : 0);
+        ? Math.min(100, Math.round(((g.presentCount + g.lateCount) / g.totalEnrolled) * 100))
+        : (g.presentCount + g.lateCount > 0 ? 100 : 0);
     });
 
     const groupBreakdown = Array.from(groupStatsMap.values()).sort((a, b) => {
@@ -775,25 +826,9 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       records = records.filter((r) => r.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
     }
     if (centerFilter && centerFilter !== "all") {
-      const normQuery = normalizeArabicText(centerFilter);
-      // Extract key keyword if query has multiple words (e.g. "حناوي" from "سنتر الحناوي - لغات")
-      const queryKeywords = normQuery.split(" ").filter((w) => w.length >= 3 && w !== "سنتر" && w !== "لغات" && w !== "عربي");
-      records = records.filter((r) => {
-        const c1 = normalizeArabicText(r.centerName);
-        const c2 = normalizeArabicText(r.enrolledCenter);
-        
-        // Exact or substring match
-        if (c1 && (c1.includes(normQuery) || normQuery.includes(c1))) return true;
-        if (c2 && (c2.includes(normQuery) || normQuery.includes(c2))) return true;
-
-        // Keyword match (e.g. "حناوي")
-        if (queryKeywords.length > 0) {
-          const matchKw = queryKeywords.some((kw) => c1.includes(kw) || c2.includes(kw));
-          if (matchKw) return true;
-        }
-
-        return false;
-      });
+      records = records.filter(
+        (r) => matchesCenterQuery(r.centerName, centerFilter) || matchesCenterQuery(r.enrolledCenter, centerFilter)
+      );
     }
     if (slotFilter && slotFilter !== "all") {
       const targetSlot = normalizeSlot(slotFilter);
@@ -920,16 +955,25 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
       updatedAttendance = row;
     }
 
-    // Automatically update student profile center & appointment slot in real time if marked present/late
-    const effectiveCenter = centerName || existing?.centerName;
-    const effectiveSlot = appointmentSlot || existing?.appointmentSlot;
-    if ((status === "present" || status === "late") && effectiveCenter && effectiveCenter !== "all" && effectiveCenter !== "بدون سنتر محدد") {
+    // Only assign student profile center if the student does NOT already have a confirmed center
+    // (Never overwrite a student's permanent center during a makeup session or fallback to generic label)
+    const studentEnrolledCenter = (student as any).centerName || (student as any).center || null;
+    const studentHasCenter = Boolean(studentEnrolledCenter && String(studentEnrolledCenter).trim());
+    const effectiveCenter = centerOverride && centerOverride !== "all" ? centerOverride : null;
+    const effectiveSlot = slotOverride && slotOverride !== "all" ? slotOverride : null;
+    if (
+      (status === "present" || status === "late") &&
+      !studentHasCenter &&
+      effectiveCenter &&
+      effectiveCenter !== "بدون سنتر محدد" &&
+      effectiveCenter !== "السنتر الرئيسي"
+    ) {
       try {
         await db
           .update(studentsTable)
           .set({
             centerName: effectiveCenter,
-            appointmentSlot: (effectiveSlot && effectiveSlot !== "all") ? effectiveSlot : (student as any).appointmentSlot,
+            appointmentSlot: effectiveSlot || (student as any).appointmentSlot,
             centerConfirmed: true,
             centerConfirmedAt: now,
             learningMode: "offline",
@@ -939,6 +983,14 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
         console.error("Failed to update student profile center manually:", err);
       }
     }
+
+    // Check if parent account actually exists
+    const [parent] = await db
+      .select({ id: parentsTable.id })
+      .from(parentsTable)
+      .where(eq(parentsTable.studentId, studentId))
+      .limit(1);
+    const hasParentAccount = Boolean(parent);
 
     // Parent Notification handling
     let parentNotified = false;
@@ -952,15 +1004,15 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
             message: `تم تسجيل ${status === "late" ? "حضور متأخر لـ" : "حضور"} الطالب (${student.name}) لحصة اليوم (${date}) الساعة ${timeStr}.`,
             type: "attendance",
           });
-          parentNotified = true;
+          parentNotified = hasParentAccount;
         } else if (status === "absent") {
           await db.insert(studentNotificationsTable).values({
             studentId,
             title: "إخطار غياب عن الحصة ⚠️",
-            message: `نحيطكم علماً بعدم حضور الطالب (${student.name}) لحصة اليوم (${date}). يُرجى التواصل والمتابعة للتأكد من سلامته ومستواه.`,
+            message: `نحيطكم علماً بعدم حضور الطالب (${student.name}) لحصة اليوم (${date}). يرجى المتابعة للتأكد من مستواه.`,
             type: "attendance_absent",
           });
-          parentNotified = true;
+          parentNotified = hasParentAccount;
         }
 
         if (parentNotified) {
@@ -978,6 +1030,7 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
       success: true,
       attendance: updatedAttendance,
       parentNotified,
+      hasParentAccount,
     });
   } catch (error) {
     next(error);
@@ -1015,12 +1068,7 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       students = students.filter((s) => s.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
     }
     if (centerFilter && centerFilter !== "all") {
-      const cFilter = centerFilter.toLowerCase();
-      students = students.filter((s) => {
-        if (!s.centerName) return false;
-        const cName = s.centerName.toLowerCase();
-        return cName === cFilter || cName.includes(cFilter) || cFilter.includes(cName);
-      });
+      students = students.filter((s) => matchesCenterQuery(s.centerName, centerFilter));
     }
     if (slotFilter && slotFilter !== "all") {
       const targetSlot = normalizeSlot(slotFilter);
@@ -1085,6 +1133,45 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       markedAbsentCount: unmarkedStudents.length,
       parentsNotifiedCount: notifyParents ? unmarkedStudents.length : 0,
       message: `تم تسجيل غياب ${unmarkedStudents.length} طالب بنجاح!`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── 5. DELETE /api/admin/attendance/:studentId ───────────────────────────────
+// Undo / remove a student's attendance record for a specific date
+router.delete("/admin/attendance/:studentId", requireAdmin, async (req: Request, res, next) => {
+  try {
+    const studentId = Number(req.params.studentId);
+    const date = String(req.query.date || getTodayCairoDate()).trim();
+    if (!Number.isSafeInteger(studentId) || studentId <= 0) {
+      res.status(400).json({ error: "معرّف الطالب غير صحيح" });
+      return;
+    }
+
+    const deleted = await db
+      .delete(studentAttendanceTable)
+      .where(
+        and(
+          eq(studentAttendanceTable.studentId, studentId),
+          eq(studentAttendanceTable.date, date)
+        )
+      )
+      .returning();
+
+    await logAudit(
+      req,
+      "ATTENDANCE_UNDO",
+      "attendance",
+      studentId,
+      `تراجع عن تسجيل حضور الطالب #${studentId} بتاريخ ${date}`
+    );
+
+    res.json({
+      success: true,
+      deletedCount: deleted.length,
+      message: "تم التراجع عن تسجيل الحضور بنجاح",
     });
   } catch (error) {
     next(error);

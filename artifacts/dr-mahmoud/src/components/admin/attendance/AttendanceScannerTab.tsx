@@ -91,6 +91,7 @@ interface AttendanceStats {
 }
 
 interface LastScannedStudent {
+  studentId?: number;
   name: string;
   phone: string;
   accessCode: string;
@@ -102,7 +103,9 @@ interface LastScannedStudent {
   isCrossGroup?: boolean;
   checkInTime: string;
   status: "present" | "late";
+  paymentStatus?: string | null;
   parentNotified: boolean;
+  hasParentAccount?: boolean;
   parentName?: string | null;
   parentPhone?: string | null;
   notes?: string | null;
@@ -160,8 +163,8 @@ function triggerHaptic() {
 export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
 
-  // Mode: "scanner" or "sheet" or "monthly_centers"
-  const [activeTab, setActiveTab] = useState<"scanner" | "sheet" | "monthly_centers">("monthly_centers");
+  // Mode: default directly to "scanner" for fastest door workflow
+  const [activeTab, setActiveTab] = useState<"scanner" | "sheet" | "monthly_centers">("scanner");
 
   // Date Selection (defaults to Africa/Cairo today YYYY-MM-DD)
   const todayStr = useMemo(() => {
@@ -180,14 +183,38 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isContinuousMode, setIsContinuousMode] = useState<boolean>(true);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [scanStatus, setScanStatus] = useState<"present" | "late">("present");
   const [isProcessingScan, setIsProcessingScan] = useState<boolean>(false);
+  const [undoingScan, setUndoingScan] = useState<boolean>(false);
   const [manualInput, setManualInput] = useState<string>("");
   const [lastScanned, setLastScanned] = useState<LastScannedStudent | null>(null);
   const [recentScans, setRecentScans] = useState<LastScannedStudent[]>([]);
 
-  // Active Session Selection for Scanner (Center & Time Slot)
-  const [selectedCenter, setSelectedCenter] = useState<string>("all");
-  const [selectedSlot, setSelectedSlot] = useState<string>("all");
+  // Active Session Selection for Scanner (persisted across reloads)
+  const [selectedCenter, setSelectedCenter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("dr_mahmoud_att_center") || "all";
+    }
+    return "all";
+  });
+  const [selectedSlot, setSelectedSlot] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("dr_mahmoud_att_slot") || "all";
+    }
+    return "all";
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("dr_mahmoud_att_center", selectedCenter);
+    }
+  }, [selectedCenter]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("dr_mahmoud_att_slot", selectedSlot);
+    }
+  }, [selectedSlot]);
 
   // Offline & Synchronization State
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
@@ -612,7 +639,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
         body: JSON.stringify({
           qrCode: code,
           date: selectedDate,
-          status: "present",
+          status: scanStatus,
           centerName: selectedCenter !== "all" ? selectedCenter : undefined,
           appointmentSlot: selectedSlot !== "all" ? selectedSlot : undefined,
           notifyParent: true,
@@ -661,6 +688,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       }
 
       const scannedItem: LastScannedStudent = {
+        studentId: data.student.id,
         name: data.student.name,
         phone: data.student.phone,
         accessCode: data.student.accessCode,
@@ -671,8 +699,10 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
         enrolledCenter: data.enrolledCenter,
         isCrossGroup: Boolean(data.isCrossGroup),
         checkInTime: data.attendance?.checkInTime,
-        status: data.attendance?.status || "present",
+        status: data.attendance?.status || scanStatus,
+        paymentStatus: data.student.paymentStatus || null,
         parentNotified: Boolean(data.parentNotified),
+        hasParentAccount: Boolean(data.hasParentAccount ?? data.parent),
         parentName: data.parent?.name,
         parentPhone: data.parent?.phone,
         notes: data.attendance?.notes,
@@ -700,7 +730,46 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       setIsProcessingScan(false);
       setManualInput("");
     }
-  }, [selectedDate, selectedCenter, selectedSlot, soundEnabled, toast, loadDailySheet, executeOfflineScan]);
+  }, [selectedDate, selectedCenter, selectedSlot, scanStatus, soundEnabled, toast, loadDailySheet, executeOfflineScan]);
+
+  // Undo last scanned student (accidental scan)
+  const handleUndoLastScan = async () => {
+    if (!lastScanned?.studentId || undoingScan) return;
+    setUndoingScan(true);
+    try {
+      const res = await fetch(
+        `/api/admin/attendance/${lastScanned.studentId}?date=${encodeURIComponent(selectedDate)}`,
+        { method: "DELETE", credentials: "include" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذر التراجع عن التسجيل");
+      toast({
+        title: "تم التراجع عن تسجيل الحضور ↩️",
+        description: `تم إلغاء حضور (${lastScanned.name}) ليوم ${selectedDate}.`,
+      });
+      setRecentScans((prev) => prev.filter((p) => p.accessCode !== lastScanned.accessCode));
+      setLastScanned(null);
+      void loadDailySheet(selectedDate);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ", description: err.message });
+    } finally {
+      setUndoingScan(false);
+    }
+  };
+
+  // Instant autocomplete suggestions for manual search (name, phone, last 4 digits, or code)
+  const manualSuggestions = useMemo(() => {
+    const q = manualInput.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return records
+      .filter(
+        (r) =>
+          r.name?.toLowerCase().includes(q) ||
+          r.phone?.includes(q) ||
+          r.accessCode?.toLowerCase().includes(q)
+      )
+      .slice(0, 6);
+  }, [manualInput, records]);
 
   // Start Camera Feed
   const startCamera = useCallback(async () => {
@@ -1006,26 +1075,28 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
           </div>
         </div>
 
-        {/* Date Selector & Mode Switch */}
+        {/* Date Selector & Mode Switch (hidden in monthly_centers since it has its own calendar strip) */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl shadow-xs">
-            <Calendar className="h-4 w-4 text-[#64748B]" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
-            />
-            {selectedDate !== todayStr && (
-              <button
-                type="button"
-                onClick={() => setSelectedDate(todayStr)}
-                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md"
-              >
-                اليوم
-              </button>
-            )}
-          </div>
+          {activeTab !== "monthly_centers" && (
+            <div className="flex items-center gap-1.5 bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl shadow-xs">
+              <Calendar className="h-4 w-4 text-[#64748B]" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="text-xs font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
+              />
+              {selectedDate !== todayStr && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(todayStr)}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md cursor-pointer"
+                >
+                  اليوم
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Sound Toggle */}
           <button
@@ -1373,8 +1444,33 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                 </div>
               </div>
 
-              {/* Action Buttons for Session */}
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Action Buttons for Session + Present/Late Quick Toggle */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="inline-flex items-center rounded-xl bg-white/10 p-1 border border-white/15">
+                  <button
+                    type="button"
+                    onClick={() => setScanStatus("present")}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition cursor-pointer ${
+                      scanStatus === "present"
+                        ? "bg-emerald-500 text-white shadow-xs"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                  >
+                    حاضر 🟢
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScanStatus("late")}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition cursor-pointer ${
+                      scanStatus === "late"
+                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        : "text-slate-300 hover:text-white"
+                    }`}
+                  >
+                    متأخر ⏰
+                  </button>
+                </div>
+
                 {!isCameraActive ? (
                   <button
                     type="button"
@@ -1558,13 +1654,17 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                 )}
               </div>
 
-              {/* Manual QR / Student Code or Phone Input Fallback */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+              {/* Manual QR / Student Name, Phone, or Code Search with Autocomplete */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     if (manualInput.trim()) {
-                      void handleProcessCode(manualInput.trim());
+                      if (manualSuggestions.length === 1) {
+                        void handleProcessCode(manualSuggestions[0].accessCode || String(manualSuggestions[0].studentId));
+                      } else {
+                        void handleProcessCode(manualInput.trim());
+                      }
                     }
                   }}
                   className="flex items-center gap-2"
@@ -1575,19 +1675,58 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                       type="text"
                       value={manualInput}
                       onChange={(e) => setManualInput(e.target.value)}
-                      placeholder="إدخال يدوي: كود الطالب أو رقم الهاتف أو STD-..."
+                      placeholder="ابحث بالاسم أو آخر 4 أرقام أو كود الطالب..."
                       className="w-full pr-10 pl-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs font-bold text-slate-800 outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={!manualInput.trim() || isProcessingScan}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    <span>تسجيل</span>
+                    <span>{scanStatus === "late" ? "تسجيل متأخر" : "تسجيل"}</span>
                   </button>
                 </form>
+
+                {manualSuggestions.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 divide-y divide-slate-200/70 overflow-hidden">
+                    {manualSuggestions.map((st) => (
+                      <button
+                        key={st.studentId}
+                        type="button"
+                        disabled={isProcessingScan}
+                        onClick={() => void handleProcessCode(st.accessCode || String(st.studentId))}
+                        className="w-full px-3 py-2 flex items-center justify-between gap-2 text-right hover:bg-blue-50/90 transition cursor-pointer"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-black text-slate-900 truncate">{st.name}</div>
+                          <div className="text-[10px] font-bold text-slate-500 truncate">
+                            {st.phone} · <span className="font-mono text-blue-600">{st.accessCode}</span>
+                            {st.center ? ` · ${st.center}` : ""}
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black ${
+                            st.status === "present"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : st.status === "late"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {st.status === "present"
+                            ? "حاضر بالفعل"
+                            : st.status === "late"
+                            ? "متأخر"
+                            : scanStatus === "late"
+                            ? "تسجيل متأخر +"
+                            : "تسجيل حضور +"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1605,16 +1744,52 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                         <h3 className="text-base font-black text-slate-900 leading-tight">
                           {lastScanned.name}
                         </h3>
-                        <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                          تم تسجيل الحضور اليوم 🟢
+                        <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-bold ${
+                          lastScanned.status === "late"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}>
+                          {lastScanned.status === "late" ? "تم التسجيل متأخر ⏰" : "تم تسجيل الحضور اليوم 🟢"}
                         </span>
                       </div>
                     </div>
 
-                    <span className="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">
-                      {lastScanned.checkInTime}
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-xl">
+                        {lastScanned.checkInTime}
+                      </span>
+                      {lastScanned.studentId && (
+                        <button
+                          type="button"
+                          disabled={undoingScan}
+                          onClick={handleUndoLastScan}
+                          className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200 transition cursor-pointer"
+                          title="تراجع عن تسجيل هذا الطالب"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          <span>{undoingScan ? "جارٍ التراجع..." : "تراجع"}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Payment Status Indicator */}
+                  {lastScanned.paymentStatus && (
+                    <div
+                      className={`mb-2 px-3 py-2 rounded-xl border text-xs font-black flex items-center justify-between ${
+                        lastScanned.paymentStatus === "paid" || lastScanned.paymentStatus === "active"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                          : "bg-rose-50 border-rose-200 text-rose-800"
+                      }`}
+                    >
+                      <span>حالة الاشتراك / الدفع:</span>
+                      <span>
+                        {lastScanned.paymentStatus === "paid" || lastScanned.paymentStatus === "active"
+                          ? "دافع ومفعّل 🟢"
+                          : "غير مدفوع / يحتاج متابعة 🔴"}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-100 my-2">
                     <div>
@@ -1659,19 +1834,19 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                       <Bell className="h-4 w-4" />
                     </div>
                     <div className="text-xs">
-                      {lastScanned.parentNotified ? (
+                      {lastScanned.hasParentAccount && lastScanned.parentNotified ? (
                         <div>
                           <strong className="text-emerald-700 font-bold block">
-                            تم إشعار ولي الأمر فورياً بنجاح 📲
+                            تم إشعار الطالب وولي الأمر بنجاح 📲
                           </strong>
                           <span className="text-slate-500 text-[11px]">
-                            {lastScanned.parentName || "حساب ولي الأمر المسجل"} ({lastScanned.parentPhone})
+                            {lastScanned.parentName || "حساب ولي الأمر المسجل"} {lastScanned.parentPhone ? `(${lastScanned.parentPhone})` : ""}
                           </span>
                         </div>
                       ) : (
                         <div>
                           <strong className="text-slate-600 font-bold block">
-                            لا يوجد حساب ولي أمر مسجل لهذا الطالب
+                            تم إشعار الطالب (لا يوجد حساب ولي أمر مسجل)
                           </strong>
                           <span className="text-slate-400 text-[11px]">
                             يمكن لولي الأمر التسجيل بكود الطالب لتلقي إشعارات الحضور
