@@ -10,6 +10,7 @@ import {
   coursesTable,
   videosTable,
   videoProgressTable,
+  quizzesTable,
   quizAttemptsTable,
   paymentReceiptsTable,
 } from "@workspace/db";
@@ -228,69 +229,191 @@ router.get("/admin/students/stream", requireAdmin, async (req, res, next) => {
   }
 });
 
-// GET /api/admin/students/analytics (Detailed student activity & watch history report)
+// GET /api/admin/students/analytics (Power BI grade student activity, progress, attendance & quiz report — O(N+M))
 router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) => {
   try {
-    const [students, progressRecords, videos, attempts] = await Promise.all([
+    const [students, progressRecords, videos, attempts, quizzesRows, attendanceRows] = await Promise.all([
       db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
       db.select().from(videoProgressTable),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage, durationText: videosTable.durationText }).from(videosTable),
       db.select().from(quizAttemptsTable),
+      db.select({ id: quizzesTable.id, title: quizzesTable.title }).from(quizzesTable),
+      db.execute(sql`
+        SELECT student_id, COUNT(*)::int AS cnt
+        FROM student_attendance
+        WHERE status IN ('present', 'late')
+        GROUP BY student_id
+      `).catch(() => []),
     ]);
 
+    // Safe fetch of daily platform check-ins (table may not exist yet before first check-in)
+    let checkinSummaryRows: Array<{ student_id: number; total_checkins: number; checked_in_today: boolean; last_checkin_at: string | null }> = [];
+    try {
+      const todayCairo = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Cairo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+      const rawCheckins = await db.execute(sql`
+        SELECT
+          student_id,
+          COUNT(*)::int AS total_checkins,
+          BOOL_OR(date = ${todayCairo}) AS checked_in_today,
+          MAX(checked_in_at) AS last_checkin_at
+        FROM student_daily_checkins
+        GROUP BY student_id
+      `);
+      checkinSummaryRows = Array.isArray(rawCheckins) ? (rawCheckins as any) : ((rawCheckins as any)?.rows || []);
+    } catch {
+      checkinSummaryRows = [];
+    }
+
+    const attList: Array<{ student_id: number; cnt: number }> = Array.isArray(attendanceRows)
+      ? (attendanceRows as any)
+      : ((attendanceRows as any)?.rows || []);
+
+    // O(1) lookup maps
     const videoMap = new Map(videos.map((v) => [v.id, v]));
+    const quizTitleMap = new Map(quizzesRows.map((q) => [q.id, q.title]));
+    const centerAttMap = new Map(attList.map((r) => [Number(r.student_id), Number(r.cnt) || 0]));
+    const checkinMap = new Map(checkinSummaryRows.map((r) => [Number(r.student_id), r]));
+
+    const progressByStudent = new Map<number, typeof progressRecords>();
+    for (const p of progressRecords) {
+      let arr = progressByStudent.get(p.studentId);
+      if (!arr) {
+        arr = [];
+        progressByStudent.set(p.studentId, arr);
+      }
+      arr.push(p);
+    }
+
+    const attemptsByStudent = new Map<number, typeof attempts>();
+    for (const a of attempts) {
+      let arr = attemptsByStudent.get(a.studentId);
+      if (!arr) {
+        arr = [];
+        attemptsByStudent.set(a.studentId, arr);
+      }
+      arr.push(a);
+    }
+
+    const nowMs = Date.now();
 
     const report = students.map((st) => {
-      const stProgress = progressRecords.filter((p) => p.studentId === st.id);
-      const stAttempts = attempts.filter((a) => a.studentId === st.id);
+      const stProgress = progressByStudent.get(st.id) || [];
+      const stAttempts = attemptsByStudent.get(st.id) || [];
+      const checkinInfo = checkinMap.get(st.id);
+      const centerAttendanceCount = centerAttMap.get(st.id) || 0;
 
-      const watchDetails = stProgress.map((p) => {
-        const vid = videoMap.get(p.videoId);
-        return {
-          videoId: p.videoId,
-          videoTitle: vid?.title || `فيديو #${p.videoId}`,
-          category: vid?.category || "عام",
-          stage: vid?.stage || "عام",
-          progress: p.progress,
-          currentTimeSeconds: p.currentTimeSeconds,
-          durationSeconds: p.durationSeconds,
-          completed: p.completed,
-          updatedAt: p.updatedAt,
-        };
-      }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      const watchDetails = stProgress
+        .map((p) => {
+          const vid = videoMap.get(p.videoId);
+          return {
+            videoId: p.videoId,
+            videoTitle: vid?.title || `فيديو #${p.videoId}`,
+            category: vid?.category || "عام",
+            stage: vid?.stage || "عام",
+            progress: p.progress,
+            currentTimeSeconds: p.currentTimeSeconds,
+            durationSeconds: p.durationSeconds,
+            completed: p.completed,
+            updatedAt: p.updatedAt,
+          };
+        })
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-      const now = new Date();
-      const lastActive = st.lastActiveAt ? new Date(st.lastActiveAt) : (st.lastLoginAt ? new Date(st.lastLoginAt) : new Date(st.createdAt));
-      const daysInactive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+      // Accurate unique quiz metrics (best score per quiz)
+      const bestByQuiz = new Map<number, { score: number; passed: boolean }>();
+      for (const a of stAttempts) {
+        const prev = bestByQuiz.get(a.quizId);
+        if (!prev || a.score > prev.score) {
+          bestByQuiz.set(a.quizId, { score: a.score, passed: Boolean(a.passed || prev?.passed) });
+        } else if (a.passed && !prev.passed) {
+          bestByQuiz.set(a.quizId, { ...prev, passed: true });
+        }
+      }
+      const uniqueQuizzesCount = bestByQuiz.size;
+      let scoreSum = 0;
+      let passedUniqueQuizzesCount = 0;
+      bestByQuiz.forEach((v) => {
+        scoreSum += v.score;
+        if (v.passed) passedUniqueQuizzesCount++;
+      });
+      const avgScore = uniqueQuizzesCount > 0 ? Math.round(scoreSum / uniqueQuizzesCount) : null;
+
+      const avgWatchProgress =
+        watchDetails.length > 0
+          ? Math.round(watchDetails.reduce((acc, w) => acc + Math.min(100, w.progress || 0), 0) / watchDetails.length)
+          : 0;
+
+      // True latest activity across login, watch, quiz, and daily check-in
+      const activityTimestamps = [
+        st.lastActiveAt ? new Date(st.lastActiveAt).getTime() : 0,
+        st.lastLoginAt ? new Date(st.lastLoginAt).getTime() : 0,
+        watchDetails[0]?.updatedAt ? new Date(watchDetails[0].updatedAt).getTime() : 0,
+        stAttempts.length > 0 ? Math.max(...stAttempts.map((a) => new Date(a.createdAt).getTime())) : 0,
+        checkinInfo?.last_checkin_at ? new Date(checkinInfo.last_checkin_at).getTime() : 0,
+      ].filter((t) => Number.isFinite(t) && t > 0);
+
+      const trueLastActiveMs = activityTimestamps.length > 0
+        ? Math.max(...activityTimestamps)
+        : new Date(st.createdAt).getTime();
+      const daysInactive = Math.max(0, Math.floor((nowMs - trueLastActiveMs) / (1000 * 60 * 60 * 24)));
+
+      const completedVideosCount = watchDetails.filter((w) => w.completed).length;
+      const dailyCheckinsCount = Number(checkinInfo?.total_checkins) || 0;
+      const checkedInToday = Boolean(checkinInfo?.checked_in_today);
+
+      // Composite Engagement Score (0..100)
+      const recencyPts = daysInactive === 0 ? 30 : daysInactive <= 2 ? 22 : daysInactive <= 6 ? 12 : 0;
+      const quizPts = uniqueQuizzesCount > 0 ? Math.min(40, Math.round(((avgScore || 0) / 100) * 30 + Math.min(10, uniqueQuizzesCount * 2))) : 0;
+      const watchPts = Math.min(30, completedVideosCount * 5 + Math.round(avgWatchProgress * 0.1));
+      const engagementScore = Math.min(100, recencyPts + quizPts + watchPts);
 
       return {
         id: st.id,
         name: st.name,
         phone: st.phone,
+        parentPhone: st.parentPhone,
         email: st.email,
         accessCode: st.accessCode,
+        avatarUrl: st.avatarUrl || null,
         status: st.status,
         grade: st.grade,
+        centerName: (st as any).centerName || null,
+        appointmentSlot: (st as any).appointmentSlot || null,
         learningMode: st.learningMode,
         paymentStatus: st.paymentStatus,
         lastLoginAt: st.lastLoginAt,
-        lastActiveAt: st.lastActiveAt,
+        lastActiveAt: new Date(trueLastActiveMs).toISOString(),
         createdAt: st.createdAt,
         daysInactive,
         isInactive: daysInactive >= 3,
         watchedVideosCount: watchDetails.length,
-        completedVideosCount: watchDetails.filter((w) => w.completed).length,
+        completedVideosCount,
+        avgWatchProgress,
         quizzesCount: stAttempts.length,
-        passedQuizzesCount: stAttempts.filter((a) => a.passed).length,
+        uniqueQuizzesCount,
+        passedQuizzesCount: passedUniqueQuizzesCount,
+        avgScore,
+        centerAttendanceCount,
+        dailyCheckinsCount,
+        checkedInToday,
+        engagementScore,
         watchDetails,
-        quizDetails: stAttempts.map((a) => ({
-          id: a.id,
-          quizId: a.quizId,
-          score: a.score,
-          passed: a.passed,
-          timeSpentSeconds: a.timeSpentSeconds,
-          createdAt: a.createdAt,
-        })),
+        quizDetails: stAttempts
+          .map((a) => ({
+            id: a.id,
+            quizId: a.quizId,
+            quizTitle: quizTitleMap.get(a.quizId) || `اختبار #${a.quizId}`,
+            score: a.score,
+            passed: a.passed,
+            timeSpentSeconds: a.timeSpentSeconds,
+            createdAt: a.createdAt,
+          }))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
       };
     });
 
