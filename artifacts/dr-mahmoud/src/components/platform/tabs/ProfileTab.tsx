@@ -302,20 +302,15 @@ export function ProfileTab({
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
               <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
-                <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : "تغيير الصورة"}
+                <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : student.avatarUrl ? "تغيير الصورة" : "رفع صورة البروفايل (إلزامي)"}
               </Button>
-              {student.avatarUrl && (
-                <Button type="button" variant="ghost" size="sm" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600">
-                  <Trash2 className="h-4 w-4" /> حذف
-                </Button>
-              )}
             </div>
           </div>
         </div>
       </article>
 
-      {/* Center Booking Section */}
-      {isCenterStudent ? (
+      {/* Center Booking Section — open to ALL students (offline & online) to choose or change center anytime */}
+      {(isCenterStudent || isChangingCenter) ? (
         (isConfirmed && !isChangingCenter) ? (
           /* Confirmed State with Edit Option */
           <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-950/30 p-5 shadow-xs space-y-4">

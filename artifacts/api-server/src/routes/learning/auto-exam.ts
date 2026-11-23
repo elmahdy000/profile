@@ -334,7 +334,9 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       searchFilter = trackFilter ? `AND (student_name ILIKE '%${cleanSearch}%')` : `WHERE (student_name ILIKE '%${cleanSearch}%')`;
     }
 
-    const minQuizzes = typeof req.query.min_quizzes === "string" ? Math.max(1, parseInt(req.query.min_quizzes)) : 5;
+    // Honor Board active for new exams starting today (2026-11-23 00:00 Africa/Cairo = 2026-11-22T22:00:00Z)
+    const HONOR_BOARD_START_ISO = "2026-11-22T22:00:00.000Z";
+    const minQuizzes = typeof req.query.min_quizzes === "string" ? Math.max(1, parseInt(req.query.min_quizzes)) : 1;
 
     const query = `
       WITH best_attempts AS (
@@ -349,7 +351,11 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               COUNT(qa.id) as attempts_count
           FROM quiz_attempts qa
           JOIN quizzes q ON qa.quiz_id = q.id
-          WHERE q.is_published = true ${quizTrackFilter}
+          WHERE q.is_published = true
+            AND COALESCE(q.scope, '') != 'homework'
+            AND COALESCE(q.category, '') != 'واجب'
+            AND q.created_at >= '${HONOR_BOARD_START_ISO}'
+            ${quizTrackFilter}
           GROUP BY qa.student_id, qa.quiz_id, q.title, q.stage
       ),
       student_stats AS (
@@ -429,7 +435,11 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       FROM quiz_attempts qa
       JOIN quizzes q ON qa.quiz_id = q.id
       JOIN students s ON qa.student_id = s.id
-      WHERE q.is_published = true AND s.status = 'approved';
+      WHERE q.is_published = true
+        AND COALESCE(q.scope, '') != 'homework'
+        AND COALESCE(q.category, '') != 'واجب'
+        AND q.created_at >= '${HONOR_BOARD_START_ISO}'
+        AND s.status = 'approved';
     `;
     const statsResult = await db.execute(sql.raw(statsQuery));
     const statsRow = Array.isArray(statsResult) ? statsResult[0] : (statsResult as any)?.rows?.[0] || {};

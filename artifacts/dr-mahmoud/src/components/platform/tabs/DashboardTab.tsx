@@ -28,6 +28,9 @@ import type { Student, LearningFile, Quiz, VideoSummary, ProgressRow } from "@/t
 import { EmptyState } from "../StudentDashboardUI";
 import { PaymentBanner } from "./PaymentBanner";
 import { DailyChallengeCard } from "@/components/kholasa/DailyChallengeCard";
+import { StudentAvatar } from "../StudentDashboardUI";
+import { getNextMotivationMessage } from "@/lib/motivationMessages";
+import { useMemo } from "react";
 
 // ── Helper for File Icons ──
 function getFileTypeDetails(mimeType?: string | null, originalName: string = "") {
@@ -781,6 +784,8 @@ export function DashboardTab({
     ? progressByVideo.get(continueVideo.id)?.progress || 0
     : 0;
 
+  const dashMotivation = useMemo(() => getNextMotivationMessage("start"), [student.id]);
+
   if (dataLoading) {
     return (
       <div className="space-y-4 max-w-[1400px] w-full" dir="rtl">
@@ -819,7 +824,7 @@ export function DashboardTab({
               <span>تنبيه إلزامي لتثبيت مقعدك واعتماد قيدك بالسنتر:</span>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-              لم تقم بتأكيد السنتر والميعاد الحضوري حتى الآن. يرجى التوجه لصفحة "حسابي" لاختيار السنتر والميعاد المناسب لمسارك لمرة واحدة فقط لتثبيت مقعدك ولتتمكن الإدارة من تجهيز وطباعة كارنيه السنتر الخاص بك.
+              لسه مأكدتش السنتر والميعاد بتاعك! ادخل على صفحة "حسابي" واختار السنتر والميعاد المناسب ليك عشان نثبت مقعدك وتقدر تغيّره في أي وقت.
             </p>
           </div>
           <Button
@@ -854,6 +859,147 @@ export function DashboardTab({
           }}
         />
       )}
+
+      {/* 1.5. Motivational Student Activity & Achievement Hero Card */}
+      {(() => {
+        const recentAttempted = safeQuizzes
+          .filter((q) => (q.attemptsUsed || 0) > 0 && typeof q.bestScore === "number")
+          .slice(0, 4);
+        const rankBadge =
+          realAverageResult >= 90 && completedQuizzesCount >= 1
+            ? { label: "بطل متفوق 🏆", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" }
+            : realAverageResult >= 75 && completedQuizzesCount >= 1
+            ? { label: "نجم صاعد ⭐", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" }
+            : completedQuizzesCount >= 1 || completedLessonsCount >= 1
+            ? { label: "ماشي في الطريق الصح 🚀", cls: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30" }
+            : { label: "بداية قوية 💪", cls: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30" };
+
+        return (
+          <div
+            className="rounded-3xl border border-blue-500/25 bg-gradient-to-l from-slate-900 via-blue-950 to-indigo-950 text-white p-5 sm:p-6 shadow-lg relative overflow-hidden space-y-4"
+            dir="rtl"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="shrink-0 ring-2 ring-amber-400/60 rounded-full p-0.5">
+                  <StudentAvatar name={student.name} src={student.avatarUrl} size="md" />
+                </div>
+                <div className="min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black border ${rankBadge.cls} bg-white/10 text-amber-200 border-amber-400/30`}>
+                      {rankBadge.label}
+                    </span>
+                    <span className="text-[11px] font-bold text-blue-200/90">
+                      ملخص شغلك على المنصة
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm font-black text-white leading-relaxed flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
+                    <span>{dashMotivation}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <a
+                  href="/honor-board"
+                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition shadow-sm"
+                >
+                  <Trophy className="h-4 w-4" />
+                  <span>لوحة الشرف 🏆</span>
+                </a>
+                {unresolvedMistakesCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => onOpen("mistakes")}
+                    className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-400/30 text-xs font-black transition cursor-pointer"
+                  >
+                    <Target className="h-4 w-4 text-rose-300" />
+                    <span>راجع أخطاءك ({unresolvedMistakesCount})</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Activity Breakdown Tiles */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-blue-200">إنجاز الدروس</span>
+                <strong className="text-lg font-black font-mono text-white">
+                  {completedLessonsCount} <span className="text-xs text-blue-200/80">/ {safeVideos.length}</span>
+                </strong>
+                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
+                  <div className="h-full rounded-full bg-sky-400" style={{ width: `${Math.min(100, averageProgress)}%` }} />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-blue-200">امتحانات حلّيتها</span>
+                <strong className="text-lg font-black font-mono text-white">
+                  {completedQuizzesCount} <span className="text-xs text-blue-200/80">/ {safeQuizzes.length}</span>
+                </strong>
+                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-emerald-400"
+                    style={{ width: `${safeQuizzes.length > 0 ? Math.min(100, Math.round((completedQuizzesCount / safeQuizzes.length) * 100)) : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-blue-200">متوسط درجاتك</span>
+                <strong className="text-lg font-black font-mono text-amber-300">
+                  {attemptedQuizzes.length > 0 ? `${realAverageResult}%` : "ابدأ أول امتحان"}
+                </strong>
+                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-amber-400"
+                    style={{ width: `${attemptedQuizzes.length > 0 ? Math.min(100, realAverageResult) : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-blue-200">بنك الأخطاء</span>
+                <strong className="text-lg font-black font-mono text-white">
+                  {unresolvedMistakesCount === 0 ? "0 ✓" : `${unresolvedMistakesCount} سؤال`}
+                </strong>
+                <span className="block text-[10px] font-bold text-blue-200/80 mt-0.5">
+                  {unresolvedMistakesCount === 0 ? "ممتاز! مفيش أخطاء متراكمة" : "اضغط فوق وراجعهم"}
+                </span>
+              </div>
+            </div>
+
+            {/* Latest Exam Scores Strip */}
+            {recentAttempted.length > 0 && (
+              <div className="pt-2 border-t border-white/10 space-y-2">
+                <div className="text-[11px] font-black text-blue-200">آخر امتحاناتك ودرجاتك:</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  {recentAttempted.map((qz) => {
+                    const sc = Math.round(Number(qz.bestScore || 0));
+                    return (
+                      <div key={qz.id} className="rounded-xl bg-white/8 border border-white/10 px-3 py-2 space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                          <span className="font-bold text-white truncate">{qz.title}</span>
+                          <span className={`font-mono font-black shrink-0 ${sc >= qz.passingScore ? "text-emerald-300" : "text-rose-300"}`}>
+                            {sc}%
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${sc >= qz.passingScore ? "bg-emerald-400" : "bg-rose-400"}`}
+                            style={{ width: `${Math.min(100, sc)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 2. KPI Statistics Cards */}
       <StudentStatistics

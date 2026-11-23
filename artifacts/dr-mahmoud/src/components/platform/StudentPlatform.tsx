@@ -73,6 +73,8 @@ import { HomeworkTab } from "./tabs/HomeworkTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
+import { MandatoryAvatarModal } from "./tabs/MandatoryAvatarModal";
+import { StudentNotificationsModal } from "./tabs/StudentNotificationsModal";
 import { MonthlyPaymentReminderModal } from "./tabs/MonthlyPaymentReminderModal";
 import { AssessmentQuestionBadge } from "./AssessmentQuestionBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -2956,6 +2958,25 @@ export function StudentPlatform() {
             onStudentUpdated={(updatedStudent) => setStudent(updatedStudent)}
           />
         )}
+        {student && student.status === "approved" && (
+          <MandatoryAvatarModal
+            student={student}
+            onAvatarUploaded={(avatarUrl) =>
+              setStudent((prev) => (prev ? { ...prev, avatarUrl } : prev))
+            }
+          />
+        )}
+        {student &&
+          student.status === "approved" &&
+          Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null") &&
+          !activeQuiz && (
+            <StudentNotificationsModal
+              notifications={notifications}
+              onMarkOneRead={markNotificationRead}
+              onMarkAllRead={markAllNotificationsRead}
+              onNavigateTab={(targetTab) => setTab(targetTab as any)}
+            />
+          )}
         {student && (
           <MonthlyPaymentReminderModal
             student={student}
