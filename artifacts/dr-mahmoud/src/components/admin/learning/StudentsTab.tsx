@@ -29,6 +29,9 @@ import {
   MapPin,
   BarChart3,
   GraduationCap,
+  Camera,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentReceipt } from "./PaymentsTab";
@@ -108,6 +111,9 @@ export function StudentsTab({
   // Drawer & Modals
   const [activeDrawerStudent, setActiveDrawerStudent] = useState<ExtendedStudent | null>(null);
   const [stageModalTarget, setStageModalTarget] = useState<ExtendedStudent | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "gallery">("table");
+  const [photoFilter, setPhotoFilter] = useState<"all" | "with_photo" | "without_photo">("all");
+  const [previewAvatarStudent, setPreviewAvatarStudent] = useState<ExtendedStudent | null>(null);
 
   // Keep an open profile in sync after a successful parent-list update.
   useEffect(() => {
@@ -232,6 +238,11 @@ export function StudentsTab({
         if (activityFilter === "inactive_30d" && diffDays < 30) return false;
         if (activityFilter === "active_now" && (diffDays >= 7 || !activeDate)) return false;
 
+        // Photo Filter
+        const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null");
+        if (photoFilter === "with_photo" && !hasPhoto) return false;
+        if (photoFilter === "without_photo" && hasPhoto) return false;
+
         return true;
       })
       .sort((a, b) => {
@@ -249,7 +260,7 @@ export function StudentsTab({
         }
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
-  }, [students, debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, activityFilter, sortBy]);
+  }, [students, debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, activityFilter, photoFilter, sortBy]);
 
   // Check if any filter is active
   const hasActiveFilters = Boolean(
@@ -630,6 +641,50 @@ export function StudentsTab({
             )}
           </div>
 
+          {/* View Mode Switcher (Table / Photo Gallery) + Photo Filter */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div className="inline-flex items-center rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  viewMode === "table"
+                    ? "bg-[#2563EB] text-white shadow-xs"
+                    : "text-[#475569] hover:text-[#0F172A]"
+                }`}
+              >
+                <List className="h-3.5 w-3.5" />
+                <span>جدول</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("gallery")}
+                className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  viewMode === "gallery"
+                    ? "bg-[#2563EB] text-white shadow-xs"
+                    : "text-[#475569] hover:text-[#0F172A]"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span>معرض الصور 📸</span>
+              </button>
+            </div>
+
+            <select
+              value={photoFilter}
+              onChange={(e) => {
+                setPhotoFilter(e.target.value as any);
+                setCurrentPage(1);
+              }}
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-bold text-[#0F172A] cursor-pointer"
+              title="فلترة حسب صورة البروفايل"
+            >
+              <option value="all">كل الصور</option>
+              <option value="with_photo">بصورة بروفايل 📸</option>
+              <option value="without_photo">بدون صورة ⚠️</option>
+            </select>
+          </div>
+
           {onNavigateToReports && (
             <button
               type="button"
@@ -781,6 +836,107 @@ export function StudentsTab({
         </div>
       )}
 
+      {/* 2.5. Full Photo Gallery View (when viewMode === "gallery") */}
+      {viewMode === "gallery" ? (
+        paginatedStudents.length === 0 ? (
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-12 text-center text-xs text-[#64748B]">
+            لا توجد نتائج مسجلة مطابقة للبحث أو الفلاتر المختارة.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
+            {paginatedStudents.map((s) => {
+              const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null");
+              return (
+                <article
+                  key={s.id}
+                  onClick={() => setActiveDrawerStudent(s)}
+                  className="group rounded-2xl border border-[#E2E8F0] bg-white overflow-hidden shadow-xs hover:shadow-md hover:border-[#2563EB]/50 transition-all cursor-pointer flex flex-col"
+                >
+                  {/* Large Crisp Student Photo */}
+                  <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
+                    {hasPhoto ? (
+                      <img
+                        src={s.avatarUrl!}
+                        alt={s.name}
+                        loading="lazy"
+                        decoding="async"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewAvatarStudent(s);
+                        }}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 text-slate-400 gap-1.5">
+                        <span className="h-14 w-14 rounded-2xl bg-white border border-slate-200 grid place-items-center text-2xl font-black text-blue-600 shadow-2xs">
+                          {s.name.charAt(0)}
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          بدون صورة
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Status Pill Overlay */}
+                    <span
+                      className={`absolute top-2 right-2 rounded-lg px-2 py-0.5 text-[10px] font-black shadow-xs border ${
+                        s.status === "approved"
+                          ? "bg-emerald-500/95 text-white border-emerald-400"
+                          : s.status === "suspended"
+                          ? "bg-rose-500/95 text-white border-rose-400"
+                          : "bg-amber-500/95 text-white border-amber-400"
+                      }`}
+                    >
+                      {s.status === "approved" ? "نشط" : s.status === "suspended" ? "موقوف" : "معلق"}
+                    </span>
+
+                    {hasPhoto && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewAvatarStudent(s);
+                        }}
+                        className="absolute bottom-2 left-2 h-8 w-8 rounded-xl bg-black/60 hover:bg-black/80 text-white grid place-items-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition cursor-pointer"
+                        title="تكبير الصورة"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Card Info */}
+                  <div className="p-3 space-y-1.5 text-right flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xs font-black text-[#0F172A] truncate group-hover:text-[#2563EB]" title={s.name}>
+                        {s.name}
+                      </h3>
+                      <p className="text-[10.5px] font-mono text-[#64748B] mt-0.5" dir="ltr">
+                        {s.accessCode || s.phone}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-1 pt-1.5 border-t border-slate-100 text-[10px]">
+                      <span className="truncate max-w-[110px] font-bold text-[#475569]">
+                        {s.centerName || (s.learningMode === "offline" ? "سنتر" : "أونلاين")}
+                      </span>
+                      <span
+                        className={`font-black px-1.5 py-0.5 rounded-md ${
+                          s.paymentStatus === "paid"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {s.paymentStatus === "paid" ? "مدفوع" : "مجاني"}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )
+      ) : (
+      <>
       {/* 3. Mobile student cards */}
       <div className="grid gap-3 lg:hidden">
         {paginatedStudents.length === 0 ? (
@@ -789,12 +945,27 @@ export function StudentsTab({
           </div>
         ) : paginatedStudents.map((student) => {
           const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
+          const hasPhoto = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null");
           return (
             <article key={student.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
               <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] rounded-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-sm font-bold text-[#2563EB]">{student.name.charAt(0)}</span>
+                    {hasPhoto ? (
+                      <img
+                        src={student.avatarUrl!}
+                        alt={student.name}
+                        loading="lazy"
+                        decoding="async"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewAvatarStudent(student);
+                        }}
+                        className="h-11 w-11 shrink-0 rounded-xl object-cover border border-[#BFDBFE] shadow-2xs"
+                      />
+                    ) : (
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-sm font-bold text-[#2563EB]">{student.name.charAt(0)}</span>
+                    )}
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-bold text-[#0F172A]">{student.name}</h3>
                       <p className="mt-0.5 font-mono text-xs text-[#64748B]" dir="ltr">{student.phone}</p>
@@ -903,12 +1074,32 @@ export function StudentsTab({
                       </button>
                     </td>
 
-                    {/* Student Primary Info */}
+                    {/* Student Primary Info + Profile Photo */}
                     <td className="border-b border-[#E2E8F0] px-2.5 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] text-xs font-bold text-[#2563EB]">
-                          {s.name.charAt(0)}
-                        </div>
+                      <div className="flex items-center gap-2.5">
+                        {s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewAvatarStudent(s);
+                            }}
+                            title="اضغط لتكبير صورة الطالب"
+                            className="relative h-10 w-10 shrink-0 rounded-xl overflow-hidden border-2 border-[#BFDBFE] hover:border-[#2563EB] transition shadow-2xs cursor-zoom-in"
+                          >
+                            <img
+                              src={s.avatarUrl}
+                              alt={s.name}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
+                        ) : (
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] text-xs font-bold text-[#2563EB]">
+                            {s.name.charAt(0)}
+                          </div>
+                        )}
                         <div className="min-w-0 space-y-0.5">
                           <span className="block max-w-[135px] truncate text-xs font-bold text-[#0F172A] transition-colors group-hover:text-[#2563EB]" title={s.name}>
                             {s.name}
@@ -1307,6 +1498,8 @@ export function StudentsTab({
           </tbody>
         </table>
       </div>
+      </>
+      )}
 
       {/* 4. Pagination Footer */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 text-xs font-semibold text-[#475569] shadow-xs">
@@ -1391,6 +1584,58 @@ export function StudentsTab({
           }
         }}
       />
+      {/* 7. Full-Size Student Photo Preview Modal */}
+      {previewAvatarStudent && previewAvatarStudent.avatarUrl && (
+        <div
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+          dir="rtl"
+          onClick={() => setPreviewAvatarStudent(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden text-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-slate-950 aspect-square w-full flex items-center justify-center overflow-hidden">
+              <img
+                src={previewAvatarStudent.avatarUrl}
+                alt={previewAvatarStudent.name}
+                className="h-full w-full object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setPreviewAvatarStudent(null)}
+                className="absolute top-3 left-3 h-9 w-9 rounded-full bg-black/60 hover:bg-black/85 text-white grid place-items-center cursor-pointer"
+                title="إغلاق"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-black text-slate-900 truncate">{previewAvatarStudent.name}</h3>
+                <p className="text-xs text-slate-500 font-semibold mt-0.5 truncate">
+                  {previewAvatarStudent.grade || "—"} {previewAvatarStudent.centerName ? `· ${previewAvatarStudent.centerName}` : ""}
+                </p>
+                <p className="text-[11px] font-mono text-blue-600 mt-0.5" dir="ltr">
+                  {previewAvatarStudent.accessCode || previewAvatarStudent.phone}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  const target = previewAvatarStudent;
+                  setPreviewAvatarStudent(null);
+                  setActiveDrawerStudent(target);
+                }}
+                className="rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shrink-0 cursor-pointer"
+              >
+                ملف الطالب
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
