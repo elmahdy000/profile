@@ -64,6 +64,14 @@ const SelfAssessmentAdminTab = lazy(() => import("./admin/learning/SelfAssessmen
 const EssayExamsAdminTab = lazy(() => import("./admin/learning/EssayExamsAdminTab").then((m) => ({ default: m.EssayExamsAdminTab })));
 const KholasaAdminTab = lazy(() => import("./kholasa/KholasaAdminTab").then((m) => ({ default: m.KholasaAdminTab })));
 const MemoStudioTab = lazy(() => import("./admin/learning/MemoStudioTab").then((m) => ({ default: m.MemoStudioTab })));
+const HomeworkAdminTab = lazy(() => import("./admin/learning/HomeworkAdminTab").then((m) => ({ default: m.HomeworkAdminTab })));
+
+const isHomeworkItem = (q: any) =>
+  q?.scope === "homework" ||
+  q?.category === "واجب" ||
+  q?.category === "homework" ||
+  String(q?.title || "").toLowerCase().includes("واجب") ||
+  String(q?.title || "").toLowerCase().includes("homework");
 
 const SELF_CONTAINED_ADMIN_TABS = new Set<string>([
   "attendance",
@@ -94,7 +102,8 @@ const WORKSPACE_SUBNAV_GROUPS: Array<{
   {
     tabs: [
       { id: "testbank", label: "بنك الأسئلة والمولد" },
-      { id: "quizzes", label: "الاختبارات والواجبات" },
+      { id: "quizzes", label: "الاختبارات الإلكترونية" },
+      { id: "homework", label: "الواجبات المنزلية" },
       { id: "essay-exams", label: "تصحيح المقالي" },
       { id: "grades-sheet", label: "شيت الدرجات" },
       { id: "memo-studio", label: "استوديو A4" },
@@ -307,6 +316,7 @@ export type AdminLearningTab =
   | "kholasa"
   | "memo-studio"
   | "quizzes"
+  | "homework"
   | "essay-exams"
   | "subscriptions"
   | "reports"
@@ -2473,7 +2483,7 @@ export function AdminLearning({
               learningCourses={learningCourses}
               videoOptions={videoOptions}
               adminApi={adminApi}
-              quizzes={quizzes}
+              quizzes={quizzes.filter((q) => !isHomeworkItem(q))}
               editQuiz={editQuiz}
               toggleQuiz={toggleQuiz}
               deleteQuiz={deleteQuiz}
@@ -2482,6 +2492,15 @@ export function AdminLearning({
                 setTab("testbank");
               }}
               onNavigateToMemoStudio={() => setTab("memo-studio")}
+            />
+          )}
+          {tab === "homework" && (
+            <HomeworkAdminTab
+              adminApi={adminApi}
+              quizzes={quizzes}
+              onRefreshQuizzes={() => load(true)}
+              toggleQuiz={toggleQuiz}
+              deleteQuiz={(hw) => deleteQuiz(hw.id)}
             />
           )}
           {tab === "essay-exams" && (

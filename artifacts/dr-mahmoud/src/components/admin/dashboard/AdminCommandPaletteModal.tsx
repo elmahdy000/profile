@@ -111,6 +111,19 @@ export const AdminCommandPaletteModal: React.FC<AdminCommandPaletteModalProps> =
         },
       },
       {
+        id: "quick-homework",
+        title: "إدارة وإنشاء الواجبات المنزلية 📚",
+        subtitle: "إنشاء واجب من البنك أو بالكتابة المباشرة أو برفع ملف ومتابعة من فتحه",
+        category: "إجراءات سريعة",
+        icon: BookOpen,
+        badge: "واجب",
+        keywords: ["واجب", "واجبات", "منزلي", "كشكول", "homework", "hw"],
+        action: () => {
+          onNavigate("learning", "homework");
+          onClose();
+        },
+      },
+      {
         id: "quick-attendance",
         title: "كشكول حضور السنتر بـ QR والباركود",
         subtitle: "مسح كود الطالب وتسجيل الحضور المباشر في قاعات السنتر",

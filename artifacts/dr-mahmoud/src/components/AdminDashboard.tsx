@@ -175,6 +175,10 @@ export function parseAdminUrl(pathname: string, search = ""): { activeTab: Admin
     case "exams":
     case "quiz":
       return { activeTab: "learning", learningSubTab: "quizzes" };
+    case "homework":
+    case "homeworks":
+    case "hw":
+      return { activeTab: "learning", learningSubTab: "homework" };
     case "testbank":
     case "test-bank":
     case "bank":
@@ -256,6 +260,7 @@ export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminL
     switch (learningSubTab) {
       case "students": return "/admin/students";
       case "quizzes": return "/admin/quizzes";
+      case "homework": return "/admin/homework";
       case "testbank": return "/admin/testbank";
       case "subscriptions": return "/admin/subscriptions";
       case "payments": return "/admin/payments";
@@ -364,6 +369,7 @@ export default function AdminDashboard() {
         "files",
         "testbank",
         "quizzes",
+        "homework",
         "essay-exams",
         "subscriptions",
         "reports",

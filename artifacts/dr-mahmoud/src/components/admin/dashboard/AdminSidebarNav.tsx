@@ -193,7 +193,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "quizzes",
-          label: "إدارة ونشر الاختبارات والواجبات",
+          label: "إدارة ونشر الاختبارات",
           icon: ClipboardCheck,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -206,6 +206,22 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
+        },
+        {
+          id: "homework",
+          label: "إدارة الواجبات المنزلية",
+          icon: BookOpen,
+          onClick: () => {
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("mode");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
+            setActiveTab("learning");
+            setLearningSubTab("homework");
+          },
+          active: activeTab === "learning" && learningSubTab === "homework",
         },
         {
           id: "memo-studio",
