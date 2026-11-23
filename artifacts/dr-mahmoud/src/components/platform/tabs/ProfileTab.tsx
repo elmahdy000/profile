@@ -5,17 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { PageHeader, StudentAvatar, ProfileInfoRow, StatusBadge } from "../StudentDashboardUI";
 import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
-
-async function cropAvatar(file: File): Promise<Blob> {
-  const image = await createImageBitmap(file);
-  const side = Math.min(image.width, image.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = 640;
-  canvas.height = 640;
-  canvas.getContext("2d")?.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, 640, 640);
-  image.close();
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر تجهيز الصورة")), "image/webp", .88));
-}
+import { getStudentAuthHeaders, prepareAvatarUploadFile } from "@/lib/studentUploadHelpers";
 
 export function ProfileTab({
   student,
@@ -62,13 +52,9 @@ export function ProfileTab({
     }
     setSavingName(true);
     try {
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/profile", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
-        },
+        headers: getStudentAuthHeaders(true),
         credentials: "include",
         body: JSON.stringify({ name: trimmed }),
       });
@@ -104,13 +90,9 @@ export function ProfileTab({
     }
     setConfirmingCenter(true);
     try {
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/profile", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
-        },
+        headers: getStudentAuthHeaders(true),
         credentials: "include",
         body: JSON.stringify({
           centerName: selectedCenter,
@@ -148,17 +130,16 @@ export function ProfileTab({
 
   const uploadAvatar = async (file?: File) => {
     if (!file) return;
-    if (!(["image/png", "image/jpeg", "image/webp"].includes(file.type)) || file.size > 3 * 1024 * 1024) {
-      toast({ variant: "destructive", title: "صورة غير صالحة", description: "استخدم PNG أو JPG أو WebP بحجم لا يزيد عن 3 MB." });
+    if ((file.type && !file.type.startsWith("image/")) || file.size > 15 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "صورة غير صالحة", description: "اختار صورة حجمها أقل من 15 ميجا." });
       return;
     }
     setAvatarLoading(true);
     try {
-      const cropped = await cropAvatar(file);
+      const { blob, filename } = await prepareAvatarUploadFile(file);
       const formData = new FormData();
-      formData.append("avatar", cropped, "avatar.webp");
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-      const res = await fetch("/api/student/avatar", { method: "POST", body: formData, credentials: "include", headers: deviceId ? { "X-Device-Id": deviceId } : {} });
+      formData.append("avatar", blob, filename);
+      const res = await fetch("/api/student/avatar", { method: "POST", body: formData, credentials: "include", headers: getStudentAuthHeaders(false) });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || "تعذر حفظ الصورة");
@@ -300,7 +281,7 @@ export function ProfileTab({
             )}
 
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
-              <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
+              <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
                 <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : student.avatarUrl ? "تغيير الصورة" : "رفع صورة البروفايل (إلزامي)"}
               </Button>

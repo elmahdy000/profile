@@ -3,35 +3,7 @@ import { Camera, CheckCircle2, Loader2, ShieldAlert, Sparkles, Upload } from "lu
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
-
-async function cropAvatar(file: File): Promise<Blob> {
-  const image = await createImageBitmap(file);
-  const side = Math.min(image.width, image.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = 640;
-  canvas.height = 640;
-  canvas
-    .getContext("2d")
-    ?.drawImage(
-      image,
-      (image.width - side) / 2,
-      (image.height - side) / 2,
-      side,
-      side,
-      0,
-      0,
-      640,
-      640,
-    );
-  image.close();
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("تعذر تجهيز الصورة"))),
-      "image/webp",
-      0.88,
-    ),
-  );
-}
+import { getStudentAuthHeaders, prepareAvatarUploadFile } from "@/lib/studentUploadHelpers";
 
 interface MandatoryAvatarModalProps {
   student: Student;
@@ -52,19 +24,20 @@ export function MandatoryAvatarModal({
 
   const handleFilePick = (file?: File) => {
     if (!file) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    const isImageType = !file.type || file.type.startsWith("image/");
+    if (!isImageType) {
       toast({
         variant: "destructive",
-        title: "صيغة الصورة غير مدعومة",
-        description: "اختار صورة بصيغة JPG أو PNG أو WebP.",
+        title: "صيغة الملف غير مدعومة",
+        description: "اختار صورة من الموبايل أو الكاميرا.",
       });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 15 * 1024 * 1024) {
       toast({
         variant: "destructive",
-        title: "حجم الصورة كبير",
-        description: "اختار صورة حجمها أقل من 5 ميجا.",
+        title: "حجم الصورة كبير جداً",
+        description: "اختار صورة حجمها أقل من 15 ميجا.",
       });
       return;
     }
@@ -81,15 +54,14 @@ export function MandatoryAvatarModal({
     }
     setUploading(true);
     try {
-      const cropped = await cropAvatar(selectedFile);
+      const { blob, filename } = await prepareAvatarUploadFile(selectedFile);
       const formData = new FormData();
-      formData.append("avatar", cropped, "avatar.webp");
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+      formData.append("avatar", blob, filename);
       const res = await fetch("/api/student/avatar", {
         method: "POST",
         body: formData,
         credentials: "include",
-        headers: deviceId ? { "X-Device-Id": deviceId } : {},
+        headers: getStudentAuthHeaders(false),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -142,7 +114,7 @@ export function MandatoryAvatarModal({
           <input
             ref={inputRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/*"
             className="sr-only"
             onChange={(e) => handleFilePick(e.target.files?.[0])}
           />

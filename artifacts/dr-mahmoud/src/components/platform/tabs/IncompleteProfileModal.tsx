@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { EGYPT_GOVERNORATES, SearchableCombobox } from "@/components/ui/SearchableCombobox";
 import type { Student } from "@/types/platform";
+import { getStudentAuthHeaders } from "@/lib/studentUploadHelpers";
 
 export interface IncompleteProfileModalProps {
   student: Student;
@@ -57,14 +58,10 @@ export function IncompleteProfileModal({
       if (governorate.trim()) bodyData.governorate = governorate.trim();
       if (city.trim()) bodyData.city = city.trim();
 
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/profile", {
         method: "PATCH",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
-        },
+        headers: getStudentAuthHeaders(true),
         body: JSON.stringify(bodyData),
       });
 

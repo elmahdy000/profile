@@ -583,10 +583,15 @@ router.get("/student/me", async (req, res, next) => {
 
 const studentAvatarUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 3 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => {
-    const valid = ["image/png", "image/jpeg", "image/webp"].includes(file.mimetype);
-    if (!valid) return callback(new Error("صيغة الصورة غير مدعومة"));
+    const mime = (file.mimetype || "").toLowerCase();
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const validMime =
+      mime.startsWith("image/") ||
+      ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "image/pjpeg"].includes(mime);
+    const validExt = [".png", ".jpg", ".jpeg", ".webp", ".heic", ".heif"].includes(ext);
+    if (!validMime && !validExt) return callback(new Error("صيغة الصورة غير مدعومة"));
     callback(null, true);
   },
 }).single("avatar");
