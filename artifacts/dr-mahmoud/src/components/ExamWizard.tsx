@@ -40,6 +40,7 @@ import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import { isEnglishQuestion, getOptionLabel } from "./admin/learning/TestBankTab";
 import { GlobalExamsMasterToggle } from "./admin/learning/GlobalExamsMasterToggle";
 import { QuizViewsModal } from "./admin/learning/QuizViewsModal";
+import { InlineDurationEditor } from "./admin/learning/InlineDurationEditor";
 
 export type Question = {
   prompt: string;
@@ -109,6 +110,7 @@ type ExamWizardProps = {
   editQuiz: (q: QuizItem) => void;
   toggleQuiz: (q: QuizItem) => Promise<void>;
   deleteQuiz: (id: number) => Promise<void>;
+  onDurationUpdated?: (quizId: number, durationMinutes: number | null) => void;
   onNavigateToTestBank?: (targetTab?: "explorer" | "upload" | "generate" | "auto_daily") => void;
   onNavigateToMemoStudio?: () => void;
 };
@@ -126,6 +128,7 @@ export function ExamWizard({
   editQuiz,
   toggleQuiz,
   deleteQuiz,
+  onDurationUpdated,
   onNavigateToTestBank,
   onNavigateToMemoStudio,
 }: ExamWizardProps) {
@@ -1861,8 +1864,11 @@ export function ExamWizard({
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-600">
-                        <Clock className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{q.durationMinutes ? `${q.durationMinutes} دقيقة` : "بدون حد وقت"}</span>
+                        <InlineDurationEditor
+                          quizId={q.id}
+                          durationMinutes={q.durationMinutes}
+                          onUpdated={(newDuration) => onDurationUpdated?.(q.id, newDuration)}
+                        />
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Award className="h-3.5 w-3.5 text-amber-500" />

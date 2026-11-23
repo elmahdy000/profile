@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { InlineDurationEditor } from "../InlineDurationEditor";
 import { QuizViewsModal } from "../QuizViewsModal";
 
 interface CurriculumExamsViewProps {
@@ -235,9 +236,15 @@ export function CurriculumExamsView({
                     <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
                       <ClipboardCheck className="h-3 w-3 text-primary" /> {qCount} سؤال
                     </span>
-                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
-                      <Clock className="h-3 w-3 text-amber-500" /> {quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"}
-                    </span>
+                    <InlineDurationEditor
+                      quizId={quiz.id}
+                      durationMinutes={quiz.durationMinutes}
+                      onUpdated={(newDuration) => {
+                        setQuizzes((prev) =>
+                          prev.map((q) => (q.id === quiz.id ? { ...q, durationMinutes: newDuration } : q))
+                        );
+                      }}
+                    />
                     <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
                       <Award className="h-3 w-3 text-emerald-500" /> النجاح: {quiz.passingScore}%
                     </span>

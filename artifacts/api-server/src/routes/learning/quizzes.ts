@@ -1473,6 +1473,38 @@ router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next
   }
 });
 
+// GET /api/learning/quizzes/:id/timer - Lightweight realtime timer sync for active exams & homeworks
+router.get("/learning/quizzes/:id/timer", requireStudent, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    if (!Number.isInteger(quizId) || quizId <= 0) {
+      res.status(400).json({ error: "معرف غير صالح" });
+      return;
+    }
+
+    const [quiz] = await db
+      .select({
+        id: quizzesTable.id,
+        durationMinutes: quizzesTable.durationMinutes,
+        isPublished: quizzesTable.isPublished,
+        updatedAt: quizzesTable.updatedAt,
+      })
+      .from(quizzesTable)
+      .where(eq(quizzesTable.id, quizId))
+      .limit(1);
+
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json(quiz);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/learning/quizzes/:id/view - Log that student opened the homework or quiz
 router.post("/learning/quizzes/:id/view", requireStudent, async (req, res, next) => {
   try {

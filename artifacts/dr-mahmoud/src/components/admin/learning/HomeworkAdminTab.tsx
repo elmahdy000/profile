@@ -35,6 +35,7 @@ import {
   parseLessonSortOrder,
   parseUnitSortOrder,
 } from "./test-bank/types";
+import { InlineDurationEditor } from "./InlineDurationEditor";
 
 const LAST_HW_STAGE_KEY = "dr_mahmoud_hw_last_stage";
 const QUICK_COUNTS = [5, 10, 15, 20, 25, 30];
@@ -255,7 +256,7 @@ export function HomeworkAdminTab({
       lessons: isMultiLesson ? selectedLessons : undefined,
       count: customQuestions ? customQuestions.length : Math.max(1, Number(questionsCount) || 10),
       questionType: questionType === "all" ? undefined : questionType,
-      durationMinutes: null,
+      durationMinutes: 30,
       passingScore: 50,
       maxAttempts: 5,
       shuffleQuestions: false,
@@ -1123,6 +1124,12 @@ export function HomeworkAdminTab({
                     <span className="text-blue-600 dark:text-blue-400 font-mono">
                       فتحه {hw.openedStudents || 0} طالب
                     </span>
+                    <span>•</span>
+                    <InlineDurationEditor
+                      quizId={hw.id}
+                      durationMinutes={hw.durationMinutes}
+                      onUpdated={() => void onRefreshQuizzes()}
+                    />
                   </div>
                   {hw.description && (
                     <p className="text-[11px] text-muted-foreground line-clamp-2">{hw.description}</p>

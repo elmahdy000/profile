@@ -649,6 +649,59 @@ export function StudentPlatform() {
   const [liveMotivation, setLiveMotivation] = useState<string>("");
   const [resultMotivation, setResultMotivation] = useState<string>("");
   const lastMilestoneRef = useRef<number>(0);
+  const quizElapsedSecondsRef = useRef<number>(0);
+
+  useEffect(() => {
+    quizElapsedSecondsRef.current = quizElapsedSeconds;
+  }, [quizElapsedSeconds]);
+
+  // Realtime Timer Sync: polls lightweight /timer endpoint every 10s so admin duration edits apply live!
+  useEffect(() => {
+    if (!activeQuiz?.id || quizResult) return;
+    let cancelled = false;
+
+    const syncTimer = async () => {
+      try {
+        const data = await api<{ id: number; durationMinutes: number | null }>(
+          `/api/learning/quizzes/${activeQuiz.id}/timer`
+        );
+        if (cancelled || !data) return;
+        const incomingDuration = data.durationMinutes ?? null;
+        const currentDuration = activeQuiz.durationMinutes ?? null;
+        if (incomingDuration !== currentDuration) {
+          const updatedQuiz = { ...activeQuiz, durationMinutes: incomingDuration };
+          const nextEffective = getEffectiveQuizDurationMinutes(updatedQuiz);
+          setActiveQuiz((prev) =>
+            prev && prev.id === activeQuiz.id ? { ...prev, durationMinutes: incomingDuration } : prev
+          );
+          setQuizzes((prev) =>
+            prev.map((q) => (q.id === activeQuiz.id ? { ...q, durationMinutes: incomingDuration } : q))
+          );
+          if (nextEffective !== null) {
+            const remaining = Math.max(0, nextEffective * 60 - quizElapsedSecondsRef.current);
+            setQuizTimeRemaining(remaining);
+            const extended = currentDuration !== null && incomingDuration !== null && incomingDuration > currentDuration;
+            toast({
+              title: extended ? "⏱️ تم زيادة الوقت!" : "⏱️ تم تحديث الوقت",
+              description: `الوقت الجديد: ${nextEffective} دقيقة (اتحدّث تلقائياً).`,
+            });
+          } else {
+            setQuizTimeRemaining(null);
+          }
+        }
+      } catch {
+        // Ignore transient network errors during background timer sync
+      }
+    };
+
+    const interval = setInterval(() => {
+      void syncTimer();
+    }, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activeQuiz?.id, activeQuiz?.durationMinutes, quizResult]);
 
   // Prevent accidental page refresh / navigation during active exam
   useEffect(() => {

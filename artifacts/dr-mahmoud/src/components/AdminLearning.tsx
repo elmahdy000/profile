@@ -2487,6 +2487,11 @@ export function AdminLearning({
               editQuiz={editQuiz}
               toggleQuiz={toggleQuiz}
               deleteQuiz={deleteQuiz}
+              onDurationUpdated={(quizId, durationMinutes) => {
+                setQuizzes((prev) =>
+                  prev.map((item) => (item.id === quizId ? { ...item, durationMinutes } : item))
+                );
+              }}
               onNavigateToTestBank={(targetSubTab = "generate") => {
                 setTestBankInitialTab(targetSubTab);
                 setTab("testbank");
