@@ -74,6 +74,7 @@ import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { MandatoryAvatarModal } from "./tabs/MandatoryAvatarModal";
+import { DailyCheckInModal } from "./tabs/DailyCheckInModal";
 import { StudentNotificationsModal } from "./tabs/StudentNotificationsModal";
 import { MonthlyPaymentReminderModal } from "./tabs/MonthlyPaymentReminderModal";
 import { AssessmentQuestionBadge } from "./AssessmentQuestionBadge";
@@ -2964,6 +2965,17 @@ export function StudentPlatform() {
             onAvatarUploaded={(avatarUrl) =>
               setStudent((prev) => (prev ? { ...prev, avatarUrl } : prev))
             }
+          />
+        )}
+        {student && student.status === "approved" && (
+          <DailyCheckInModal
+            student={student}
+            enabled={Boolean(
+              student.avatarUrl &&
+                student.avatarUrl.trim() &&
+                student.avatarUrl !== "null" &&
+                !activeQuiz
+            )}
           />
         )}
         {student &&

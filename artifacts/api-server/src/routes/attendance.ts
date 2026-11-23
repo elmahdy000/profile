@@ -8,6 +8,7 @@ import {
   studentNotificationsTable,
 } from "@workspace/db";
 import { requireAdmin, getAdminIdentity } from "../middleware/auth";
+import { requireStudent } from "../middleware/student-auth";
 import { logAudit } from "./learning";
 
 const router: IRouter = Router();
@@ -1189,6 +1190,184 @@ router.delete("/admin/attendance/:studentId", requireAdmin, async (req: Request,
       deletedCount: deleted.length,
       message: "تم التراجع عن تسجيل الحضور بنجاح",
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── 6. STUDENT DAILY PLATFORM CHECK-IN (إثبات الحضور اليومي على المنصة) ──────
+const DAILY_CHECKIN_LAUNCH_DATE = "2026-11-24";
+let dailyCheckinTableReady = false;
+
+async function ensureDailyCheckinTable() {
+  if (dailyCheckinTableReady) return;
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS student_daily_checkins (
+      id SERIAL PRIMARY KEY,
+      student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      date VARCHAR(10) NOT NULL,
+      checked_in_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (student_id, date)
+    )
+  `);
+  await db.execute(sql`
+    CREATE INDEX IF NOT EXISTS idx_student_daily_checkins_student_date
+    ON student_daily_checkins (student_id, date DESC)
+  `);
+  dailyCheckinTableReady = true;
+}
+
+function addDaysYmd(ymd: string, deltaDays: number): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + deltaDays));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function getArabicShortDay(ymd: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  return new Intl.DateTimeFormat("ar-EG", {
+    timeZone: "Africa/Cairo",
+    weekday: "short",
+  }).format(dt);
+}
+
+async function buildDailyCheckinStatus(student: typeof studentsTable.$inferSelect) {
+  await ensureDailyCheckinTable();
+  const today = getTodayCairoDate();
+  const yesterday = addDaysYmd(today, -1);
+
+  const rawRows = await db.execute(sql`
+    SELECT date, checked_in_at
+    FROM student_daily_checkins
+    WHERE student_id = ${student.id}
+    ORDER BY date DESC
+    LIMIT 60
+  `);
+  const rows: Array<{ date: string; checked_in_at: string }> = Array.isArray(rawRows)
+    ? (rawRows as any)
+    : ((rawRows as any)?.rows || []);
+
+  const dateSet = new Set(rows.map((r) => String(r.date).slice(0, 10)));
+  const checkedInToday = dateSet.has(today);
+
+  // Compute current streak (counting back from today if checked in, else from yesterday)
+  let streakDays = 0;
+  let cursor = checkedInToday ? today : yesterday;
+  while (dateSet.has(cursor)) {
+    streakDays++;
+    cursor = addDaysYmd(cursor, -1);
+  }
+
+  // Compute missed days ONLY since max(launchDate, studentCreatedDate) up to yesterday
+  const createdYmd = student.createdAt
+    ? new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Cairo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(student.createdAt))
+    : DAILY_CHECKIN_LAUNCH_DATE;
+  const effectiveStart = createdYmd > DAILY_CHECKIN_LAUNCH_DATE ? createdYmd : DAILY_CHECKIN_LAUNCH_DATE;
+
+  let missedDaysCount = 0;
+  let missedYesterday = false;
+  if (effectiveStart <= yesterday) {
+    let day = effectiveStart;
+    let guard = 0;
+    while (day <= yesterday && guard < 90) {
+      if (!dateSet.has(day)) {
+        missedDaysCount++;
+        if (day === yesterday) missedYesterday = true;
+      }
+      day = addDaysYmd(day, 1);
+      guard++;
+    }
+  }
+
+  // Last 7 days mini-calendar (oldest -> today)
+  const recentDays = [];
+  for (let offset = -6; offset <= 0; offset++) {
+    const ymd = addDaysYmd(today, offset);
+    recentDays.push({
+      date: ymd,
+      dayLabel: getArabicShortDay(ymd),
+      checkedIn: dateSet.has(ymd),
+      isToday: offset === 0,
+      isMissed: ymd >= effectiveStart && ymd < today && !dateSet.has(ymd),
+    });
+  }
+
+  // If student missed yesterday, send ONE warning notification today (deduped)
+  if (missedYesterday && missedDaysCount > 0) {
+    try {
+      const existingWarn = await db.execute(sql`
+        SELECT id FROM student_notifications
+        WHERE student_id = ${student.id}
+          AND type = 'daily_absence_warning'
+          AND created_at >= (NOW() AT TIME ZONE 'Africa/Cairo')::date
+        LIMIT 1
+      `);
+      const warnRows = Array.isArray(existingWarn) ? existingWarn : ((existingWarn as any)?.rows || []);
+      if (warnRows.length === 0) {
+        const msg =
+          missedDaysCount >= 3
+            ? `تنبيه مهم! وصلت لـ ${missedDaysCount} أيام غياب عن المنصة. تكرار الغياب أكتر من 3 مرات بيؤدي لإغلاق المنصة — التزم بتسجيل حضورك اليومي من النهارده.`
+            : `ملاحظناش تسجيل حضورك على المنصة امبارح (إجمالي الغياب: ${missedDaysCount} من 3). خليك ملتزم بالدخول يومياً عشان تكرار الغياب أكتر من 3 مرات بيؤدي لإغلاق المنصة.`;
+        await db.insert(studentNotificationsTable).values({
+          studentId: student.id,
+          title: "⚠️ تنبيه غياب يومي عن المنصة",
+          message: msg,
+          type: "daily_absence_warning",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to insert daily absence warning:", err);
+    }
+  }
+
+  return {
+    todayDate: today,
+    checkedInToday,
+    streakDays,
+    totalCheckins: rows.length,
+    missedDaysCount,
+    missedYesterday,
+    maxAllowedMisses: 3,
+    recentDays,
+  };
+}
+
+// GET /api/learning/daily-checkin/status
+router.get("/learning/daily-checkin/status", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const status = await buildDailyCheckinStatus(student);
+    res.setHeader("Cache-Control", "no-store");
+    res.json(status);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/learning/daily-checkin
+router.post("/learning/daily-checkin", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    await ensureDailyCheckinTable();
+    const today = getTodayCairoDate();
+
+    await db.execute(sql`
+      INSERT INTO student_daily_checkins (student_id, date, checked_in_at)
+      VALUES (${student.id}, ${today}, NOW())
+      ON CONFLICT (student_id, date) DO NOTHING
+    `);
+
+    const status = await buildDailyCheckinStatus(student);
+    res.json({ success: true, ...status });
   } catch (error) {
     next(error);
   }
