@@ -76,14 +76,18 @@
 }
 
 /* Admin pages historically use literal light palette utility classes. Keep
- * their light appearance intact while mapping those literals to the shared
- * dark surfaces whenever the application theme is dark. */
+ * their light appearance intact while mapping those literals to crisp,
+ * multi-level dark surfaces whenever the application theme is dark. */
 .dark .admin-dashboard-shell {
   color-scheme: dark;
-  background: #0b1120 !important;
-  color: #f8fafc !important;
+  background: #090d16 !important;
+  color: #f1f5f9 !important;
 }
-.dark .admin-dashboard-shell [class~="bg-white"],
+/* Level 2: Primary cards */
+.dark .admin-dashboard-shell [class~="bg-white"] {
+  background-color: #131b2b !important;
+}
+/* Level 1: Recessed/page surfaces */
 .dark .admin-dashboard-shell [class~="bg-[#F7F9FC]"],
 .dark .admin-dashboard-shell [class~="bg-[#F6F8FC]"],
 .dark .admin-dashboard-shell [class~="bg-[#F8FAFC]"],
@@ -91,18 +95,48 @@
 .dark .admin-dashboard-shell [class~="bg-slate-50"],
 .dark .admin-dashboard-shell [class~="bg-slate-50/70"],
 .dark .admin-dashboard-shell [class~="bg-slate-50/80"],
-.dark .admin-dashboard-shell [class~="bg-slate-50/60"],
-.dark .admin-dashboard-shell [class~="bg-slate-100"],
-.dark .admin-dashboard-shell [class~="bg-[#E4EAF2]"] {
-  background-color: #151e2e !important;
+.dark .admin-dashboard-shell [class~="bg-slate-50/60"] {
+  background-color: #0f1522 !important;
 }
+/* Level 3: Elevated chips, table headers, subtle pills */
+.dark .admin-dashboard-shell [class~="bg-slate-100"],
+.dark .admin-dashboard-shell [class~="bg-slate-200"],
+.dark .admin-dashboard-shell [class~="bg-[#E4EAF2]"] {
+  background-color: #1b2538 !important;
+}
+/* Soft tinted light badges -> crisp dark-adapted translucent pills */
+.dark .admin-dashboard-shell [class~="bg-blue-50"],
+.dark .admin-dashboard-shell [class~="bg-blue-50/70"],
+.dark .admin-dashboard-shell [class~="bg-blue-100"] {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+}
+.dark .admin-dashboard-shell [class~="bg-emerald-50"],
+.dark .admin-dashboard-shell [class~="bg-emerald-50/70"],
+.dark .admin-dashboard-shell [class~="bg-emerald-100"] {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+.dark .admin-dashboard-shell [class~="bg-amber-50"],
+.dark .admin-dashboard-shell [class~="bg-amber-50/70"],
+.dark .admin-dashboard-shell [class~="bg-amber-100"] {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+.dark .admin-dashboard-shell [class~="bg-rose-50"],
+.dark .admin-dashboard-shell [class~="bg-rose-50/70"],
+.dark .admin-dashboard-shell [class~="bg-rose-100"],
+.dark .admin-dashboard-shell [class~="bg-red-50"],
+.dark .admin-dashboard-shell [class~="bg-red-100"] {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+}
+.dark .admin-dashboard-shell [class~="bg-indigo-50"],
+.dark .admin-dashboard-shell [class~="bg-indigo-100"],
 .dark .admin-dashboard-shell [class~="bg-[#F3F0FF]"],
-.dark .admin-dashboard-shell [class~="bg-violet-50"] {
-  background-color: #211d3a !important;
+.dark .admin-dashboard-shell [class~="bg-violet-50"],
+.dark .admin-dashboard-shell [class~="bg-violet-100"] {
+  background-color: rgba(139, 92, 246, 0.15) !important;
 }
 .dark .admin-dashboard-shell [class*="bg-[linear-gradient"] {
   background-image: none !important;
-  background-color: #111b2c !important;
+  background-color: #131b2b !important;
 }
 .dark .admin-dashboard-shell [class~="text-[#0F172A]"],
 .dark .admin-dashboard-shell [class~="text-[#10223D]"],
@@ -114,7 +148,7 @@
 .dark .admin-dashboard-shell [class~="text-slate-900"],
 .dark .admin-dashboard-shell [class~="text-slate-800"],
 .dark .admin-dashboard-shell [class~="text-slate-700"] {
-  color: #f8fafc !important;
+  color: #f1f5f9 !important;
 }
 .dark .admin-dashboard-shell [class~="text-[#64748B]"],
 .dark .admin-dashboard-shell [class~="text-[#70658A]"],
@@ -122,6 +156,23 @@
 .dark .admin-dashboard-shell [class~="text-slate-500"],
 .dark .admin-dashboard-shell [class~="text-slate-400"] {
   color: #94a3b8 !important;
+}
+.dark .admin-dashboard-shell [class~="text-blue-700"],
+.dark .admin-dashboard-shell [class~="text-blue-800"] {
+  color: #60a5fa !important;
+}
+.dark .admin-dashboard-shell [class~="text-emerald-700"],
+.dark .admin-dashboard-shell [class~="text-emerald-800"] {
+  color: #34d399 !important;
+}
+.dark .admin-dashboard-shell [class~="text-amber-700"],
+.dark .admin-dashboard-shell [class~="text-amber-800"] {
+  color: #fbbf24 !important;
+}
+.dark .admin-dashboard-shell [class~="text-rose-700"],
+.dark .admin-dashboard-shell [class~="text-rose-800"],
+.dark .admin-dashboard-shell [class~="text-red-700"] {
+  color: #fb7185 !important;
 }
 .dark .admin-dashboard-shell [class~="border-[#E4EAF2]"],
 .dark .admin-dashboard-shell [class~="border-[#DDE7F5]"],
@@ -132,30 +183,38 @@
 .dark .admin-dashboard-shell [class~="border-slate-200/80"],
 .dark .admin-dashboard-shell [class~="border-slate-300"],
 .dark .admin-dashboard-shell [class~="border-blue-200"],
+.dark .admin-dashboard-shell [class~="border-emerald-200"],
+.dark .admin-dashboard-shell [class~="border-amber-200"],
+.dark .admin-dashboard-shell [class~="border-rose-200"],
 .dark .admin-dashboard-shell [class~="border-violet-200"] {
-  border-color: #263449 !important;
+  border-color: #26334a !important;
 }
 .dark .admin-dashboard-shell input,
 .dark .admin-dashboard-shell select,
 .dark .admin-dashboard-shell textarea,
 .dark .admin-learning-workspace .input-admin {
-  background-color: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
+  background-color: #0b101b !important;
+  border-color: #2a3952 !important;
+  color: #f1f5f9 !important;
+}
+.dark .admin-dashboard-shell input:focus,
+.dark .admin-dashboard-shell select:focus,
+.dark .admin-dashboard-shell textarea:focus {
+  border-color: #3b82f6 !important;
 }
 .dark .admin-dashboard-shell input::placeholder,
 .dark .admin-dashboard-shell textarea::placeholder {
-  color: #7f8da3 !important;
+  color: #7c8ca3 !important;
 }
-.dark .admin-dashboard-shell option { background: #0f172a; color: #f8fafc; }
+.dark .admin-dashboard-shell option { background: #0f1522; color: #f1f5f9; }
 .dark .admin-learning-workspace {
-  color: #f8fafc;
-  --admin-border: #263449;
+  color: #f1f5f9;
+  --admin-border: #26334a;
   --admin-muted: #94a3b8;
 }
 .dark .admin-learning-workspace article:hover {
   border-color: #3b82f6;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 28%);
 }
 
 /* Adaptive admin surfaces
@@ -561,60 +620,61 @@ html:not(.dark) .admin-adaptive-dark-ui [class~="hover:bg-[#1A2942]"] { backgrou
   --destructive-border: hsl(var(--destructive));
 }
 
-/* DARK MODE (Refined Educational Dark System) */
+/* DARK MODE (Refined High-Contrast 4-Level Dark System) */
 .dark {
-  --button-outline: rgba(255, 255, 255, 0.12);
-  --badge-outline: rgba(255, 255, 255, 0.08);
+  --button-outline: rgba(255, 255, 255, 0.14);
+  --badge-outline: rgba(255, 255, 255, 0.1);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255, 255, 255, 0.03);
-  --elevate-2: rgba(255, 255, 255, 0.06);
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.08);
 
-  /* Tokens requested:
-     --background-main: #0B1120 (221 48% 8%)
-     --background-sidebar: #0F172A (222 47% 11%)
-     --surface-primary: #151E2E (218 37% 13%)
-     --border-subtle: #263449 (215 31% 22%)
-     --text-primary: #F8FAFC (210 40% 98%)
-     --text-muted: #94A3B8 (215 16% 65%)
-     --primary: #2383F7 (213 93% 55%)
+  /* 4-Level Neutral-Slate Dark Hierarchy:
+     L0 Canvas (--background): #090D16 (222 41% 6%)
+     L1 Sidebar (--sidebar):   #0F1522 (221 39% 10%)
+     L2 Card (--card):         #131B2B (220 39% 12%)
+     L3 Elevated (--muted):    #1B2538 (219 35% 16%)
+     Border (--border):        #26334A (218 32% 22%)
+     Text (--foreground):      #F1F5F9 (210 40% 96%)
+     Muted (--muted-fg):       #94A3B8 (215 20% 68%)
+     Primary (--primary):      #3B82F6 (217 91% 60%)
   */
-  --background: 221 48% 8%;
-  --foreground: 210 40% 98%;
+  --background: 222 41% 6%;
+  --foreground: 210 40% 96%;
 
-  --border: 215 31% 22%;
+  --border: 218 32% 22%;
 
-  --card: 218 37% 13%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 215 31% 22%;
+  --card: 220 39% 12%;
+  --card-foreground: 210 40% 96%;
+  --card-border: 218 32% 22%;
 
-  --sidebar: 222 47% 11%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 215 31% 22%;
-  --sidebar-primary: 213 93% 55%;
+  --sidebar: 221 39% 10%;
+  --sidebar-foreground: 210 40% 96%;
+  --sidebar-border: 218 32% 22%;
+  --sidebar-primary: 217 91% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 218 37% 16%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 213 93% 55%;
+  --sidebar-accent: 219 35% 16%;
+  --sidebar-accent-foreground: 210 40% 96%;
+  --sidebar-ring: 217 91% 60%;
 
-  --popover: 218 37% 13%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 215 31% 22%;
+  --popover: 220 39% 13%;
+  --popover-foreground: 210 40% 96%;
+  --popover-border: 218 32% 25%;
 
-  --primary: 213 93% 55%; /* #2383F7 */
+  --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 217 33% 18%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 219 35% 16%;
+  --secondary-foreground: 210 40% 96%;
 
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 16% 65%;
-  --accent: 217 33% 18%;
-  --accent-foreground: 210 40% 98%;
+  --muted: 219 35% 16%;
+  --muted-foreground: 215 20% 68%;
+  --accent: 219 35% 18%;
+  --accent-foreground: 210 40% 96%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 215 31% 22%;
-  --ring: 213 93% 55%;
+  --input: 218 32% 24%;
+  --ring: 217 91% 60%;
 }
 
 /* ================================================================

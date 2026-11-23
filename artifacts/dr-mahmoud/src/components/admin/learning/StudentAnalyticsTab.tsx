@@ -59,6 +59,7 @@ export type QuizDetail = {
   id: number;
   quizId: number;
   quizTitle?: string;
+  isHomework?: boolean;
   score: number;
   passed: boolean;
   timeSpentSeconds: number;
@@ -81,6 +82,7 @@ export type StudentAnalyticsItem = {
   paymentStatus: string;
   lastLoginAt?: string | null;
   lastActiveAt?: string | null;
+  neverLoggedIn?: boolean;
   createdAt: string;
   daysInactive: number;
   isInactive: boolean;
@@ -89,7 +91,10 @@ export type StudentAnalyticsItem = {
   avgWatchProgress?: number;
   quizzesCount: number;
   uniqueQuizzesCount?: number;
+  uniqueExamsCount?: number;
+  uniqueHomeworksCount?: number;
   passedQuizzesCount: number;
+  passRate?: number | null;
   avgScore?: number | null;
   centerAttendanceCount?: number;
   dailyCheckinsCount?: number;
@@ -99,8 +104,48 @@ export type StudentAnalyticsItem = {
   quizDetails: QuizDetail[];
 };
 
-const SEGMENT_COLORS = ["#2563EB", "#10B981", "#F59E0B", "#64748B"];
-const HISTOGRAM_COLORS = ["#E11D48", "#F97316", "#F59E0B", "#2563EB", "#10B981"];
+const SEGMENT_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#64748B"];
+const HISTOGRAM_COLORS = ["#F43F5E", "#F97316", "#F59E0B", "#3B82F6", "#10B981"];
+
+function isOfflineStudent(s: StudentAnalyticsItem): boolean {
+  const mode = (s.learningMode || "").toLowerCase();
+  if (mode === "offline") return true;
+  if (mode === "online") return false;
+  const center = (s.centerName || "").trim();
+  return Boolean(center && !/أونلاين|اونلاين|online/i.test(center));
+}
+
+function BiChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number | string; color?: string }>;
+  label?: string;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div
+      className="rounded-xl border border-border bg-popover text-popover-foreground shadow-lg px-3 py-2 text-xs space-y-1 text-right"
+      dir="rtl"
+    >
+      {label && <div className="font-black text-foreground border-b border-border/60 pb-1 mb-1">{label}</div>}
+      {payload.map((entry, idx) => (
+        <div key={idx} className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-1.5 text-muted-foreground font-bold">
+            <span
+              className="h-2 w-2 rounded-full shrink-0"
+              style={{ backgroundColor: entry.color || "#3B82F6" }}
+            />
+            {entry.name}
+          </span>
+          <span className="font-mono font-black text-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function formatSeconds(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "00:00";
@@ -137,6 +182,7 @@ export function StudentAnalyticsTab() {
 
   // Power BI Cross-Filtering Slicers
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusSlicer, setStatusSlicer] = useState<"approved" | "all" | "pending" | "suspended">("approved");
   const [stageSlicer, setStageSlicer] = useState<string>("all");
   const [centerSlicer, setCenterSlicer] = useState<string>("all");
   const [modeSlicer, setModeSlicer] = useState<"all" | "offline" | "online">("all");
@@ -178,7 +224,7 @@ export function StudentAnalyticsTab() {
   // Reset pagination whenever any slicer changes
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, stageSlicer, centerSlicer, modeSlicer, paymentSlicer, segmentFilter, sortBy]);
+  }, [searchQuery, statusSlicer, stageSlicer, centerSlicer, modeSlicer, paymentSlicer, segmentFilter, sortBy]);
 
   // Unique slicer options
   const uniqueStages = useMemo(() => {
@@ -192,7 +238,8 @@ export function StudentAnalyticsTab() {
   const uniqueCenters = useMemo(() => {
     const set = new Set<string>();
     data.forEach((s) => {
-      if (s.centerName && s.centerName.trim()) set.add(s.centerName.trim());
+      const c = (s.centerName || "").trim();
+      if (c && !/أونلاين|اونلاين|online/i.test(c)) set.add(c);
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b, "ar"));
   }, [data]);
@@ -202,6 +249,7 @@ export function StudentAnalyticsTab() {
     const q = searchQuery.trim().toLowerCase();
     return data
       .filter((s) => {
+        if (statusSlicer !== "all" && s.status !== statusSlicer) return false;
         if (q) {
           const hit =
             s.name?.toLowerCase().includes(q) ||
@@ -213,7 +261,7 @@ export function StudentAnalyticsTab() {
         if (stageSlicer !== "all" && (s.grade || "").trim() !== stageSlicer) return false;
         if (centerSlicer !== "all" && (s.centerName || "").trim() !== centerSlicer) return false;
         if (modeSlicer !== "all") {
-          const isOffline = s.learningMode === "offline" || Boolean(s.centerName);
+          const isOffline = isOfflineStudent(s);
           if (modeSlicer === "offline" && !isOffline) return false;
           if (modeSlicer === "online" && isOffline) return false;
         }
@@ -235,7 +283,7 @@ export function StudentAnalyticsTab() {
         if (sortBy === "videos") return b.completedVideosCount - a.completedVideosCount;
         return (b.engagementScore ?? 0) - (a.engagementScore ?? 0);
       });
-  }, [data, searchQuery, stageSlicer, centerSlicer, modeSlicer, paymentSlicer, segmentFilter, sortBy]);
+  }, [data, searchQuery, statusSlicer, stageSlicer, centerSlicer, modeSlicer, paymentSlicer, segmentFilter, sortBy]);
 
   // ── Executive KPI Metrics (Reactive to Slicers) ──
   const kpis = useMemo(() => {
@@ -273,43 +321,37 @@ export function StudentAnalyticsTab() {
 
   // ── Chart 1: 14-Day Platform Activity Trend (Quizzes + Video Watches) ──
   const activityTrendData = useMemo(() => {
+    const keyFmt = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const labelFmt = new Intl.DateTimeFormat("ar-EG", {
+      timeZone: "Africa/Cairo",
+      day: "numeric",
+      month: "short",
+    });
+
     const map = new Map<string, { dateKey: string; label: string; quizzes: number; watches: number }>();
     const now = new Date();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 86400000);
-      const key = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Africa/Cairo",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(d);
-      const label = new Intl.DateTimeFormat("ar-EG", {
-        timeZone: "Africa/Cairo",
-        day: "numeric",
-        month: "short",
-      }).format(d);
-      map.set(key, { dateKey: key, label, quizzes: 0, watches: 0 });
+      const key = keyFmt.format(d);
+      map.set(key, { dateKey: key, label: labelFmt.format(d), quizzes: 0, watches: 0 });
     }
 
     for (const s of filtered) {
       for (const q of s.quizDetails) {
-        const key = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Africa/Cairo",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date(q.createdAt));
-        const bucket = map.get(key);
+        const dt = new Date(q.createdAt);
+        if (isNaN(dt.getTime())) continue;
+        const bucket = map.get(keyFmt.format(dt));
         if (bucket) bucket.quizzes += 1;
       }
       for (const w of s.watchDetails) {
-        const key = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Africa/Cairo",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date(w.updatedAt));
-        const bucket = map.get(key);
+        const dt = new Date(w.updatedAt);
+        if (isNaN(dt.getTime())) continue;
+        const bucket = map.get(keyFmt.format(dt));
         if (bucket) bucket.watches += 1;
       }
     }
@@ -368,7 +410,7 @@ export function StudentAnalyticsTab() {
     let freeOffline = 0;
     let freeOnline = 0;
     for (const s of filtered) {
-      const isOff = s.learningMode === "offline" || Boolean(s.centerName);
+      const isOff = isOfflineStudent(s);
       const isPaid = s.paymentStatus === "paid";
       if (isPaid && isOff) paidOffline++;
       else if (isPaid && !isOff) paidOnline++;
@@ -407,6 +449,7 @@ export function StudentAnalyticsTab() {
 
   const hasSlicers =
     Boolean(searchQuery.trim()) ||
+    statusSlicer !== "approved" ||
     stageSlicer !== "all" ||
     centerSlicer !== "all" ||
     modeSlicer !== "all" ||
@@ -415,6 +458,7 @@ export function StudentAnalyticsTab() {
 
   const clearSlicers = () => {
     setSearchQuery("");
+    setStatusSlicer("approved");
     setStageSlicer("all");
     setCenterSlicer("all");
     setModeSlicer("all");
@@ -447,7 +491,7 @@ export function StudentAnalyticsTab() {
       s.phone || "",
       s.grade || "",
       s.centerName || "",
-      s.learningMode === "offline" || s.centerName ? "سنتر" : "أونلاين",
+      isOfflineStudent(s) ? "سنتر" : "أونلاين",
       s.paymentStatus === "paid" ? "مدفوع" : "مجاني",
       `${s.engagementScore ?? 0}%`,
       s.avgScore !== null && s.avgScore !== undefined ? `${s.avgScore}%` : "—",
@@ -537,7 +581,7 @@ export function StudentAnalyticsTab() {
 
       {/* 2. Power BI Interactive Slicers Bar */}
       <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-4 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5">
           <div className="relative lg:col-span-2">
             <Search className="h-4 w-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -548,6 +592,17 @@ export function StudentAnalyticsTab() {
               className="w-full h-10 pr-9 pl-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          <select
+            value={statusSlicer}
+            onChange={(e) => setStatusSlicer(e.target.value as any)}
+            className="h-10 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-foreground cursor-pointer"
+          >
+            <option value="approved">المفعلون فقط ✓</option>
+            <option value="all">كل الحالات ({data.length})</option>
+            <option value="pending">قيد المراجعة</option>
+            <option value="suspended">موقوف</option>
+          </select>
 
           <select
             value={stageSlicer}
@@ -717,23 +772,33 @@ export function StudentAnalyticsTab() {
               <h3 className="text-sm font-black text-foreground">نشاط المنصة اليومي (آخر 14 يوم)</h3>
               <p className="text-[11px] text-muted-foreground">عدد محاولات الامتحانات ومشاهدات الدروس يومياً</p>
             </div>
-            <Activity className="h-4 w-4 text-blue-600" />
+            <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="h-64 w-full" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={activityTrendData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.7} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<BiChartTooltip />} cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
                 <Area
                   type="monotone"
                   dataKey="quizzes"
                   name="محاولات امتحانات"
-                  stroke="#2563EB"
-                  fill="#2563EB"
-                  fillOpacity={0.18}
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
+                  fillOpacity={0.2}
                   strokeWidth={2}
                 />
                 <Area
@@ -742,7 +807,7 @@ export function StudentAnalyticsTab() {
                   name="مشاهدات دروس"
                   stroke="#10B981"
                   fill="#10B981"
-                  fillOpacity={0.15}
+                  fillOpacity={0.16}
                   strokeWidth={2}
                 />
               </AreaChart>
@@ -757,15 +822,25 @@ export function StudentAnalyticsTab() {
               <h3 className="text-sm font-black text-foreground">توزيع مستويات ودرجات الطلاب</h3>
               <p className="text-[11px] text-muted-foreground">عدد الطلاب في كل شريحة درجة (أفضل درجة لكل امتحان)</p>
             </div>
-            <Award className="h-4 w-4 text-amber-500" />
+            <Award className="h-4 w-4 text-amber-500 dark:text-amber-400" />
           </div>
           <div className="h-64 w-full" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={scoreHistogramData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="range" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.7} />
+                <XAxis
+                  dataKey="range"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<BiChartTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.45)" }} />
                 <Bar dataKey="count" name="عدد الطلاب" radius={[8, 8, 0, 0]}>
                   {scoreHistogramData.map((_, idx) => (
                     <Cell key={idx} fill={HISTOGRAM_COLORS[idx % HISTOGRAM_COLORS.length]} />
@@ -776,25 +851,49 @@ export function StudentAnalyticsTab() {
           </div>
         </div>
 
-        {/* Chart 3: Stage Performance Breakdown */}
+        {/* Chart 3: Stage Performance Breakdown (Dual Y-Axis: Students Count vs Avg Score %) */}
         <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-black text-foreground">توزيع ومتوسط درجات المراحل الدراسية</h3>
-              <p className="text-[11px] text-muted-foreground">مقارنة عدد الطلاب ومتوسط الدرجات لكل مرحلة</p>
+              <p className="text-[11px] text-muted-foreground">مقارنة عدد الطلاب (يسار) ومتوسط الدرجات % (يمين) لكل مرحلة</p>
             </div>
-            <BarChart3 className="h-4 w-4 text-indigo-600" />
+            <BarChart3 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="h-64 w-full" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stageChartData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                <XAxis dataKey="stage" tick={{ fontSize: 9 }} interval={0} angle={-12} textAnchor="end" height={45} />
-                <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
-                <Bar dataKey="الطلاب" fill="#2563EB" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="متوسط الدرجة" fill="#10B981" radius={[6, 6, 0, 0]} />
+              <BarChart data={stageChartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.7} />
+                <XAxis
+                  dataKey="stage"
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                  interval={0}
+                  angle={-12}
+                  textAnchor="end"
+                  height={45}
+                />
+                <YAxis
+                  yAxisId="left"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[0, 100]}
+                  unit="%"
+                  tick={{ fontSize: 10, fill: "#10B981" }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={false}
+                />
+                <Tooltip content={<BiChartTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.45)" }} />
+                <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
+                <Bar yAxisId="left" dataKey="الطلاب" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                <Bar yAxisId="right" dataKey="متوسط الدرجة" fill="#10B981" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -807,7 +906,7 @@ export function StudentAnalyticsTab() {
               <h3 className="text-sm font-black text-foreground">توزيع الطلاب (سنتر / أونلاين · مدفوع / مجاني)</h3>
               <p className="text-[11px] text-muted-foreground">نسبة كل شريحة داخل الفلتر الحالي</p>
             </div>
-            <Filter className="h-4 w-4 text-emerald-600" />
+            <Filter className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="h-64 w-full flex items-center justify-center" dir="ltr">
             {segmentDonutData.length === 0 ? (
@@ -824,13 +923,15 @@ export function StudentAnalyticsTab() {
                     innerRadius={52}
                     outerRadius={88}
                     paddingAngle={3}
+                    stroke="hsl(var(--card))"
+                    strokeWidth={2}
                   >
                     {segmentDonutData.map((_, idx) => (
                       <Cell key={idx} fill={SEGMENT_COLORS[idx % SEGMENT_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: "11px" }} />
+                  <Tooltip content={<BiChartTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -1075,14 +1176,16 @@ export function StudentAnalyticsTab() {
                     <td className="px-3 py-2.5 text-center">
                       <span
                         className={`inline-block rounded-lg px-2 py-0.5 text-[10.5px] font-bold ${
-                          s.daysInactive === 0
+                          s.neverLoggedIn
+                            ? "bg-muted text-muted-foreground"
+                            : s.daysInactive === 0
                             ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                             : s.daysInactive < 3
-                            ? "bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                            ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
                             : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
                         }`}
                       >
-                        {s.daysInactive === 0 ? "نشط اليوم" : `منذ ${s.daysInactive} يوم`}
+                        {s.neverLoggedIn ? "لم يدخل بعد" : s.daysInactive === 0 ? "نشط اليوم" : `منذ ${s.daysInactive} يوم`}
                       </span>
                     </td>
                   </tr>
@@ -1210,7 +1313,16 @@ export function StudentAnalyticsTab() {
                         className="rounded-xl border border-border bg-background px-3 py-2 flex items-center justify-between gap-2 text-xs"
                       >
                         <div className="min-w-0">
-                          <div className="font-bold text-foreground truncate">{q.quizTitle || `اختبار #${q.quizId}`}</div>
+                          <div className="font-bold text-foreground truncate flex items-center gap-1.5">
+                            <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-black shrink-0 ${
+                              q.isHomework
+                                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                : "bg-blue-500/15 text-blue-700 dark:text-blue-300"
+                            }`}>
+                              {q.isHomework ? "واجب" : "امتحان"}
+                            </span>
+                            <span className="truncate">{q.quizTitle || `اختبار #${q.quizId}`}</span>
+                          </div>
                           <div className="text-[10px] text-muted-foreground">
                             {formatDate(q.createdAt)} · المدة: {formatSeconds(q.timeSpentSeconds)}
                           </div>

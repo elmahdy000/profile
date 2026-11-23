@@ -237,7 +237,7 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
       db.select().from(videoProgressTable),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage, durationText: videosTable.durationText }).from(videosTable),
       db.select().from(quizAttemptsTable),
-      db.select({ id: quizzesTable.id, title: quizzesTable.title }).from(quizzesTable),
+      db.select({ id: quizzesTable.id, title: quizzesTable.title, scope: quizzesTable.scope, passingScore: quizzesTable.passingScore }).from(quizzesTable),
       db.execute(sql`
         SELECT student_id, COUNT(*)::int AS cnt
         FROM student_attendance
@@ -275,7 +275,7 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
 
     // O(1) lookup maps
     const videoMap = new Map(videos.map((v) => [v.id, v]));
-    const quizTitleMap = new Map(quizzesRows.map((q) => [q.id, q.title]));
+    const quizMetaMap = new Map(quizzesRows.map((q) => [q.id, q]));
     const centerAttMap = new Map(attList.map((r) => [Number(r.student_id), Number(r.cnt) || 0]));
     const checkinMap = new Map(checkinSummaryRows.map((r) => [Number(r.student_id), r]));
 
@@ -300,6 +300,11 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
     }
 
     const nowMs = Date.now();
+    const clampPct = (val: number | null | undefined) => {
+      const n = Number(val);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    };
 
     const report = students.map((st) => {
       const stProgress = progressByStudent.get(st.id) || [];
@@ -315,37 +320,51 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
             videoTitle: vid?.title || `فيديو #${p.videoId}`,
             category: vid?.category || "عام",
             stage: vid?.stage || "عام",
-            progress: p.progress,
+            progress: clampPct(p.progress),
             currentTimeSeconds: p.currentTimeSeconds,
             durationSeconds: p.durationSeconds,
-            completed: p.completed,
+            completed: Boolean(p.completed),
             updatedAt: p.updatedAt,
           };
         })
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-      // Accurate unique quiz metrics (best score per quiz)
-      const bestByQuiz = new Map<number, { score: number; passed: boolean }>();
+      // Accurate unique quiz metrics (best score per unique quiz, separated by exam vs homework)
+      const bestByQuiz = new Map<number, { score: number; passed: boolean; isHomework: boolean }>();
       for (const a of stAttempts) {
+        const meta = quizMetaMap.get(a.quizId);
+        const isHomework = meta?.scope === "homework";
+        const safeScore = clampPct(a.score);
         const prev = bestByQuiz.get(a.quizId);
-        if (!prev || a.score > prev.score) {
-          bestByQuiz.set(a.quizId, { score: a.score, passed: Boolean(a.passed || prev?.passed) });
+        if (!prev || safeScore > prev.score) {
+          bestByQuiz.set(a.quizId, {
+            score: safeScore,
+            passed: Boolean(a.passed || prev?.passed),
+            isHomework,
+          });
         } else if (a.passed && !prev.passed) {
           bestByQuiz.set(a.quizId, { ...prev, passed: true });
         }
       }
+
       const uniqueQuizzesCount = bestByQuiz.size;
       let scoreSum = 0;
       let passedUniqueQuizzesCount = 0;
+      let uniqueExamsCount = 0;
+      let uniqueHomeworksCount = 0;
       bestByQuiz.forEach((v) => {
         scoreSum += v.score;
         if (v.passed) passedUniqueQuizzesCount++;
+        if (v.isHomework) uniqueHomeworksCount++;
+        else uniqueExamsCount++;
       });
+
       const avgScore = uniqueQuizzesCount > 0 ? Math.round(scoreSum / uniqueQuizzesCount) : null;
+      const passRate = uniqueQuizzesCount > 0 ? Math.round((passedUniqueQuizzesCount / uniqueQuizzesCount) * 100) : null;
 
       const avgWatchProgress =
         watchDetails.length > 0
-          ? Math.round(watchDetails.reduce((acc, w) => acc + Math.min(100, w.progress || 0), 0) / watchDetails.length)
+          ? Math.round(watchDetails.reduce((acc, w) => acc + w.progress, 0) / watchDetails.length)
           : 0;
 
       // True latest activity across login, watch, quiz, and daily check-in
@@ -357,20 +376,26 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
         checkinInfo?.last_checkin_at ? new Date(checkinInfo.last_checkin_at).getTime() : 0,
       ].filter((t) => Number.isFinite(t) && t > 0);
 
-      const trueLastActiveMs = activityTimestamps.length > 0
-        ? Math.max(...activityTimestamps)
-        : new Date(st.createdAt).getTime();
-      const daysInactive = Math.max(0, Math.floor((nowMs - trueLastActiveMs) / (1000 * 60 * 60 * 24)));
+      const neverLoggedIn = activityTimestamps.length === 0;
+      const referenceMs = neverLoggedIn ? new Date(st.createdAt).getTime() : Math.max(...activityTimestamps);
+      const daysInactive = Math.max(0, Math.floor((nowMs - referenceMs) / (1000 * 60 * 60 * 24)));
 
       const completedVideosCount = watchDetails.filter((w) => w.completed).length;
       const dailyCheckinsCount = Number(checkinInfo?.total_checkins) || 0;
       const checkedInToday = Boolean(checkinInfo?.checked_in_today);
 
-      // Composite Engagement Score (0..100)
-      const recencyPts = daysInactive === 0 ? 30 : daysInactive <= 2 ? 22 : daysInactive <= 6 ? 12 : 0;
-      const quizPts = uniqueQuizzesCount > 0 ? Math.min(40, Math.round(((avgScore || 0) / 100) * 30 + Math.min(10, uniqueQuizzesCount * 2))) : 0;
-      const watchPts = Math.min(30, completedVideosCount * 5 + Math.round(avgWatchProgress * 0.1));
-      const engagementScore = Math.min(100, recencyPts + quizPts + watchPts);
+      // Balanced Composite Engagement Score (0..100) — never awards points to never-logged-in accounts
+      const recencyPts = neverLoggedIn
+        ? 0
+        : (daysInactive === 0 ? 20 : daysInactive <= 2 ? 14 : daysInactive <= 6 ? 7 : 0) +
+          (checkedInToday ? 5 : Math.min(5, dailyCheckinsCount));
+      const quizPts =
+        uniqueQuizzesCount > 0
+          ? Math.min(40, Math.round(((avgScore || 0) / 100) * 28 + Math.min(12, uniqueQuizzesCount * 3)))
+          : 0;
+      const watchPts = Math.min(25, completedVideosCount * 5 + Math.round(avgWatchProgress * 0.1));
+      const attendancePts = Math.min(10, (centerAttendanceCount + dailyCheckinsCount) * 2);
+      const engagementScore = Math.min(100, recencyPts + quizPts + watchPts + attendancePts);
 
       return {
         id: st.id,
@@ -387,16 +412,20 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
         learningMode: st.learningMode,
         paymentStatus: st.paymentStatus,
         lastLoginAt: st.lastLoginAt,
-        lastActiveAt: new Date(trueLastActiveMs).toISOString(),
+        lastActiveAt: neverLoggedIn ? null : new Date(referenceMs).toISOString(),
+        neverLoggedIn,
         createdAt: st.createdAt,
         daysInactive,
-        isInactive: daysInactive >= 3,
+        isInactive: neverLoggedIn || daysInactive >= 3,
         watchedVideosCount: watchDetails.length,
         completedVideosCount,
         avgWatchProgress,
         quizzesCount: stAttempts.length,
         uniqueQuizzesCount,
+        uniqueExamsCount,
+        uniqueHomeworksCount,
         passedQuizzesCount: passedUniqueQuizzesCount,
+        passRate,
         avgScore,
         centerAttendanceCount,
         dailyCheckinsCount,
@@ -404,15 +433,19 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
         engagementScore,
         watchDetails,
         quizDetails: stAttempts
-          .map((a) => ({
-            id: a.id,
-            quizId: a.quizId,
-            quizTitle: quizTitleMap.get(a.quizId) || `اختبار #${a.quizId}`,
-            score: a.score,
-            passed: a.passed,
-            timeSpentSeconds: a.timeSpentSeconds,
-            createdAt: a.createdAt,
-          }))
+          .map((a) => {
+            const meta = quizMetaMap.get(a.quizId);
+            return {
+              id: a.id,
+              quizId: a.quizId,
+              quizTitle: meta?.title || `اختبار #${a.quizId}`,
+              isHomework: meta?.scope === "homework",
+              score: clampPct(a.score),
+              passed: Boolean(a.passed),
+              timeSpentSeconds: a.timeSpentSeconds,
+              createdAt: a.createdAt,
+            };
+          })
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
       };
     });
