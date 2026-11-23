@@ -302,7 +302,7 @@ export function CurriculumQuickExamModal({
         lesson: isSingle ? lesson : undefined,
         lessons: isMulti ? selectedMultiLessons : undefined,
         count: reviewedQuestions.length,
-        durationMinutes: creationMode === "homework" ? null : (Number(durationMinutes) || 30),
+        durationMinutes: Number(durationMinutes) || 30,
         passingScore: Number(passingScore) || 60,
         maxAttempts: Number(maxAttempts) || 3,
         shuffleQuestions,

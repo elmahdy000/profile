@@ -14,10 +14,12 @@ import {
   ChevronDown,
   Play,
   Eye,
-  Award
+  Award,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Quiz } from "@/types/platform";
+import { formatExamDayAndTime, getEffectiveQuizDurationMinutes } from "@/lib/motivationMessages";
 
 // ── 1. Compact Page Header ──
 export function ExamsPageHeader({ totalCount }: { totalCount: number }) {
@@ -244,6 +246,8 @@ export function ExamCard({
   const isCompleted = attemptsUsed > 0;
   const isLocked = !!quiz.locked;
   const questionsCount = quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length;
+  const effectiveDuration = getEffectiveQuizDurationMinutes(quiz);
+  const examDateInfo = formatExamDayAndTime(quiz.createdAt);
 
   let statusBadgeText = "جديد — لم يتم حله";
   let statusBadgeClass = "bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60";
@@ -278,13 +282,21 @@ export function ExamCard({
             {statusBadgeText}
           </span>
 
-          {quiz.durationMinutes && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          {effectiveDuration && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
               <Clock className="h-3 w-3 text-amber-500" />
-              <span className="font-mono tabular-nums">{quiz.durationMinutes}</span> دقيقة
+              <span className="font-mono tabular-nums">{effectiveDuration}</span> دقيقة
             </span>
           )}
         </div>
+
+        {/* 1.5. Day & Time of Exam / Homework */}
+        {examDateInfo && (
+          <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+            <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>{examDateInfo.fullLabel}</span>
+          </div>
+        )}
 
         {/* 2. Exam Title */}
         <h3
@@ -355,7 +367,7 @@ export function ExamCard({
                 }`}
               >
                 <span>أفضل نتيجة لك:</span>
-                <span className="font-mono font-black tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
+                <span className="font-mono font-black tabular-nums">{best}% ({passed ? "ناجح ✓" : "محتاج مراجعة"})</span>
               </div>
               <div
                 className={`h-1.5 w-full overflow-hidden rounded-full ${

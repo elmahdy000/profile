@@ -70,9 +70,9 @@ const PRESETS: PresetConfig[] = [
   {
     id: "homework",
     label: "📝 واجب منزلي",
-    subtitle: "15 سؤال · وقت مفتوح",
+    subtitle: "15 سؤال · 30 دقيقة",
     count: 15,
-    durationMinutes: 45,
+    durationMinutes: 30,
     maxAttempts: 3,
     passingScore: 50,
     isHomework: true,
@@ -379,7 +379,7 @@ export function ExpressExamModal({
       lessons: isMultiLesson ? selectedLessons : undefined,
       count: customQuestions ? customQuestions.length : Math.max(1, Number(questionsCount) || 10),
       questionType: questionType === "all" ? undefined : questionType,
-      durationMinutes: isHomework ? null : Math.max(5, Number(durationMinutes) || 15),
+      durationMinutes: Math.max(5, Number(durationMinutes) || (isHomework ? 30 : 15)),
       passingScore: Math.max(10, Math.min(100, Number(passingScore) || 60)),
       maxAttempts: Math.max(1, Number(maxAttempts) || 1),
       shuffleQuestions,
@@ -882,7 +882,7 @@ export function ExpressExamModal({
                     <span className="flex items-center gap-2 flex-wrap">
                       <span>إعدادات متقدمة:</span>
                       <span className="text-[11px] font-mono text-foreground">
-                        {isHomework ? "واجب (وقت مفتوح)" : `${durationMinutes} دقيقة`} · نجاح {passingScore}% · {maxAttempts} محاولة · {isPublished ? "نشر فوري" : "مسودة"}
+                        {isHomework ? `واجب (${durationMinutes} دقيقة)` : `${durationMinutes} دقيقة`} · نجاح {passingScore}% · {maxAttempts} محاولة · {isPublished ? "نشر فوري" : "مسودة"}
                       </span>
                     </span>
                     {showAdvanced ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
@@ -898,10 +898,9 @@ export function ExpressExamModal({
                           type="number"
                           min={5}
                           max={240}
-                          disabled={isHomework}
                           value={durationMinutes}
                           onChange={(e) => setDurationMinutes(Number(e.target.value) || 15)}
-                          className="w-full h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-center disabled:opacity-50"
+                          className="w-full h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-center"
                         />
                       </div>
                       <div className="space-y-1">

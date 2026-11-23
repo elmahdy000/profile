@@ -44,7 +44,15 @@ import {
   QrCode,
   FolderDown,
   Flag,
+  CalendarDays,
 } from "lucide-react";
+import {
+  formatExamDayAndTime,
+  getEffectiveQuizDurationMinutes,
+  getMotivationTierForScore,
+  getNextMotivationMessage,
+  isQuizHomework,
+} from "@/lib/motivationMessages";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
@@ -638,6 +646,9 @@ export function StudentPlatform() {
   const [reauthCode, setReauthCode] = useState("");
   const [reauthLoading, setReauthLoading] = useState(false);
   const [reauthError, setReauthError] = useState("");
+  const [liveMotivation, setLiveMotivation] = useState<string>("");
+  const [resultMotivation, setResultMotivation] = useState<string>("");
+  const lastMilestoneRef = useRef<number>(0);
 
   // Prevent accidental page refresh / navigation during active exam
   useEffect(() => {
@@ -650,14 +661,22 @@ export function StudentPlatform() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [activeQuiz, quizResult]);
 
-  // Exam Countdown Timer Effect
+  // Exam & Homework Countdown Timer Effect
   useEffect(() => {
     if (!activeQuiz || quizResult) return;
+    const isHw = isQuizHomework(activeQuiz);
     const timer = setInterval(() => {
       setQuizElapsedSeconds((prev) => prev + 1);
       setQuizTimeRemaining((prev) => {
         if (prev === null) return null;
         if (prev <= 1) {
+          if (isHw) {
+            toast({
+              title: "⏰ خلص وقت الواجب!",
+              description: "لو لسه بتكمل في الكشكول خلّص آخر سؤال وراجع إجاباتك كويس.",
+            });
+            return 0;
+          }
           toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
           void submitQuizRef.current(true);
           return 0;
@@ -667,6 +686,23 @@ export function StudentPlatform() {
     }, 1000);
     return () => clearInterval(timer);
   }, [activeQuiz, quizResult]);
+
+  // Live non-repeating milestone motivation as student progresses through questions
+  useEffect(() => {
+    if (!activeQuiz || quizResult || activeQuiz.questions.length === 0) return;
+    const answered = activeQuiz.questions.filter((q: any, i: number) => {
+      const origIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+      const isEssayQ = q.questionType === "essay" || !q.options || q.options.length === 0;
+      if (isEssayQ) return Boolean((essayTextAnswers[origIdx] ?? essayTextAnswers[i] ?? "").trim());
+      return (quizAnswers[i] ?? -1) >= 0;
+    }).length;
+    const pct = Math.round((answered / activeQuiz.questions.length) * 100);
+    const bucket = pct >= 100 ? 4 : pct >= 75 ? 3 : pct >= 50 ? 2 : pct >= 25 ? 1 : 0;
+    if (bucket > lastMilestoneRef.current) {
+      lastMilestoneRef.current = bucket;
+      setLiveMotivation(getNextMotivationMessage("milestone"));
+    }
+  }, [activeQuiz, quizResult, quizAnswers, essayTextAnswers]);
 
   const startQuiz = (quiz: Quiz) => {
     if (isUnpaid) {
@@ -732,7 +768,11 @@ export function StudentPlatform() {
     quizSubmitInFlightRef.current = false;
     setQuizStartTime(Date.now());
     setQuizElapsedSeconds(0);
-    setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
+    const effectiveDuration = getEffectiveQuizDurationMinutes({ ...quiz, questions: mappedQuestions });
+    setQuizTimeRemaining(effectiveDuration ? effectiveDuration * 60 : null);
+    lastMilestoneRef.current = 0;
+    setResultMotivation("");
+    setLiveMotivation(getNextMotivationMessage("start"));
   };
 
   const startQuizReview = async (quiz: Quiz) => {
@@ -864,6 +904,8 @@ export function StudentPlatform() {
       setQuizResult(res);
       setQuizTimeRemaining(null);
       setShowQuizReauthModal(false);
+      const freshMotivation = getNextMotivationMessage(getMotivationTierForScore(res.score, res.passed));
+      setResultMotivation(freshMotivation);
       if (!isUnpaid) {
         api<{ unresolvedCount?: number }>("/api/learning/mistakes")
           .then((mk) => setUnresolvedMistakesCount(Number(mk?.unresolvedCount) || 0))
@@ -877,9 +919,7 @@ export function StudentPlatform() {
       try { playNotificationSound(); } catch (e) {}
       toast({
         title: res.passed ? "مبروك يا بطل! نجحت في الاختبار 🎓" : "تم تسليم الاختبار وحفظ درجتك 📝",
-        description: `النتيجة النهائية: ${res.score}% (${res.correct} من ${res.total} إجابة صح) — ${
-          res.passed ? "عاش بجد! نتيجتك اتسجلت خلاص." : "ولا يهمك، راجع الإجابات تحت وجرب تاني."
-        }`,
+        description: `${res.score}% (${res.correct}/${res.total}) — ${freshMotivation}`,
       });
 
       // Auto-scroll to top to reveal result card immediately
@@ -2018,12 +2058,18 @@ export function StudentPlatform() {
       <AnimatePresence>
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (() => {
-          const isHomework =
-            activeQuiz.scope === "homework" ||
-            activeQuiz.category === "واجب" ||
-            activeQuiz.category === "homework" ||
-            activeQuiz.title?.includes("واجب") ||
-            activeQuiz.title?.toLowerCase().includes("homework");
+          const isHomework = isQuizHomework(activeQuiz);
+          const effectiveDurationMinutes = getEffectiveQuizDurationMinutes(activeQuiz);
+          const examDateInfo = formatExamDayAndTime(activeQuiz.createdAt);
+          const totalQ = activeQuiz.questions.length;
+          const answeredQ = activeQuiz.questions.filter((q: any, i: number) => {
+            const origIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+            const isEssayQ = q.questionType === "essay" || !q.options || q.options.length === 0;
+            if (isEssayQ) return Boolean((essayTextAnswers[origIdx] ?? essayTextAnswers[i] ?? "").trim());
+            return (quizAnswers[i] ?? -1) >= 0;
+          }).length;
+          const progressPct = totalQ > 0 ? Math.round((answeredQ / totalQ) * 100) : 0;
+          const flaggedCount = Object.values(flaggedQuestions).filter(Boolean).length;
           return (
             <motion.div
               className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
@@ -2050,6 +2096,15 @@ export function StudentPlatform() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                       <span><span className="font-mono tabular-nums">{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length}</span> سؤال</span>
+                      {examDateInfo && (
+                        <>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                            <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>{examDateInfo.fullLabel}</span>
+                          </span>
+                        </>
+                      )}
                       {isHomework ? (
                         <>
                           <span>•</span>
@@ -2059,62 +2114,54 @@ export function StudentPlatform() {
                         <>
                           <span>•</span>
                           <span>نسبة النجاح <span className="font-mono tabular-nums">{activeQuiz.passingScore}%</span></span>
-                          {!quizResult && (
-                            <>
-                              <span>•</span>
-                              <span className="font-extrabold text-blue-600 dark:text-blue-400">
-                                أجبت: <span className="font-mono tabular-nums">{quizAnswers.filter((a) => a >= 0).length}</span> / <span className="font-mono tabular-nums">{activeQuiz.questions.length}</span>
-                              </span>
-                            </>
-                          )}
                         </>
                       )}
                     </div>
                   </div>
 
-                  {/* Left side (LTR): Actions */}
+                  {/* Left side (LTR): Actions + Live Countdown Timer (for BOTH Exams & Homeworks!) */}
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
-                    {isHomework ? (
+                    {!quizResult && (
+                      <div
+                        className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
+                          quizTimeRemaining === null
+                            ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
+                            : quizTimeRemaining <= 60
+                            ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
+                            : quizTimeRemaining <= 300
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            : isHomework
+                            ? "bg-amber-50/90 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-400/40"
+                            : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
+                        }`}
+                        title={isHomework ? "مؤقت حل الواجب" : "الوقت المتبقي للاختبار"}
+                      >
+                        <Clock className="h-4 w-4 shrink-0" />
+                        <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
+                          {quizTimeRemaining !== null
+                            ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
+                            : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                          }
+                        </span>
+                        {quizTimeRemaining !== null && effectiveDurationMinutes && (
+                          <span className="text-[10px] font-bold font-mono opacity-70 hidden sm:inline">
+                            {`/ ${effectiveDurationMinutes}:00`}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {isHomework && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => window.print()}
-                        className="h-9 px-3.5 rounded-xl border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
+                        className="h-9 px-3 rounded-xl border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
                       >
                         <Printer className="h-4 w-4" />
-                        <span>طباعة الواجب 🖨️</span>
+                        <span className="hidden sm:inline">طباعة الواجب 🖨️</span>
                       </Button>
-                    ) : (
-                      !quizResult && (
-                        <div
-                          className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
-                            quizTimeRemaining === null
-                              ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
-                              : quizTimeRemaining < 30
-                              ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
-                              : quizTimeRemaining < 60
-                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                              : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
-                          }`}
-                        >
-                          <Clock className="h-4 w-4 shrink-0" />
-                          <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
-                            {quizTimeRemaining !== null
-                              ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
-                              : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
-                            }
-                          </span>
-                          {quizTimeRemaining !== null && (
-                            <span className="text-[10px] font-bold font-mono opacity-70">
-                              {(() => {
-                                const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
-                                return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
-                              })()}
-                            </span>
-                          )}
-                        </div>
-                      )
                     )}
 
                     {/* Exit button */}
@@ -2143,14 +2190,87 @@ export function StudentPlatform() {
                   </div>
                 </div>
 
-                {/* Progress bar for countdown */}
-                {!isHomework && quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
+                {/* Distinctive Progress Indicator + Live Unique Motivation */}
+                {!quizResult && totalQ > 0 && (
+                  <div className="border-t border-slate-200/70 dark:border-slate-800/80 bg-gradient-to-l from-blue-50/50 via-white to-indigo-50/40 dark:from-[#0A1324] dark:via-[#070D18] dark:to-[#0C172B]">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 space-y-1.5" dir="rtl">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {!isHomework ? (
+                            <>
+                              <span className="inline-flex items-center gap-1.5 font-black text-slate-800 dark:text-slate-100">
+                                <span className={`h-2 w-2 rounded-full ${progressPct === 100 ? "bg-emerald-500" : "bg-blue-600 animate-pulse"}`} />
+                                التقدم: <span className="font-mono text-blue-600 dark:text-blue-400">{answeredQ} / {totalQ}</span>
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full font-mono font-black text-[10px] ${
+                                progressPct === 100
+                                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                              }`}>
+                                {progressPct}%
+                              </span>
+                              {totalQ - answeredQ > 0 && (
+                                <span className="text-slate-500 dark:text-slate-400 font-bold">
+                                  (فاضل {totalQ - answeredQ})
+                                </span>
+                              )}
+                              {flaggedCount > 0 && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px]">
+                                  <Flag className="h-2.5 w-2.5 fill-current" />
+                                  {flaggedCount} للمراجعة
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 font-black text-amber-700 dark:text-amber-300">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>وقتك شغال للواجب — ركّز وخلّص على مهلك</span>
+                            </span>
+                          )}
+                        </div>
+                        {liveMotivation && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 truncate max-w-full sm:max-w-md">
+                            <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                            <span className="truncate">{liveMotivation}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Smooth Animated Progress Bar */}
+                      <div className="h-2 w-full rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden p-[1px]">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ease-out relative ${
+                            isHomework && quizTimeRemaining !== null && effectiveDurationMinutes
+                              ? quizTimeRemaining <= 60
+                                ? "bg-gradient-to-l from-rose-500 to-red-600"
+                                : quizTimeRemaining <= 300
+                                ? "bg-gradient-to-l from-amber-400 to-orange-500"
+                                : "bg-gradient-to-l from-amber-500 via-orange-500 to-amber-400"
+                              : progressPct === 100
+                              ? "bg-gradient-to-l from-emerald-500 to-teal-500"
+                              : "bg-gradient-to-l from-sky-500 via-blue-600 to-indigo-600"
+                          }`}
+                          style={{
+                            width: `${
+                              isHomework && quizTimeRemaining !== null && effectiveDurationMinutes
+                                ? Math.max(2, Math.min(100, (quizTimeRemaining / (effectiveDurationMinutes * 60)) * 100))
+                                : Math.max(progressPct > 0 ? 4 : 0, progressPct)
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Thin Countdown Bar for Online Exams */}
+                {!isHomework && quizTimeRemaining !== null && !quizResult && effectiveDurationMinutes && (
                   <div className="h-1 w-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
                     <div
                       className={`h-full transition-all duration-1000 ease-linear ${
-                        quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-blue-600"
+                        quizTimeRemaining <= 60 ? "bg-red-500" : quizTimeRemaining <= 300 ? "bg-amber-500" : "bg-blue-600"
                       }`}
-                      style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
+                      style={{ width: `${Math.max(0, Math.min(100, (quizTimeRemaining / (effectiveDurationMinutes * 60)) * 100))}%` }}
                     />
                   </div>
                 )}
@@ -2238,9 +2358,17 @@ export function StudentPlatform() {
                       {quizResult.passed ? "مبروك يا بطل! نجحت في الاختبار 🎉" : "معلش يا بطل، لسه محتاج تراجع شوية 💪"}
                     </strong>
 
-                    <p className="mt-1.5 text-xs md:text-sm font-semibold opacity-90 max-w-md mx-auto">
+                    {resultMotivation && (
+                      <div className="mt-3 mx-auto max-w-lg rounded-2xl bg-white/85 dark:bg-[#0F1D32]/90 border border-current/15 px-4 py-2.5 shadow-sm">
+                        <p className="text-sm md:text-base font-black text-slate-900 dark:text-white leading-relaxed">
+                          {resultMotivation}
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="mt-2 text-xs md:text-sm font-semibold opacity-90 max-w-md mx-auto">
                       {quizResult.passed
-                        ? "عاش جداً! نتيجتك اتحفظت في حسابك خلاص."
+                        ? "نتيجتك اتحفظت في حسابك خلاص."
                         : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، راجع الأسئلة اللي تحت وجرب تاني.`}
                     </p>
 
@@ -2304,7 +2432,7 @@ export function StudentPlatform() {
                           📌 تعليمات تسليم الواجب: تسليم يدوي ورقي بالحصة
                         </h4>
                         <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed font-medium">
-                          هذا الواجب مخصص للمذاكرة والتطبيق الورقي؛ يُرجى نقل وحل الأسئلة في كشكول الواجب الخاص بك، لتسليمها باليد لمساعد المعلم في موعد الحصة القادمة بالسنتر. لست بحاجة لكتابة الإجابات أو تسليمها إلكترونياً على المنصة.
+                          الواجب ده للمذاكرة والتطبيق الورقي؛ انقل وحل الأسئلة في كشكول الواجب بتاعك وسلمه باليد في الحصة الجاية بالسنتر. عندك مؤقت فوق يساعدك تضبط وقت الحل!
                         </p>
                       </div>
                     </div>

@@ -17,6 +17,7 @@ import {
   Eye,
 } from "lucide-react";
 import type { Quiz } from "@/types/platform";
+import { formatExamDayAndTime, getEffectiveQuizDurationMinutes } from "@/lib/motivationMessages";
 
 interface HomeworkTabProps {
   homework: Quiz[];
@@ -176,6 +177,8 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
           {filteredHomework.map((hw) => {
             const isLocked = Boolean(hw.locked);
             const questionsCount = hw.questionsToShow && hw.questionsToShow > 0 ? hw.questionsToShow : hw.questions.length;
+            const effectiveDuration = getEffectiveQuizDurationMinutes(hw);
+            const hwDateInfo = formatExamDayAndTime(hw.createdAt);
 
             return (
               <article
@@ -183,18 +186,34 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
                 className="group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200 overflow-hidden border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-amber-500/50"
               >
                 <div className="space-y-3">
-                  {/* Top Status & Questions Count */}
-                  <div className="flex items-center justify-between gap-2">
+                  {/* Top Status, Timer & Questions Count */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80">
                       <BookCheck className="h-3.5 w-3.5 text-amber-600" />
                       <span>تسليم يدوي ورقي 📝</span>
                     </span>
 
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                      <BookOpen className="h-3.5 w-3.5 text-amber-600" />
-                      <span>{questionsCount} سؤال</span>
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {effectiveDuration && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/90 dark:bg-amber-950/50 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
+                          <Clock className="h-3 w-3 text-amber-500" />
+                          <span className="font-mono tabular-nums">{effectiveDuration}</span> دقيقة
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+                        <span>{questionsCount} سؤال</span>
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Day & Time Badge */}
+                  {hwDateInfo && (
+                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                      <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>{hwDateInfo.fullLabel}</span>
+                    </div>
+                  )}
 
                   {/* Title */}
                   <h3
