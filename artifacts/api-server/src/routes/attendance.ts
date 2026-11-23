@@ -68,9 +68,25 @@ function normalizeArabicText(str?: string | null): string {
     .trim();
 }
 
+function canonicalizeCenterName(raw?: string | null): string {
+  if (!raw) return "بدون سنتر محدد";
+  const trimmed = String(raw).trim();
+  if (!trimmed || trimmed.toLowerCase() === "null") return "بدون سنتر محدد";
+  const norm = normalizeArabicText(trimmed);
+  if (norm.includes("رافال") || norm.includes("rafal")) return "سنتر رافال (Rafal) - عربي";
+  if (norm.includes("زاج") || norm.includes("zag")) return "سنتر زاج (Zag) - عربي";
+  if (norm.includes("فيوتشر") || norm.includes("future")) return "سنتر فيوتشر (Future) - عربي";
+  if (norm.includes("المجد") || norm.includes("مجد") || norm.includes("magd")) return "سنتر المجد (El-Magd) - لغات";
+  if (norm.includes("حناوي") || norm.includes("hennawy") || norm.includes("hannawy")) return "سنتر الحناوي - لغات";
+  if (norm.includes("قنايات") || norm.includes("qanayat")) return "سنتر القنايات - عربي";
+  if (norm.includes("اديوفيرس") || norm.includes("eduverse")) return "سنتر إديوفيرس (EduVerse) - لغات";
+  return trimmed;
+}
+
 function matchesCenterQuery(centerValue: string | null | undefined, query: string): boolean {
   const normQuery = normalizeArabicText(query);
   if (!normQuery) return true;
+  if (canonicalizeCenterName(centerValue) === canonicalizeCenterName(query)) return true;
   const c = normalizeArabicText(centerValue);
   if (!c) return false;
   if (c === normQuery || c.includes(normQuery) || normQuery.includes(c)) return true;
@@ -172,9 +188,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       centerOverride &&
       centerOverride !== "all" &&
       enrolledCenter &&
-      centerOverride.trim() !== enrolledCenter.trim() &&
-      !centerOverride.includes(enrolledCenter.trim()) &&
-      !enrolledCenter.includes(centerOverride.trim())
+      canonicalizeCenterName(centerOverride) !== canonicalizeCenterName(enrolledCenter)
     );
 
     // Check if attendance already recorded today for this student
@@ -699,17 +713,19 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
     }>();
 
     const getGroupKey = (c?: string | null, s?: string | null) => {
-      const center = (c && c.trim()) || "بدون سنتر محدد";
-      const slot = (s && s.trim()) || "بدون موعد محدد";
+      const center = canonicalizeCenterName(c);
+      const slot = normalizeSlot(s) || "بدون موعد محدد";
       return `${center}:::${slot}`;
     };
 
     const getOrCreateGroupEntry = (center: string, slot: string) => {
-      const key = getGroupKey(center, slot);
+      const canonicalCenter = canonicalizeCenterName(center);
+      const canonicalSlot = normalizeSlot(slot) || "بدون موعد محدد";
+      const key = `${canonicalCenter}:::${canonicalSlot}`;
       if (!groupStatsMap.has(key)) {
         groupStatsMap.set(key, {
-          centerName: (center && center.trim()) || "بدون سنتر محدد",
-          appointmentSlot: (slot && slot.trim()) || "بدون موعد محدد",
+          centerName: canonicalCenter,
+          appointmentSlot: canonicalSlot,
           totalEnrolled: 0,
           presentCount: 0,
           absentCount: 0,

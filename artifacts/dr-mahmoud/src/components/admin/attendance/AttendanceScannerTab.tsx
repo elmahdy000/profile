@@ -304,8 +304,14 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   const activeSessionStats = useMemo(() => {
     if (selectedCenter !== "all" || selectedSlot !== "all") {
       const matchingGroups = groupBreakdown.filter((g) => {
-        const matchesCenter = selectedCenter === "all" || g.centerName.includes(selectedCenter) || selectedCenter.includes(g.centerName);
-        const matchesSlot = selectedSlot === "all" || normalizeSlotName(g.appointmentSlot) === normalizeSlotName(selectedSlot);
+        const matchesCenter =
+          selectedCenter === "all" ||
+          normalizeCenterName(g.centerName) === normalizeCenterName(selectedCenter) ||
+          g.centerName.includes(selectedCenter) ||
+          selectedCenter.includes(g.centerName);
+        const matchesSlot =
+          selectedSlot === "all" ||
+          normalizeSlotName(g.appointmentSlot) === normalizeSlotName(selectedSlot);
         return matchesCenter && matchesSlot;
       });
 
@@ -942,18 +948,32 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     }
   };
 
-  // Bulk mark unmarked students as absent (supports scoping by stage, center, or group slot)
+  // Bulk mark unmarked students as absent (scoped strictly to the active center/slot!)
   const handleBulkMarkAbsent = async () => {
-    if (stats.unmarkedCount === 0) {
-      toast({ title: "لا يوجد طلاب متبقين لتسجيل غيابهم" });
+    const effectiveCenter = activeTab === "scanner" ? selectedCenter : centerFilter;
+    const effectiveSlot = activeTab === "scanner" ? selectedSlot : slotFilter;
+
+    if (effectiveCenter === "all" && effectiveSlot === "all") {
+      toast({
+        variant: "destructive",
+        title: "اختر السنتر أو المجموعة أولاً",
+        description: "لتفادي تسجيل غياب لسناتر أخرى ليس لها حصة اليوم، اختر السنتر والمجموعة أولاً.",
+      });
       return;
     }
 
-    const scopeDesc = slotFilter !== "all"
-      ? `لمجموعة [${slotFilter}]`
-      : centerFilter !== "all"
-      ? `لسنتر [${centerFilter}]`
-      : "لكافة الطلاب المتبقين في كشف اليومية";
+    const targetUnmarked = activeTab === "scanner" ? activeSessionStats.unmarked : stats.unmarkedCount;
+    if (targetUnmarked === 0) {
+      toast({ title: "لا يوجد طلاب متبقين لتسجيل غيابهم في هذه المجموعة" });
+      return;
+    }
+
+    const scopeDesc =
+      effectiveSlot !== "all" && effectiveCenter !== "all"
+        ? `لمجموعة [${effectiveSlot}] في [${effectiveCenter}]`
+        : effectiveSlot !== "all"
+        ? `لمجموعة [${effectiveSlot}]`
+        : `لسنتر [${effectiveCenter}]`;
 
     const confirmMsg = `هل تريد تسجيل الغياب للطلاب المتبقين ${scopeDesc} ليوم ${selectedDate}؟`;
     if (!window.confirm(confirmMsg)) return;
@@ -968,8 +988,8 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
         body: JSON.stringify({
           date: selectedDate,
           grade: gradeFilter !== "all" ? gradeFilter : undefined,
-          center: centerFilter !== "all" ? centerFilter : undefined,
-          slot: slotFilter !== "all" ? slotFilter : undefined,
+          center: effectiveCenter !== "all" ? effectiveCenter : undefined,
+          slot: effectiveSlot !== "all" ? effectiveSlot : undefined,
           notifyParents,
         }),
       });
@@ -1342,32 +1362,44 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
             </div>
           </div>
 
-          {/* Dedicated Bulk Action Banner when unmarked students exist */}
-          {stats.unmarkedCount > 0 && (
-            <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/90 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-3">
-                <span className="p-2 rounded-xl bg-purple-600 text-white shadow-xs shrink-0">
-                  <UserX className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="text-xs sm:text-sm font-black text-purple-950">
-                    يوجد {stats.unmarkedCount} طالب في انتظار رصد الحضور
-                  </p>
-                  <p className="text-[11px] text-purple-700/90 font-medium">
-                    يمكنك بنقرة واحدة تحويل جميع الطلاب المتبقين الذين لم يحضروا بعد إلى غياب رسمي
-                  </p>
+          {/* Dedicated Bulk Action Banner — ONLY scoped to the actively selected center/group */}
+          {(() => {
+            const scopedCenter = activeTab === "scanner" ? selectedCenter : centerFilter;
+            const scopedSlot = activeTab === "scanner" ? selectedSlot : slotFilter;
+            const hasScope = scopedCenter !== "all" || scopedSlot !== "all";
+            const scopedUnmarked =
+              activeTab === "scanner"
+                ? activeSessionStats.unmarked
+                : filteredRecords.filter((r) => r.status === "unmarked").length;
+
+            if (!hasScope || scopedUnmarked <= 0) return null;
+
+            return (
+              <div className="bg-purple-50/70 border border-purple-200/90 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 rounded-xl bg-purple-600 text-white shadow-xs shrink-0">
+                    <UserX className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-xs sm:text-sm font-black text-purple-950">
+                      يوجد {scopedUnmarked} طالب متبقي في {scopedSlot !== "all" ? scopedSlot : scopedCenter}
+                    </p>
+                    <p className="text-[11px] text-purple-700/90 font-medium">
+                      تسجيل غياب لمتبقي هذه المجموعة فقط (بدون المساس بباقي السناتر)
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleBulkMarkAbsent}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm shadow-purple-600/20 transition-all shrink-0 cursor-pointer"
+                >
+                  <UserX className="h-3.5 w-3.5" />
+                  <span>تسجيل متبقي المجموعة غياب ({scopedUnmarked})</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleBulkMarkAbsent}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm shadow-purple-600/20 transition-all shrink-0 cursor-pointer"
-              >
-                <UserX className="h-3.5 w-3.5" />
-                <span>تسجيل المتبقين غياب ({stats.unmarkedCount})</span>
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
