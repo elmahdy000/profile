@@ -301,16 +301,81 @@ export function KholasaLessonsTab({
     const showZatonaTab = isLanguagesTrack && hasZatonaContent(activeMaterial);
     const showSectionsTab = isLanguagesTrack && hasSections;
 
-    const subTabs: Array<{ id: LessonStudyTab; label: string; icon: typeof Sparkles }> = [
-      { id: "explanation", label: "شرح الدرس 📖", icon: FileText },
-      { id: "video", label: "فيديو الشرح", icon: Video },
-      { id: "definitions", label: `التعريفات والمفاهيم (${defsCount})`, icon: BookOpen },
-      ...(showZatonaTab ? [{ id: "summary" as const, label: "أهم النقاط (الزتونة) ⚡", icon: Sparkles }] : []),
-      { id: "mindmap", label: `الخرائط الذهنية (${activeMaterial.mindmapImages?.length || 0})`, icon: MapIcon },
-      { id: "flashcards", label: `التسميع (${activeMaterial.flashcards?.length || 0})`, icon: Layers },
-      { id: "questions", label: `بنك أسئلة الدرس (${totalQuestions})`, icon: HelpCircle },
-      ...(showSectionsTab ? [{ id: "sections" as const, label: "الشرح المفصل", icon: FileText }] : []),
+    const subTabs: Array<{
+      id: LessonStudyTab;
+      label: string;
+      meta: string;
+      icon: typeof Sparkles;
+      iconTint: string;
+    }> = [
+      {
+        id: "explanation",
+        label: "شرح الدرس",
+        meta: "قراءة منسّقة",
+        icon: FileText,
+        iconTint: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      },
+      {
+        id: "video",
+        label: "فيديو الشرح",
+        meta: activeMaterial.video?.durationText || (activeMaterial.video ? "شاهد الآن" : "قريباً"),
+        icon: Video,
+        iconTint: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+      },
+      {
+        id: "definitions",
+        label: "التعريفات والمفاهيم",
+        meta: `${defsCount} مفهوم`,
+        icon: BookOpen,
+        iconTint: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+      },
+      ...(showZatonaTab
+        ? [
+            {
+              id: "summary" as const,
+              label: "الزتونة",
+              meta: "أهم النقاط",
+              icon: Sparkles,
+              iconTint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+            },
+          ]
+        : []),
+      {
+        id: "mindmap",
+        label: "الخرائط الذهنية",
+        meta: `${activeMaterial.mindmapImages?.length || 0} خريطة`,
+        icon: MapIcon,
+        iconTint: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+      },
+      {
+        id: "flashcards",
+        label: "التسميع",
+        meta: `${activeMaterial.flashcards?.length || 0} كارت`,
+        icon: Layers,
+        iconTint: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+      },
+      {
+        id: "questions",
+        label: "أسئلة الدرس",
+        meta: `${totalQuestions} سؤال`,
+        icon: HelpCircle,
+        iconTint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      },
+      ...(showSectionsTab
+        ? [
+            {
+              id: "sections" as const,
+              label: "الشرح المفصل",
+              meta: `${activeMaterial.structuredSections?.length || 0} فقرات`,
+              icon: FileText,
+              iconTint: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
+            },
+          ]
+        : []),
     ];
+
+    const desktopGridCols =
+      subTabs.length <= 6 ? "lg:grid-cols-6" : "lg:grid-cols-4";
 
     return (
       <div className="space-y-5 text-right" dir="rtl">
@@ -406,23 +471,45 @@ export function KholasaLessonsTab({
           </div>
         </div>
 
-        {/* Organized 6-Tab Study Bar */}
-        <div className="flex overflow-x-auto gap-1.5 rounded-2xl border border-border bg-card p-1.5">
-          {subTabs.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setStudyTab(id)}
-              className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-bold transition cursor-pointer ${
-                studyTab === id
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span>{label}</span>
-            </button>
-          ))}
+        {/* Clean Responsive Study Grid (Flat, Zero Gradients) */}
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${desktopGridCols} gap-2.5`}>
+          {subTabs.map(({ id, label, meta, icon: Icon, iconTint }) => {
+            const isActive = studyTab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setStudyTab(id)}
+                className={`group relative flex items-center gap-2.5 rounded-2xl border p-3 text-right transition-colors cursor-pointer ${
+                  isActive
+                    ? "border-primary bg-primary/[0.06] ring-1 ring-primary/20 shadow-2xs"
+                    : "border-border bg-card hover:border-primary/35 hover:bg-muted/40"
+                }`}
+              >
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : iconTint
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={`text-xs font-black leading-snug truncate ${
+                      isActive ? "text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {label}
+                  </div>
+                  <div className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">
+                    {meta}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab Body */}
