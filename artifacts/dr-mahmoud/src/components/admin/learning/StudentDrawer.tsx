@@ -186,6 +186,7 @@ export function StudentDrawer({
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"overview" | "payments" | "summaries" | "courses" | "attendance" | "quizzes" | "files" | "security">("overview");
   const [copied, setCopied] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [localStudent, setLocalStudent] = useState<ExtendedStudent | null>(student);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -471,29 +472,44 @@ export function StudentDrawer({
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
 
         {/* Drawer Panel */}
-        <div className="relative z-10 flex h-full w-full flex-col overflow-hidden border border-[#E2E8F0] bg-white text-[#0F172A] shadow-2xl sm:h-[calc(100vh-2rem)] sm:max-w-6xl sm:rounded-[28px] lg:h-[min(900px,calc(100vh-3rem))]">
+        <div className="relative z-10 flex h-full w-full flex-col overflow-hidden border border-border bg-card text-foreground shadow-2xl sm:h-[calc(100vh-2rem)] sm:max-w-6xl sm:rounded-[28px] lg:h-[min(900px,calc(100vh-3rem))]">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 sm:px-7 sm:py-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] text-xl font-bold text-[#2563EB]">
-                {student.name.charAt(0)}
-              </div>
+          <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-4 sm:px-7 sm:py-5">
+            <div className="flex items-center gap-3.5">
+              {student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null" ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoModal(true)}
+                  title="اضغط لتكبير صورة الطالب"
+                  className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-muted shadow-xs hover:border-blue-600 transition cursor-zoom-in"
+                >
+                  <img
+                    src={student.avatarUrl}
+                    alt={student.name}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ) : (
+                <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 text-xl font-bold text-blue-600 dark:text-blue-400">
+                  <span>{student.name.charAt(0)}</span>
+                </div>
+              )}
               <div>
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-bold text-[#0F172A] sm:text-xl">{student.name}</h2>
-                  <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${student.status === "approved" ? "border-[#A7F3D0] bg-[#ECFDF5] text-[#10B981]" : student.status === "suspended" ? "border-red-200 bg-red-50 text-red-600" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+                  <h2 className="text-lg font-bold text-foreground sm:text-xl">{student.name}</h2>
+                  <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${student.status === "approved" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : student.status === "suspended" ? "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300" : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"}`}>
                     {student.status === "approved" ? "حساب نشط" : student.status === "suspended" ? "حساب موقوف" : "بانتظار التفعيل"}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#64748B]">
-                  <span className="dir-ltr text-[#2563EB] font-mono font-semibold">{student.phone}</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="dir-ltr text-blue-600 dark:text-blue-400 font-mono font-semibold">{student.phone}</span>
                   {student.accessCode && (
                     <button
                       type="button"
                       onClick={handleCopyCode}
-                      className="inline-flex items-center gap-1 rounded bg-[#F1F5F9] border border-[#E2E8F0] px-2 py-0.5 text-[11px] font-mono text-[#2563EB] hover:bg-[#E2E8F0]"
+                      className="inline-flex items-center gap-1 rounded bg-muted border border-border px-2 py-0.5 text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:bg-muted/80 cursor-pointer"
                     >
-                      {copied ? <Check className="h-3 w-3 text-[#10B981]" /> : <Copy className="h-3 w-3" />}
+                      {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                       <span>{student.accessCode}</span>
                     </button>
                   )}
@@ -505,14 +521,14 @@ export function StudentDrawer({
               type="button"
               onClick={onClose}
               aria-label="إغلاق ملف الطالب"
-              className="grid h-10 w-10 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#0F172A]"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-muted hover:text-foreground cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Sub-Header Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 sm:px-7">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-7">
             <div className="flex flex-wrap items-center gap-2">
               {student.status !== "approved" ? (
                 <Button
@@ -729,29 +745,29 @@ export function StudentDrawer({
                         </button>
                       )}
                     </div>
-                    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
-                      <span className="text-[11px] text-[#64748B]">السنتر المختار</span>
+                    <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
+                      <span className="block text-[11px] font-semibold text-muted-foreground">السنتر المختار</span>
                       {resolvedCenterName ? (
-                        <p className="text-xs font-bold text-[#10B981]">{resolvedCenterName}</p>
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{resolvedCenterName}</p>
                       ) : (
                         <button
                           type="button"
                           onClick={handleOpenEditBooking}
-                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-[#A7F3D0] bg-[#ECFDF5] px-2 py-1 text-xs font-bold text-[#10B981] hover:bg-[#D1FAE5]"
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5" /> حدد السنتر الآن
                         </button>
                       )}
                     </div>
-                    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
-                      <span className="text-[11px] text-[#64748B]">الموعد المتاح</span>
+                    <div className="rounded-2xl border border-border bg-muted/40 p-4 space-y-2">
+                      <span className="block text-[11px] font-semibold text-muted-foreground">الموعد المتاح</span>
                       {resolvedAppointmentSlot ? (
-                        <p className="text-xs font-bold text-amber-800">{resolvedAppointmentSlot}</p>
+                        <p className="text-xs font-bold text-amber-700 dark:text-amber-300">{resolvedAppointmentSlot}</p>
                       ) : (
                         <button
                           type="button"
                           onClick={handleOpenEditBooking}
-                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 hover:bg-amber-100"
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 cursor-pointer"
                         >
                           <Plus className="h-3.5 w-3.5" /> حدد موعد الحضور
                         </button>
@@ -1542,6 +1558,37 @@ export function StudentDrawer({
           onStudentUpdated?.(updatedStudent);
         }}
       />
+      {/* Full-Size Student Photo Modal */}
+      {showPhotoModal && student.avatarUrl && (
+        <div
+          className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 p-4"
+          dir="rtl"
+          onClick={() => setShowPhotoModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl border border-border bg-card shadow-2xl overflow-hidden text-right"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-slate-950 aspect-square w-full flex items-center justify-center overflow-hidden">
+              <img src={student.avatarUrl} alt={student.name} className="h-full w-full object-contain" />
+              <button
+                type="button"
+                onClick={() => setShowPhotoModal(false)}
+                className="absolute top-3 left-3 h-9 w-9 rounded-full bg-black/70 hover:bg-black text-white grid place-items-center cursor-pointer"
+                title="إغلاق"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <h3 className="text-sm font-black text-foreground">{student.name}</h3>
+              <p className="text-xs text-muted-foreground font-mono mt-0.5" dir="ltr">
+                {student.accessCode || student.phone}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

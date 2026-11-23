@@ -107,8 +107,8 @@ export function StudentNotificationsModal({
       dir="rtl"
     >
       <div className="w-full max-w-lg max-h-[88vh] flex flex-col rounded-3xl border-2 border-blue-500/40 bg-card shadow-2xl overflow-hidden text-right">
-        {/* Header */}
-        <div className="shrink-0 bg-gradient-to-l from-blue-600 via-indigo-600 to-violet-600 px-5 py-4 text-white flex items-center justify-between gap-3">
+        {/* Header (Flat Solid Color — No Gradient) */}
+        <div className="shrink-0 bg-blue-600 dark:bg-blue-700 px-5 py-4 text-white flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/20 border border-white/30">
               <BellRing className="h-5 w-5 animate-bounce" />

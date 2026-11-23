@@ -2245,9 +2245,9 @@ export function StudentPlatform() {
                   </div>
                 </div>
 
-                {/* Distinctive Progress Indicator + Live Unique Motivation */}
+                {/* Distinctive Progress Indicator + Live Unique Motivation (Flat Solid Colors) */}
                 {!quizResult && totalQ > 0 && (
-                  <div className="border-t border-slate-200/70 dark:border-slate-800/80 bg-gradient-to-l from-blue-50/50 via-white to-indigo-50/40 dark:from-[#0A1324] dark:via-[#070D18] dark:to-[#0C172B]">
+                  <div className="border-t border-slate-200/70 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0A1324]">
                     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 space-y-1.5" dir="rtl">
                       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -2297,13 +2297,13 @@ export function StudentPlatform() {
                           className={`h-full rounded-full transition-all duration-500 ease-out relative ${
                             isHomework && quizTimeRemaining !== null && effectiveDurationMinutes
                               ? quizTimeRemaining <= 60
-                                ? "bg-gradient-to-l from-rose-500 to-red-600"
+                                ? "bg-rose-600"
                                 : quizTimeRemaining <= 300
-                                ? "bg-gradient-to-l from-amber-400 to-orange-500"
-                                : "bg-gradient-to-l from-amber-500 via-orange-500 to-amber-400"
+                                ? "bg-amber-500"
+                                : "bg-amber-500"
                               : progressPct === 100
-                              ? "bg-gradient-to-l from-emerald-500 to-teal-500"
-                              : "bg-gradient-to-l from-sky-500 via-blue-600 to-indigo-600"
+                              ? "bg-emerald-600"
+                              : "bg-blue-600"
                           }`}
                           style={{
                             width: `${

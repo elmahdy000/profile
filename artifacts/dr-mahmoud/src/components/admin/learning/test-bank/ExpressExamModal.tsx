@@ -542,8 +542,8 @@ export function ExpressExamModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-3xl max-h-[93vh] flex flex-col rounded-3xl border border-slate-200 dark:border-slate-800 bg-card shadow-2xl overflow-hidden text-right">
-        {/* Top Header */}
-        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-border bg-gradient-to-l from-slate-900 via-slate-900 to-amber-950/90 text-white">
+        {/* Top Header (Flat Solid Surface) */}
+        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-border bg-slate-900 dark:bg-[#0D1626] text-white">
           <div className="flex items-center gap-3 min-w-0">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-amber-400/20 border border-amber-400/30 text-amber-300">
               <Zap className="h-5 w-5 fill-amber-400" />

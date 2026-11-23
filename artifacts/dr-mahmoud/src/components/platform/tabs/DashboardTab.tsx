@@ -876,25 +876,25 @@ export function DashboardTab({
 
         return (
           <div
-            className="rounded-3xl border border-blue-500/25 bg-gradient-to-l from-slate-900 via-blue-950 to-indigo-950 text-white p-5 sm:p-6 shadow-lg relative overflow-hidden space-y-4"
+            className="rounded-3xl border border-border bg-card dark:bg-[#0D1626] text-foreground p-5 sm:p-6 shadow-sm space-y-4"
             dir="rtl"
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="shrink-0 ring-2 ring-amber-400/60 rounded-full p-0.5">
+                <div className="shrink-0 ring-2 ring-blue-500/40 rounded-full p-0.5">
                   <StudentAvatar name={student.name} src={student.avatarUrl} size="md" />
                 </div>
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black border ${rankBadge.cls} bg-white/10 text-amber-200 border-amber-400/30`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black border ${rankBadge.cls}`}>
                       {rankBadge.label}
                     </span>
-                    <span className="text-[11px] font-bold text-blue-200/90">
+                    <span className="text-[11px] font-bold text-muted-foreground">
                       ملخص شغلك على المنصة
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm font-black text-white leading-relaxed flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
+                  <p className="text-xs sm:text-sm font-black text-foreground leading-relaxed flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
                     <span>{dashMotivation}</span>
                   </p>
                 </div>
@@ -903,7 +903,7 @@ export function DashboardTab({
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <a
                   href="/honor-board"
-                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition shadow-sm"
+                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition shadow-2xs"
                 >
                   <Trophy className="h-4 w-4" />
                   <span>لوحة الشرف 🏆</span>
@@ -912,59 +912,59 @@ export function DashboardTab({
                   <button
                     type="button"
                     onClick={() => onOpen("mistakes")}
-                    className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-100 border border-rose-400/30 text-xs font-black transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-black transition cursor-pointer"
                   >
-                    <Target className="h-4 w-4 text-rose-300" />
+                    <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                     <span>راجع أخطاءك ({unresolvedMistakesCount})</span>
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Activity Breakdown Tiles */}
+            {/* Activity Breakdown Tiles (Flat Solid Colors — Clean Light & Dark Mode) */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-blue-200">إنجاز الدروس</span>
-                <strong className="text-lg font-black font-mono text-white">
-                  {completedLessonsCount} <span className="text-xs text-blue-200/80">/ {safeVideos.length}</span>
+              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-muted-foreground">إنجاز الدروس</span>
+                <strong className="text-lg font-black font-mono text-foreground">
+                  {completedLessonsCount} <span className="text-xs text-muted-foreground">/ {safeVideos.length}</span>
                 </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
-                  <div className="h-full rounded-full bg-sky-400" style={{ width: `${Math.min(100, averageProgress)}%` }} />
+                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div className="h-full rounded-full bg-blue-600 dark:bg-blue-500" style={{ width: `${Math.min(100, averageProgress)}%` }} />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-blue-200">امتحانات حلّيتها</span>
-                <strong className="text-lg font-black font-mono text-white">
-                  {completedQuizzesCount} <span className="text-xs text-blue-200/80">/ {safeQuizzes.length}</span>
+              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-muted-foreground">امتحانات حلّيتها</span>
+                <strong className="text-lg font-black font-mono text-foreground">
+                  {completedQuizzesCount} <span className="text-xs text-muted-foreground">/ {safeQuizzes.length}</span>
                 </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
+                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-emerald-400"
+                    className="h-full rounded-full bg-emerald-600 dark:bg-emerald-500"
                     style={{ width: `${safeQuizzes.length > 0 ? Math.min(100, Math.round((completedQuizzesCount / safeQuizzes.length) * 100)) : 0}%` }}
                   />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-blue-200">متوسط درجاتك</span>
-                <strong className="text-lg font-black font-mono text-amber-300">
+              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-muted-foreground">متوسط درجاتك</span>
+                <strong className="text-lg font-black font-mono text-amber-600 dark:text-amber-400">
                   {attemptedQuizzes.length > 0 ? `${realAverageResult}%` : "ابدأ أول امتحان"}
                 </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-white/15 overflow-hidden">
+                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-amber-400"
+                    className="h-full rounded-full bg-amber-500"
                     style={{ width: `${attemptedQuizzes.length > 0 ? Math.min(100, realAverageResult) : 0}%` }}
                   />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-blue-200">بنك الأخطاء</span>
-                <strong className="text-lg font-black font-mono text-white">
+              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
+                <span className="block text-[10.5px] font-bold text-muted-foreground">بنك الأخطاء</span>
+                <strong className="text-lg font-black font-mono text-foreground">
                   {unresolvedMistakesCount === 0 ? "0 ✓" : `${unresolvedMistakesCount} سؤال`}
                 </strong>
-                <span className="block text-[10px] font-bold text-blue-200/80 mt-0.5">
+                <span className="block text-[10px] font-bold text-muted-foreground mt-0.5">
                   {unresolvedMistakesCount === 0 ? "ممتاز! مفيش أخطاء متراكمة" : "اضغط فوق وراجعهم"}
                 </span>
               </div>
@@ -972,22 +972,22 @@ export function DashboardTab({
 
             {/* Latest Exam Scores Strip */}
             {recentAttempted.length > 0 && (
-              <div className="pt-2 border-t border-white/10 space-y-2">
-                <div className="text-[11px] font-black text-blue-200">آخر امتحاناتك ودرجاتك:</div>
+              <div className="pt-2.5 border-t border-border space-y-2">
+                <div className="text-[11px] font-black text-muted-foreground">آخر امتحاناتك ودرجاتك:</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {recentAttempted.map((qz) => {
                     const sc = Math.round(Number(qz.bestScore || 0));
                     return (
-                      <div key={qz.id} className="rounded-xl bg-white/8 border border-white/10 px-3 py-2 space-y-1">
+                      <div key={qz.id} className="rounded-xl bg-muted/40 dark:bg-[#132036] border border-border px-3 py-2 space-y-1">
                         <div className="flex items-center justify-between gap-2 text-[11px]">
-                          <span className="font-bold text-white truncate">{qz.title}</span>
-                          <span className={`font-mono font-black shrink-0 ${sc >= qz.passingScore ? "text-emerald-300" : "text-rose-300"}`}>
+                          <span className="font-bold text-foreground truncate">{qz.title}</span>
+                          <span className={`font-mono font-black shrink-0 ${sc >= qz.passingScore ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             {sc}%
                           </span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${sc >= qz.passingScore ? "bg-emerald-400" : "bg-rose-400"}`}
+                            className={`h-full rounded-full ${sc >= qz.passingScore ? "bg-emerald-600 dark:bg-emerald-500" : "bg-rose-600 dark:bg-rose-500"}`}
                             style={{ width: `${Math.min(100, sc)}%` }}
                           />
                         </div>

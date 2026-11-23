@@ -736,8 +736,8 @@ export function TestBankTab({
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      {/* Compact Modern Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-slate-900 via-slate-900 to-teal-950 p-4 sm:p-5 text-white shadow-md border border-slate-800">
+      {/* Compact Modern Header Banner (Flat Solid Surface) */}
+      <div className="relative overflow-hidden rounded-2xl bg-slate-900 dark:bg-[#0D1626] p-4 sm:p-5 text-white shadow-sm border border-slate-800">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">

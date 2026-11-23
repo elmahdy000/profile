@@ -867,11 +867,11 @@ export function StudentsTab({
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 text-slate-400 gap-1.5">
-                        <span className="h-14 w-14 rounded-2xl bg-white border border-slate-200 grid place-items-center text-2xl font-black text-blue-600 shadow-2xs">
+                      <div className="h-full w-full flex flex-col items-center justify-center bg-muted/60 text-muted-foreground gap-1.5">
+                        <span className="h-14 w-14 rounded-2xl bg-card border border-border grid place-items-center text-2xl font-black text-blue-600 dark:text-blue-400 shadow-2xs">
                           {s.name.charAt(0)}
                         </span>
-                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
                           بدون صورة
                         </span>
                       </div>
