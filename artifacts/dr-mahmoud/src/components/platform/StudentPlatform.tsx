@@ -2115,13 +2115,28 @@ export function StudentPlatform() {
             onClick={() => { setTab("lessons"); setSidebarOpen(false); }}
             aria-current={tab === "lessons" ? "page" : undefined}
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
-              tab === "lessons" || tab === "kholasa" || tab === "files"
+              tab === "lessons" || tab === "files"
                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
             <span>المذاكرة</span>
+          </button>
+
+          {/* Center: الخلاصة */}
+          <button
+            type="button"
+            onClick={() => { setTab("kholasa"); setSidebarOpen(false); }}
+            aria-current={tab === "kholasa" ? "page" : undefined}
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
+              tab === "kholasa"
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-amber-500 before:rounded-full"
+                : "text-amber-700/80 dark:text-amber-400/80 hover:text-amber-700 dark:hover:text-amber-300"
+            }`}
+          >
+            <Sparkles className={`h-[20px] w-[20px] ${tab === "kholasa" ? "stroke-[2.5]" : ""}`} />
+            <span className="font-extrabold">الخلاصة</span>
           </button>
 
           <button
@@ -2140,33 +2155,19 @@ export function StudentPlatform() {
 
           <button
             type="button"
-            onClick={() => { setTab("mistakes"); setSidebarOpen(false); }}
-            aria-current={tab === "mistakes" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
-              tab === "mistakes" || tab === "self-assessment"
-                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <BarChart3 className={`h-[20px] w-[20px] ${tab === "mistakes" ? "stroke-[2.5]" : ""}`} />
-            <span>مستوايا</span>
-            {!isUnpaid && unresolvedMistakesCount > 0 && (
-              <span className="absolute top-1.5 left-2 h-2 w-2 rounded-full bg-rose-600" aria-hidden="true" />
-            )}
-          </button>
-
-          <button
-            type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
-              sidebarOpen || ["profile", "summaries", "offline-vault", "card"].includes(tab)
+              sidebarOpen || ["mistakes", "self-assessment", "profile", "summaries", "offline-vault", "card"].includes(tab)
                 ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
             <span>المزيد</span>
+            {!isUnpaid && unresolvedMistakesCount > 0 && (
+              <span className="absolute top-1.5 left-2 h-2 w-2 rounded-full bg-rose-600" aria-hidden="true" />
+            )}
           </button>
         </div>
       </nav>
