@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { lazy, Suspense, useState, useRef, useMemo, useEffect } from "react";
 import {
   Check,
   ChevronLeft,
@@ -41,6 +41,7 @@ import { isEnglishQuestion, getOptionLabel } from "./admin/learning/TestBankTab"
 import { GlobalExamsMasterToggle } from "./admin/learning/GlobalExamsMasterToggle";
 import { QuizViewsModal } from "./admin/learning/QuizViewsModal";
 import { InlineDurationEditor } from "./admin/learning/InlineDurationEditor";
+const ExpressExamModal = lazy(() => import("./admin/learning/test-bank/ExpressExamModal"));
 
 export type Question = {
   prompt: string;
@@ -102,7 +103,7 @@ type ExamWizardProps = {
   setQuizForm: React.Dispatch<React.SetStateAction<any>>;
   editingQuizId: number | null;
   resetQuizForm: () => void;
-  createQuiz: (e: React.FormEvent) => Promise<void>;
+  createQuiz: (e: React.FormEvent, publishOverride?: boolean) => Promise<boolean | void>;
   learningCourses: Array<{ id: number; title: string; category: string; stages?: string[] }>;
   videoOptions: Array<{ id: number; title: string; category: string; courseId?: number | null; stage?: string | null; stages?: string[] }>;
   adminApi: <T>(url: string, init?: RequestInit) => Promise<T>;
@@ -157,6 +158,9 @@ export function ExamWizard({
   };
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [isOnePageMode, setIsOnePageMode] = useState<boolean>(true);
+  const [showAdvancedTarget, setShowAdvancedTarget] = useState<boolean>(false);
+  const [expressModalOpen, setExpressModalOpen] = useState<boolean>(false);
   const [questionSource, setQuestionSource] = useState<"manual" | "file" | "bank">("manual");
   const [collapsedQuestions, setCollapsedQuestions] = useState<Set<number>>(new Set());
   const [quizStageSearch, setQuizStageSearch] = useState("");
@@ -443,6 +447,9 @@ export function ExamWizard({
           );
           return {
             ...prev,
+            title: prev.title.trim()
+              ? prev.title
+              : file.name.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").trim(),
             questions: hasManualQuestion ? [...prev.questions, ...result.questions] : result.questions,
           };
         });
@@ -486,28 +493,35 @@ export function ExamWizard({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onNavigateToTestBank && (
-            <Button
-              type="button"
-              onClick={() => onNavigateToTestBank("generate")}
-              className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-black h-10 px-4 rounded-xl gap-2 shadow-xs cursor-pointer"
-            >
-              <Sparkles className="h-4 w-4 text-amber-300" />
-              المولد الذكي بالوحدات والدروس ⚡
-            </Button>
-          )}
+          <Button
+            type="button"
+            onClick={() => setExpressModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-black h-10 px-4 rounded-xl gap-2 shadow-xs cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4" />
+            توليد امتحان فوري من البنك
+          </Button>
 
           {activeViewTab === "list" ? (
             <Button
               type="button"
               onClick={() => {
                 resetQuizForm();
+                setQuizForm((prev: QuizFormState) => ({
+                  ...prev,
+                  isPublished: true,
+                  shuffleQuestions: true,
+                  showExplanations: true,
+                  durationMinutes: prev.durationMinutes || "20",
+                  maxAttempts: prev.maxAttempts || 1,
+                }));
+                setIsOnePageMode(true);
                 setActiveViewTab("create");
               }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black h-10 px-4 rounded-xl gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="h-4 w-4" />
-              إنشاء اختبار يدوي جديد ➕
+              رفع / إنشاء امتحان سريع
             </Button>
           ) : (
             <Button
@@ -528,66 +542,65 @@ export function ExamWizard({
 
       {activeViewTab === "create" && (
         <>
-          {/* Header */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          {/* Header + Mode Switcher */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-black text-slate-900 sm:text-2xl">
-                  {editingQuizId ? "تعديل الاختبار" : "إنشاء اختبار جديد"}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="text-xl font-black text-foreground sm:text-2xl">
+                  {editingQuizId ? "تعديل الاختبار" : "رفع وإنشاء امتحان جديد"}
                 </h2>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                  {quizForm.isPublished ? "منشور 🟢" : "مسودة 📝"}
+                <span className={`rounded-lg px-2.5 py-0.5 text-xs font-bold border ${
+                  quizForm.isPublished
+                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
+                    : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+                }`}>
+                  {quizForm.isPublished ? "نشر فوري للطلاب" : "مسودة"}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-                أضف بيانات الاختبار وحدد إعداداته ثم أنشئ الأسئلة بكل سهولة.
+              <p className="mt-1 text-xs text-muted-foreground">
+                اختر الدفعة بضغطة واحدة، ارفع ملف الأسئلة أو أضفها مباشرة، وانشر الامتحان فوراً.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                <Check className="h-3.5 w-3.5" /> تم الحفظ تلقائيًا
-              </span>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-xl bg-muted p-1 border border-border text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setIsOnePageMode(true)}
+                  className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                    isOnePageMode ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  الوضع السريع (شاشة واحدة)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOnePageMode(false)}
+                  className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                    !isOnePageMode ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  الوضع المتقدم (4 خطوات)
+                </button>
+              </div>
+
               <Button
-                variant="ghost"
+                type="button"
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   resetQuizForm();
                   setActiveViewTab("list");
                 }}
+                className="rounded-xl text-xs font-bold cursor-pointer"
               >
-                إلغاء والعودة
+                إلغاء
               </Button>
             </div>
           </div>
 
-      {/* Smart Quick Generator Banner for Unit & Lesson Exams */}
-      {onNavigateToTestBank && !editingQuizId && (
-        <div className="rounded-2xl border border-violet-200/90 bg-gradient-to-r from-violet-50 via-indigo-50/70 to-purple-50 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-violet-600 text-white grid place-items-center shrink-0 shadow-md shadow-violet-600/20">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">
-                تريد عمل امتحان سريع على وحدة كاملة أو دروس محددة ونشره فوراً؟ ⚡
-              </h3>
-              <p className="text-xs text-slate-600 mt-0.5">
-                اختر المرحلة والوحدة أو أي دروس محددة، وسيقوم النظام بسحب وتوزيع الأسئلة تلقائياً ونشر الامتحان مباشرة في حسابات الطلاب المؤهلين.
-              </p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            onClick={() => onNavigateToTestBank("generate")}
-            className="rounded-xl px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-black text-xs gap-1.5 shadow-md shadow-violet-600/20 active:scale-95 transition-all shrink-0 cursor-pointer"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>فتح مولد الامتحانات بالوحدات والدروس 🚀</span>
-          </Button>
-        </div>
-      )}
-
-      {/* Stepper (Desktop Horizontal Stepper) */}
+      {/* Stepper (Shown ONLY in 4-step Advanced Mode) */}
+      {!isOnePageMode && (
       <div className="hidden grid-cols-4 gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:grid">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -627,8 +640,10 @@ export function ExamWizard({
           );
         })}
       </div>
+      )}
 
       {/* Mobile Stepper */}
+      {!isOnePageMode && (
       <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:hidden">
         <div className="flex items-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary text-xs font-black text-white">
@@ -640,13 +655,264 @@ export function ExamWizard({
         </div>
         <span className="text-xs text-slate-400 font-bold">الخطوة {currentStep} من 4</span>
       </div>
+      )}
 
       <form onSubmit={async (e) => {
-        await createQuiz(e);
-        setActiveViewTab("list");
-      }}>
-        {/* STEP 1: Basic Information */}
-        {currentStep === 1 && (
+        const ok = await createQuiz(e);
+        if (ok !== false) setActiveViewTab("list");
+      }} className="space-y-6">
+        {/* ONE-PAGE EXPRESS SETUP CARD (Default Mode) */}
+        {isOnePageMode && (
+          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs space-y-5">
+            {/* 1. One-Click Target Cohort Pills */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-xs sm:text-sm font-black text-foreground">
+                  1. اختر الدفعة المستهدفة بضغطة واحدة <span className="text-rose-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedTarget((v) => !v)}
+                  className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                >
+                  {showAdvancedTarget ? "إخفاء التخصيص المتقدم" : "اختيار كورس أو مراحل أخرى"}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {[
+                  {
+                    id: "bac2_ar",
+                    label: "تانية بكالوريا — عربي (عام)",
+                    stage: "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+                    matchCourse: (t: string) => (t.includes("تانية") || t.includes("الثاني")) && (t.includes("عرب") || t.includes("عام")),
+                  },
+                  {
+                    id: "bac2_en",
+                    label: "تانية بكالوريا — لغات (Languages)",
+                    stage: "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+                    matchCourse: (t: string) => (t.includes("تانية") || t.includes("الثاني")) && (t.includes("لغات") || t.toLowerCase().includes("lang")),
+                  },
+                  {
+                    id: "bac1_ar",
+                    label: "أولى بكالوريا — عربي (عام)",
+                    stage: "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+                    matchCourse: (t: string) => (t.includes("أولى") || t.includes("الأول")) && !t.includes("لغات"),
+                  },
+                  {
+                    id: "bac1_en",
+                    label: "أولى بكالوريا — لغات (Languages)",
+                    stage: "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+                    matchCourse: (t: string) => (t.includes("أولى") || t.includes("الأول")) && t.includes("لغات"),
+                  },
+                ].map((preset) => {
+                  const isActive = quizForm.stages.length === 1 && quizForm.stages[0] === preset.stage;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => {
+                        const matched =
+                          learningCourses.find((c) => preset.matchCourse(c.title)) ||
+                          learningCourses.find((c) => c.stages?.includes(preset.stage)) ||
+                          learningCourses[0];
+                        setQuizForm((prev: QuizFormState) => ({
+                          ...prev,
+                          courseId: matched ? String(matched.id) : prev.courseId,
+                          category: matched?.title || preset.stage,
+                          scope: "course",
+                          videoId: "",
+                          stage: preset.stage,
+                          stages: [preset.stage],
+                        }));
+                      }}
+                      className={`rounded-xl border p-3 text-right text-xs font-extrabold transition cursor-pointer flex items-center justify-between gap-2 ${
+                        isActive
+                          ? "border-blue-600 bg-blue-600 text-white shadow-xs"
+                          : "border-border bg-muted/40 text-foreground hover:border-blue-500/50"
+                      }`}
+                    >
+                      <span>{preset.label}</span>
+                      {isActive && <Check className="h-4 w-4 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {quizForm.stages.length > 0 && !showAdvancedTarget && (
+                <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                  الدفعة المحددة حالياً: {quizForm.stages.map(cleanStageLabel).join(" ، ")}
+                </p>
+              )}
+            </div>
+
+            {/* 2. Title + Fast Duration + Max Attempts in One Clean Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2 border-t border-border">
+              <div className="lg:col-span-6 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-foreground">
+                    2. عنوان الاختبار <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const todayLabel = new Intl.DateTimeFormat("ar-EG", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      }).format(new Date());
+                      setQuizForm((prev: QuizFormState) => ({
+                        ...prev,
+                        title: `اختبار شامل — ${todayLabel}`,
+                      }));
+                    }}
+                    className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  >
+                    عنوان تلقائي بتاريخ اليوم
+                  </button>
+                </div>
+                <input
+                  required
+                  value={quizForm.title}
+                  onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })}
+                  placeholder="مثال: الامتحان الأول — الوحدة الأولى"
+                  className="w-full h-11 rounded-xl border border-border bg-background px-3.5 text-sm font-bold text-foreground focus:border-blue-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="lg:col-span-3 space-y-1.5">
+                <label className="text-xs font-extrabold text-foreground block">الوقت (بالدقائق)</label>
+                <div className="flex items-center gap-1.5">
+                  {[15, 20, 30, 45].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setQuizForm({ ...quizForm, durationMinutes: String(m) })}
+                      className={`h-11 flex-1 rounded-xl border text-xs font-black font-mono cursor-pointer transition ${
+                        Number(quizForm.durationMinutes) === m
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-border bg-muted/40 text-foreground hover:border-blue-500/40"
+                      }`}
+                    >
+                      {m}د
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    min={1}
+                    max={240}
+                    value={quizForm.durationMinutes}
+                    onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.value })}
+                    className="h-11 w-16 rounded-xl border border-border bg-background text-center text-xs font-mono font-black text-foreground focus:outline-none"
+                    title="تحديد دقائق مخصصة"
+                  />
+                </div>
+              </div>
+
+              <div className="lg:col-span-3 space-y-1.5">
+                <label className="text-xs font-extrabold text-foreground block">عدد المحاولات المسموحة</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { val: 1, label: "محاولة 1" },
+                    { val: 2, label: "محاولتين" },
+                    { val: 3, label: "3 محاولات" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => setQuizForm({ ...quizForm, maxAttempts: opt.val })}
+                      className={`h-11 rounded-xl border text-xs font-extrabold cursor-pointer transition ${
+                        Number(quizForm.maxAttempts) === opt.val
+                          ? "border-emerald-600 bg-emerald-600 text-white"
+                          : "border-border bg-muted/40 text-foreground hover:border-emerald-500/40"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Compact Smart Toggles Row */}
+            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-border text-xs font-bold">
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quizForm.shuffleQuestions}
+                  onChange={(e) => setQuizForm({ ...quizForm, shuffleQuestions: e.target.checked })}
+                  className="h-4 w-4 rounded border-border text-blue-600"
+                />
+                <span>خلط ترتيب الأسئلة عشوائياً لمنع الغش</span>
+              </label>
+
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quizForm.showExplanations}
+                  onChange={(e) => setQuizForm({ ...quizForm, showExplanations: e.target.checked })}
+                  className="h-4 w-4 rounded border-border text-blue-600"
+                />
+                <span>إظهار الإجابة النموذجية والشرح بعد التسليم</span>
+              </label>
+
+              <div className="inline-flex items-center gap-2 mr-auto">
+                <span className="text-muted-foreground">درجة النجاح:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={quizForm.passingScore}
+                  onChange={(e) => setQuizForm({ ...quizForm, passingScore: Number(e.target.value) })}
+                  className="h-8 w-16 rounded-lg border border-border bg-background text-center font-mono font-black text-xs"
+                />
+                <span>%</span>
+              </div>
+            </div>
+
+            {/* 4. Instant File Upload Shortcut Bar */}
+            <div className="rounded-xl border border-dashed border-blue-500/40 bg-blue-500/5 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-600 text-white">
+                  <Upload className="h-4 w-4" />
+                </span>
+                <div>
+                  <strong className="block text-xs font-black text-foreground">
+                    عندك ملف أسئلة جاهز (Word أو PDF أو TXT)؟
+                  </strong>
+                  <span className="text-[11px] text-muted-foreground">
+                    ارفعه بضغطة واحدة وسيستخرج النظام كل الأسئلة والاختيارات تلقائياً بالأسفل.
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isImportingQuestions}
+                  onClick={() => quizImportInputRef.current?.click()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl cursor-pointer gap-1.5"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>{isImportingQuestions ? "جارٍ قراءة الملف..." : "ارفع ملف الأسئلة الآن"}</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setExpressModalOpen(true)}
+                  className="text-xs font-bold rounded-xl cursor-pointer gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                  <span>أو اسحب من بنك الأسئلة</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 1: Basic Information (Shown in 4-Step Mode OR when 'تخصيص كورس آخر' is expanded) */}
+        {(!isOnePageMode ? currentStep === 1 : showAdvancedTarget) && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900">1. البيانات الأساسية</h2>
@@ -812,8 +1078,8 @@ export function ExamWizard({
           </div>
         )}
 
-        {/* STEP 2: Exam Settings */}
-        {currentStep === 2 && (
+        {/* STEP 2: Exam Settings (4-Step Mode Only) */}
+        {!isOnePageMode && currentStep === 2 && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900">2. إعدادات درجات ووقت الاختبار</h2>
@@ -950,8 +1216,8 @@ export function ExamWizard({
           </div>
         )}
 
-        {/* STEP 3: Question Creation */}
-        {currentStep === 3 && (
+        {/* STEP 3: Question Creation (Always visible in One-Page Mode!) */}
+        {(isOnePageMode || currentStep === 3) && (
           <div className="space-y-6">
             {/* Segmented Selector */}
             <div className="grid grid-cols-3 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
@@ -1363,8 +1629,8 @@ export function ExamWizard({
           </div>
         )}
 
-        {/* STEP 4: Review and Publish */}
-        {currentStep === 4 && (
+        {/* STEP 4: Review and Publish (4-Step Mode Only) */}
+        {!isOnePageMode && currentStep === 4 && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900">4. مراجعة وتأكيد إنشاء الاختبار</h2>
@@ -1430,10 +1696,10 @@ export function ExamWizard({
         )}
 
         {/* STICKY BOTTOM ACTION BAR */}
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 p-4 shadow-xl backdrop-blur">
-          <div className="mx-auto flex max-w-[1180px] items-center justify-between">
-            <div>
-              {currentStep > 1 && (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 p-3.5 shadow-xl backdrop-blur">
+          <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+              {!isOnePageMode && currentStep > 1 ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -1442,32 +1708,48 @@ export function ExamWizard({
                 >
                   <ChevronRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" /> السابق
                 </Button>
+              ) : (
+                <span>
+                  الأسئلة الجاهزة: <strong className="font-mono text-foreground">{quizForm.questions.length}</strong>
+                  {quizForm.stages.length > 0 ? ` · ${quizForm.stages.length} دفعة محددة` : " · اختر الدفعة بالأعلى"}
+                </span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
               <Button
-                type="submit"
+                type="button"
                 variant="outline"
-                className="font-bold text-xs"
+                onClick={async (e) => {
+                  setQuizForm((prev: QuizFormState) => ({ ...prev, isPublished: false }));
+                  const ok = await createQuiz(e as any, false);
+                  if (ok !== false) setActiveViewTab("list");
+                }}
+                className="font-bold text-xs rounded-xl cursor-pointer"
               >
-                حفظ كمسودة 📝
+                حفظ كمسودة
               </Button>
 
-              {currentStep < 4 ? (
+              {!isOnePageMode && currentStep < 4 ? (
                 <Button
                   type="button"
                   onClick={() => setCurrentStep((s) => (s + 1) as any)}
-                  className="font-bold text-xs px-6 gap-1.5"
+                  className="font-bold text-xs px-6 gap-1.5 rounded-xl cursor-pointer"
                 >
                   التالي <ChevronLeft className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
                 </Button>
               ) : (
                 <Button
-                  type="submit"
-                  className="font-black text-xs px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md"
+                  type="button"
+                  onClick={async (e) => {
+                    setQuizForm((prev: QuizFormState) => ({ ...prev, isPublished: true }));
+                    const ok = await createQuiz(e as any, true);
+                    if (ok !== false) setActiveViewTab("list");
+                  }}
+                  className="font-black text-xs sm:text-sm px-6 sm:px-8 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm cursor-pointer gap-1.5"
                 >
-                  {editingQuizId ? "حفظ التعديلات" : quizForm.isPublished ? "حفظ ونشر فوراً 🚀" : "حفظ الاختبار"}
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>{editingQuizId ? "حفظ ونشر التعديلات" : "نشر الامتحان للطلاب الآن"}</span>
                 </Button>
               )}
             </div>
@@ -2440,6 +2722,32 @@ export function ExamWizard({
           isHomework={viewingHomeworkViews.scope === "homework" || viewingHomeworkViews.category === "واجب"}
           adminApi={adminApi}
         />
+      )}
+
+      {/* Hidden File Input always mounted so One-Page Quick Upload button works immediately */}
+      {isOnePageMode && questionSource !== "file" && (
+        <input
+          ref={quizImportInputRef}
+          type="file"
+          accept=".pdf,.docx,.txt,.md"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files?.[0]) {
+              void importQuizQuestions(e.target.files[0]);
+            }
+          }}
+        />
+      )}
+
+      {/* Express 1-Click Question Bank Generator Modal */}
+      {expressModalOpen && (
+        <Suspense fallback={null}>
+          <ExpressExamModal
+            isOpen={expressModalOpen}
+            onClose={() => setExpressModalOpen(false)}
+            adminApi={adminApi}
+          />
+        </Suspense>
       )}
     </div>
   );

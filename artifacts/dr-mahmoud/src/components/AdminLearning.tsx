@@ -1107,24 +1107,26 @@ export function AdminLearning({
     setEditingFile(null);
     toast({ title: "تم تحديث مكان ظهور الملف" });
   };
-  const createQuiz = async (e: React.FormEvent) => {
+  const createQuiz = async (e: React.FormEvent, publishOverride?: boolean): Promise<boolean> => {
     e.preventDefault();
     if (!quizForm.title.trim()) {
       toast({ variant: "destructive", description: "اسم الاختبار مطلوب." });
-      return;
+      return false;
     }
     if (!quizForm.courseId || quizForm.stages.length === 0 || (quizForm.scope === "lesson" && !quizForm.videoId)) {
-      toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل، وحدد الدرس إذا كان الاختبار تابعًا لدرس." });
-      return;
+      toast({ variant: "destructive", description: "اختر الدفعة المستهدفة بالأعلى أولاً، وحدد الدرس إذا كان الاختبار تابعًا لدرس." });
+      return false;
     }
     if (!quizForm.questions || quizForm.questions.length === 0 || quizForm.questions.some((q) => !(q as Question).prompt?.trim())) {
-      toast({ variant: "destructive", description: "أضف سؤالًا واحدًا على الأقل، وتأكد أن جميع نص الأسئلة مكتوب." });
-      return;
+      toast({ variant: "destructive", description: "أضف سؤالًا واحدًا على الأقل، وتأكد أن جميع نصوص الأسئلة مكتوبة." });
+      return false;
     }
     const wasEditing = editingQuizId !== null;
+    const effectivePublished = typeof publishOverride === "boolean" ? publishOverride : quizForm.isPublished;
     try {
       const payload = {
         ...quizForm,
+        isPublished: effectivePublished,
         courseId: Number(quizForm.courseId),
         videoId: quizForm.scope === "lesson" && quizForm.videoId ? Number(quizForm.videoId) : null,
         durationMinutes: quizForm.durationMinutes ? Number(quizForm.durationMinutes) : null,
@@ -1136,9 +1138,11 @@ export function AdminLearning({
       });
       setQuizzes(prev => editingQuizId ? prev.map((quiz) => quiz.id === editingQuizId ? { ...created, attemptsCount: quiz.attemptsCount, uniqueStudentsCount: quiz.uniqueStudentsCount } : quiz) : [created, ...prev]);
       resetQuizForm();
-      toast({ title: wasEditing ? "تم تحديث الاختبار بنجاح" : "تم إنشاء الاختبار بنجاح" });
+      toast({ title: wasEditing ? "تم تحديث الاختبار بنجاح" : effectivePublished ? "تم نشر الامتحان للطلاب بنجاح" : "تم حفظ الاختبار كمسودة" });
+      return true;
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
+      return false;
     }
   };
   const editQuiz = (quiz: Quiz) => {

@@ -316,16 +316,18 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
   try {
     const track = typeof req.query.track === "string" ? req.query.track.trim().toLowerCase() : "all";
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const quizIdParam = typeof req.query.quiz_id === "string" ? parseInt(req.query.quiz_id, 10) : NaN;
+    const targetQuizId = Number.isInteger(quizIdParam) && quizIdParam > 0 ? quizIdParam : null;
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 100));
 
     let trackFilter = "";
     let quizTrackFilter = "";
     if (track === "general" || track === "arabic" || track === "عام" || track === "عربي") {
       trackFilter = "WHERE track_group = 'general'";
-      quizTrackFilter = "AND NOT (q.stage ILIKE '%لغات%' OR q.stage ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
+      quizTrackFilter = "AND NOT (COALESCE(q.stage, '') ILIKE '%لغات%' OR COALESCE(q.stage, '') ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
     } else if (track === "languages" || track === "language" || track === "لغات") {
       trackFilter = "WHERE track_group = 'languages'";
-      quizTrackFilter = "AND (q.stage ILIKE '%لغات%' OR q.stage ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
+      quizTrackFilter = "AND (COALESCE(q.stage, '') ILIKE '%لغات%' OR COALESCE(q.stage, '') ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
     }
 
     let searchFilter = "";
@@ -334,9 +336,14 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       searchFilter = trackFilter ? `AND (student_name ILIKE '%${cleanSearch}%')` : `WHERE (student_name ILIKE '%${cleanSearch}%')`;
     }
 
-    // Honor Board active for new exams starting today (2026-11-23 00:00 Africa/Cairo = 2026-11-22T22:00:00Z)
-    const HONOR_BOARD_START_ISO = "2026-11-22T22:00:00.000Z";
-    const minQuizzes = typeof req.query.min_quizzes === "string" ? Math.max(1, parseInt(req.query.min_quizzes)) : 1;
+    // Honor Board active for new exams starting today: Tuesday 2026-11-24 00:00 Africa/Cairo (= 2026-11-23T22:00:00.000Z)
+    const HONOR_BOARD_START_ISO = "2026-11-23T22:00:00.000Z";
+    const minQuizzes = targetQuizId
+      ? 1
+      : typeof req.query.min_quizzes === "string"
+        ? Math.max(1, parseInt(req.query.min_quizzes))
+        : 1;
+    const specificQuizSql = targetQuizId ? `AND q.id = ${targetQuizId}` : "";
 
     const query = `
       WITH best_attempts AS (
@@ -346,23 +353,35 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               q.title as quiz_title,
               q.stage as quiz_stage,
               MAX(qa.score) as best_score,
+              (ARRAY_AGG(qa.score ORDER BY qa.created_at ASC, qa.id ASC))[1] as first_attempt_score,
+              (ARRAY_AGG(
+                  CASE WHEN qa.time_spent_seconds >= 5 THEN qa.time_spent_seconds ELSE NULL END
+                  ORDER BY qa.score DESC, CASE WHEN qa.time_spent_seconds >= 5 THEN qa.time_spent_seconds ELSE 999999 END ASC, qa.created_at ASC
+              ))[1] as best_time_seconds,
               BOOL_OR(qa.passed) as ever_passed,
+              MIN(qa.created_at) as first_attempt_at,
               MAX(qa.created_at) as latest_attempt_at,
-              COUNT(qa.id) as attempts_count
+              COUNT(qa.id)::int as attempts_count
           FROM quiz_attempts qa
           JOIN quizzes q ON qa.quiz_id = q.id
           WHERE q.is_published = true
             AND COALESCE(q.scope, '') != 'homework'
             AND COALESCE(q.category, '') != 'واجب'
             AND q.created_at >= '${HONOR_BOARD_START_ISO}'
+            ${specificQuizSql}
             ${quizTrackFilter}
           GROUP BY qa.student_id, qa.quiz_id, q.title, q.stage
       ),
       student_stats AS (
           SELECT
               ba.student_id,
-              COUNT(ba.quiz_id) as quizzes_taken,
+              COUNT(ba.quiz_id)::int as quizzes_taken,
               ROUND(AVG(ba.best_score)::numeric, 1) as avg_score,
+              ROUND(AVG(ba.first_attempt_score)::numeric, 1) as first_try_avg,
+              ROUND(AVG(ba.best_time_seconds)::numeric, 0)::int as avg_time_seconds,
+              SUM(ba.attempts_count)::int as total_attempts_used,
+              COUNT(*) FILTER (WHERE ba.attempts_count = 1 OR ba.first_attempt_score = ba.best_score)::int as first_try_mastered_count,
+              MIN(ba.first_attempt_at) as earliest_submit_at,
               MAX(ba.latest_attempt_at) as last_quiz_date,
               json_agg(
                   json_build_object(
@@ -370,6 +389,9 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                       'quiz_title', ba.quiz_title,
                       'quiz_stage', ba.quiz_stage,
                       'score', ba.best_score,
+                      'first_attempt_score', ba.first_attempt_score,
+                      'time_seconds', ba.best_time_seconds,
+                      'attempts_count', ba.attempts_count,
                       'passed', ba.ever_passed,
                       'date', ba.latest_attempt_at,
                       'grade_label', CASE 
@@ -399,6 +421,11 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               END as track_group,
               ss.quizzes_taken,
               ss.avg_score,
+              ss.first_try_avg,
+              ss.avg_time_seconds,
+              ss.total_attempts_used,
+              ss.first_try_mastered_count,
+              ss.earliest_submit_at,
               ss.last_quiz_date,
               CASE 
                   WHEN ss.avg_score >= 95 THEN 'امتياز مع مرتبة الشرف'
@@ -407,8 +434,23 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                   WHEN ss.avg_score >= 65 THEN 'جيد'
                   ELSE 'مقبول'
               END as overall_grade,
-              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.quizzes_taken DESC, ss.avg_score DESC) as track_rank,
-              DENSE_RANK() OVER(ORDER BY ss.quizzes_taken DESC, ss.avg_score DESC) as overall_rank,
+              ROW_NUMBER() OVER(
+                PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END
+                ORDER BY
+                  ss.avg_score DESC,
+                  ss.quizzes_taken DESC,
+                  ss.first_try_avg DESC,
+                  COALESCE(ss.avg_time_seconds, 999999) ASC,
+                  ss.earliest_submit_at ASC
+              )::int as track_rank,
+              ROW_NUMBER() OVER(
+                ORDER BY
+                  ss.avg_score DESC,
+                  ss.quizzes_taken DESC,
+                  ss.first_try_avg DESC,
+                  COALESCE(ss.avg_time_seconds, 999999) ASC,
+                  ss.earliest_submit_at ASC
+              )::int as overall_rank,
               ss.quizzes_details
           FROM student_stats ss
           JOIN students s ON ss.student_id = s.id
@@ -418,34 +460,50 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       FROM classified_students
       ${trackFilter}
       ${searchFilter}
-      ORDER BY quizzes_taken DESC, avg_score DESC, last_quiz_date DESC
+      ORDER BY track_rank ASC, overall_rank ASC
       LIMIT ${limit};
     `;
 
-    const result = await db.execute(sql.raw(query));
-    const students = Array.isArray(result) ? result : (result as any)?.rows || [];
+    const [result, examsResult, statsResult] = await Promise.all([
+      db.execute(sql.raw(query)),
+      db.execute(sql.raw(`
+        SELECT id, title, stage, created_at
+        FROM quizzes q
+        WHERE q.is_published = true
+          AND COALESCE(q.scope, '') != 'homework'
+          AND COALESCE(q.category, '') != 'واجب'
+          AND q.created_at >= '${HONOR_BOARD_START_ISO}'
+          ${quizTrackFilter}
+        ORDER BY q.created_at DESC
+        LIMIT 30;
+      `)),
+      db.execute(sql.raw(`
+        SELECT 
+          COUNT(DISTINCT qa.student_id) as total_active_students,
+          COUNT(DISTINCT CASE WHEN (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as languages_students,
+          COUNT(DISTINCT CASE WHEN NOT (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as general_students,
+          COUNT(qa.id) as total_attempts,
+          ROUND(AVG(qa.score)::numeric, 1) as overall_avg_score
+        FROM quiz_attempts qa
+        JOIN quizzes q ON qa.quiz_id = q.id
+        JOIN students s ON qa.student_id = s.id
+        WHERE q.is_published = true
+          AND COALESCE(q.scope, '') != 'homework'
+          AND COALESCE(q.category, '') != 'واجب'
+          AND q.created_at >= '${HONOR_BOARD_START_ISO}'
+          ${specificQuizSql}
+          AND s.status = 'approved';
+      `)),
+    ]);
 
-    const statsQuery = `
-      SELECT 
-        COUNT(DISTINCT qa.student_id) as total_active_students,
-        COUNT(DISTINCT CASE WHEN (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as languages_students,
-        COUNT(DISTINCT CASE WHEN NOT (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as general_students,
-        COUNT(qa.id) as total_attempts,
-        ROUND(AVG(qa.score)::numeric, 1) as overall_avg_score
-      FROM quiz_attempts qa
-      JOIN quizzes q ON qa.quiz_id = q.id
-      JOIN students s ON qa.student_id = s.id
-      WHERE q.is_published = true
-        AND COALESCE(q.scope, '') != 'homework'
-        AND COALESCE(q.category, '') != 'واجب'
-        AND q.created_at >= '${HONOR_BOARD_START_ISO}'
-        AND s.status = 'approved';
-    `;
-    const statsResult = await db.execute(sql.raw(statsQuery));
+    const students = Array.isArray(result) ? result : (result as any)?.rows || [];
+    const exams = Array.isArray(examsResult) ? examsResult : (examsResult as any)?.rows || [];
     const statsRow = Array.isArray(statsResult) ? statsResult[0] : (statsResult as any)?.rows?.[0] || {};
 
     res.json({
       success: true,
+      startDateIso: HONOR_BOARD_START_ISO,
+      exams,
       stats: {
         totalStudents: Number(statsRow?.total_active_students || 0),
         generalStudents: Number(statsRow?.general_students || 0),
