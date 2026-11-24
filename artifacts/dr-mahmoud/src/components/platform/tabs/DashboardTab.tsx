@@ -1,721 +1,835 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  BookOpen,
-  ClipboardCheck,
-  BarChart3,
-  Trophy,
-  Play,
-  ChevronLeft,
-  FileText,
-  CheckCircle2,
-  FolderOpen,
-  Award,
-  ArrowRight,
-  Layers,
-  Eye,
-  FileCode,
-  FileArchive,
-  Clock,
-  Sparkles,
   AlertCircle,
-  RotateCcw,
+  Award,
+  BookCheck,
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ClipboardCheck,
+  Clock,
+  Download,
+  ExternalLink,
+  Eye,
+  FileArchive,
+  FileCode,
+  FileEdit,
+  FileText,
+  FolderDown,
+  FolderOpen,
+  Layers,
   MapPin,
+  Play,
+  RotateCcw,
+  Search,
+  Sparkles,
   Target,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTrackForStage } from "@/data/academic";
-import type { Student, LearningFile, Quiz, VideoSummary, ProgressRow } from "@/types/platform";
+import type {
+  LearningFile,
+  ProgressRow,
+  Quiz,
+  Student,
+  VideoSummary,
+} from "@/types/platform";
+import {
+  buildStudentDashboardModel,
+  type ContinueLearningModel,
+  type LearningPlanTask,
+  type UnifiedProgressModel,
+} from "@/lib/studentDashboardEngine";
 import { EmptyState } from "../StudentDashboardUI";
 import { PaymentBanner } from "./PaymentBanner";
 import { DailyChallengeCard } from "@/components/kholasa/DailyChallengeCard";
-import { StudentAvatar } from "../StudentDashboardUI";
-import { getNextMotivationMessage } from "@/lib/motivationMessages";
-import { useMemo } from "react";
 
-// ── Helper for File Icons ──
-function getFileTypeDetails(mimeType?: string | null, originalName: string = "") {
-  const ext = originalName.split(".").pop()?.toLowerCase() || "";
-  if (mimeType === "application/pdf" || ext === "pdf") {
-    return {
-      icon: FileText,
-      badgeText: "PDF",
-      bgClass: "bg-red-500/10 dark:bg-red-950/50 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/40",
-      iconColorClass: "text-red-600 dark:text-red-400",
-    };
-  }
-  if (ext === "cpp" || ext === "c" || ext === "js" || ext === "ts" || ext === "py" || ext === "html" || ext === "css") {
-    return {
-      icon: FileCode,
-      badgeText: ext.toUpperCase(),
-      bgClass: "bg-purple-500/10 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/40",
-      iconColorClass: "text-purple-600 dark:text-purple-400",
-    };
-  }
-  if (ext === "zip" || ext === "rar" || ext === "7z") {
-    return {
-      icon: FileArchive,
-      badgeText: ext.toUpperCase(),
-      bgClass: "bg-amber-500/10 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/40",
-      iconColorClass: "text-amber-600 dark:text-amber-400",
-    };
-  }
-  return {
-    icon: FileText,
-    badgeText: ext ? ext.toUpperCase() : "DOC",
-    bgClass: "bg-blue-500/10 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/40",
-    iconColorClass: "text-blue-600 dark:text-blue-400",
-  };
+export type StudentNavTab =
+  | "lessons"
+  | "kholasa"
+  | "mistakes"
+  | "essay-exams"
+  | "files"
+  | "quizzes"
+  | "homework"
+  | "summaries"
+  | "self-assessment"
+  | "offline-vault"
+  | "profile";
+
+function getFirstName(fullName?: string | null): string {
+  const clean = String(fullName || "").trim();
+  if (!clean) return "بطل";
+  return clean.split(/\s+/)[0] || clean;
 }
 
-// ── 1. Dashboard Page Header ──
-export function DashboardHeader({
+function getFileIcon(fileType: string) {
+  if (fileType === "PDF") return FileText;
+  if (["CPP", "C", "JS", "TS", "PY", "HTML", "CSS"].includes(fileType)) return FileCode;
+  if (fileType === "ARCHIVE") return FileArchive;
+  return FileText;
+}
+
+// ── A. Compact Student Header ──
+function CompactStudentHeader({
   student,
   academicTrackTitle,
-  onContinue,
-  onOpenSummaries,
+  state,
+  onOpenSearch,
 }: {
   student: Student;
   academicTrackTitle?: string;
-  onContinue: () => void;
-  onOpenSummaries?: () => void;
+  state: "new" | "active" | "needs_revision" | "completed_all";
+  onOpenSearch?: () => void;
 }) {
-  const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? "صباح الخير" : currentHour < 17 ? "مساء الخير" : "مساء الهمة والتركيز";
+  const firstName = getFirstName(student.name);
+  const subtitle =
+    state === "new"
+      ? "ابدأ أول درس ليك دلوقتي وخلي مذاكرتك ماشية بنظام."
+      : state === "needs_revision"
+        ? "راجع غلطاتك الأول وكمّل مذاكرتك من آخر نقطة وقفت عندها."
+        : state === "completed_all"
+          ? "خلصت كل المحتوى المتاح دلوقتي، تقدر تراجع أو تتدرب من بنك الأسئلة."
+          : "كمّل مذاكرتك من آخر نقطة وقفت عندها.";
 
   return (
-    <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5" dir="rtl">
-      <div className="space-y-1.5">
+    <header
+      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4"
+      dir="rtl"
+    >
+      <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight">
-            {greeting}، {student.name} 👋
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+            أهلاً يا {firstName}
           </h1>
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs ${
-              student.learningMode === "offline"
-                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25"
-                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25"
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${student.learningMode === "offline" ? "bg-purple-500" : "bg-blue-500 animate-pulse"}`} />
-            {student.learningMode === "offline" ? "نظامك: أوفلاين (السنتر)" : "نظامك: أونلاين"}
-          </span>
-
-          {student.centerName && (
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-2xs">
-              <MapPin className="h-3 w-3" /> {student.centerName}
-            </span>
-          )}
-
-          {student.appointmentSlot && (
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs">
-              <Clock className="h-3 w-3" /> {student.appointmentSlot}
+          {academicTrackTitle && (
+            <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-0.5 text-[11px] font-bold text-muted-foreground border border-border">
+              {academicTrackTitle}
             </span>
           )}
         </div>
-        <p className="text-xs md:text-[13px] font-medium text-muted-foreground">
-          {academicTrackTitle
-            ? `${academicTrackTitle} — تابع تقدمك وابدأ من آخر نقطة وصلت إليها.`
-            : "تابع تقدمك وابدأ من آخر نقطة وصلت إليها."}
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
+          {subtitle}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-auto">
-        {onOpenSummaries && (
-          <Button
-            type="button"
-            onClick={onOpenSummaries}
-            variant="outline"
-            className="h-10 px-4 rounded-xl border-border/80 hover:border-primary/40 text-foreground text-xs font-bold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <FileText className="h-4 w-4 text-primary" />
-            <span>رفع ملخص كشكول 📝</span>
-          </Button>
-        )}
-        <Button
+      {onOpenSearch && (
+        <button
           type="button"
-          onClick={onContinue}
-          className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
+          onClick={onOpenSearch}
+          className="inline-flex items-center justify-between gap-3 h-10 px-3.5 rounded-xl border border-border bg-card hover:bg-muted/60 text-muted-foreground hover:text-foreground text-xs font-bold transition-colors shrink-0 self-start sm:self-auto min-w-[190px] cursor-pointer"
+          aria-label="ابحث في الدروس والملفات والاختبارات"
         >
-          <span>متابعة التعلم</span>
-          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-        </Button>
-      </div>
+          <span className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-primary shrink-0" />
+            <span>ابحث في المنهج...</span>
+          </span>
+          <kbd
+            dir="ltr"
+            className="hidden sm:inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono font-bold text-muted-foreground"
+          >
+            Ctrl K
+          </kbd>
+        </button>
+      )}
     </header>
   );
 }
 
-// ── 2. Meaningful Statistics Cards (Vercel Precision Style) ──
-export function StudentStatistics({
-  completedLessonsCount,
-  totalLessonsCount,
-  availableQuizzesCount,
-  completedQuizzesCount,
-  newFilesCount,
-  hasQuizResults,
-  averageResult,
+// ── B. Intelligent Learning Continuation Hero ──
+function ContinueLearningHero({
+  model,
+  fallbackImage,
+  onExecuteCta,
+  onOpenLessons,
 }: {
-  completedLessonsCount: number;
-  totalLessonsCount: number;
-  availableQuizzesCount: number;
-  completedQuizzesCount: number;
-  newFilesCount: number;
-  hasQuizResults: boolean;
-  averageResult: number;
+  model: ContinueLearningModel;
+  fallbackImage?: string;
+  onExecuteCta: () => void;
+  onOpenLessons: () => void;
 }) {
-  const stats = [
-    {
-      label: "الدروس المكتملة",
-      value: completedLessonsCount,
-      sub: `/ ${totalLessonsCount}`,
-      icon: BookOpen,
-      iconStyle: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-      hoverBorder: "hover:border-blue-500/40",
-    },
-    {
-      label: "الاختبارات",
-      value: availableQuizzesCount,
-      sub: `متاح (${completedQuizzesCount} منجز)`,
-      icon: ClipboardCheck,
-      iconStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-      hoverBorder: "hover:border-emerald-500/40",
-    },
-    {
-      label: "الملازم والملفات",
-      value: newFilesCount,
-      sub: "ملف متاح للمعاينة",
-      icon: FolderOpen,
-      iconStyle: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
-      hoverBorder: "hover:border-indigo-500/40",
-    },
-    {
-      label: "متوسط النتائج",
-      value: hasQuizResults ? `${averageResult}%` : "—",
-      sub: hasQuizResults
-        ? averageResult >= 85
-          ? "مستوى ممتاز"
-          : averageResult >= 65
-            ? "مستوى جيد"
-            : "يحتاج مراجعة"
-        : "لا توجد نتائج بعد",
-      icon: Award,
-      iconStyle: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-      hoverBorder: "hover:border-amber-500/40",
-    },
-  ];
+  const { video, progressPct, lastPositionLabel, remainingLabel, isCompleted, unitLabel, cta } = model;
+  const thumbnail = video?.thumbnailUrl || fallbackImage || "/university-cs-path.webp";
 
   return (
-    <section aria-label="إحصائيات الطالب" className="grid grid-cols-2 lg:grid-cols-4 gap-3.5" dir="rtl">
-      {stats.map((st, idx) => {
-        const Icon = st.icon;
-        return (
-          <motion.div
-            key={st.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.05 }}
-            whileHover={{ y: -2 }}
-            className={`group rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex items-center gap-3.5 shadow-2xs transition-colors ${st.hoverBorder}`}
-          >
-            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border shadow-2xs transition-transform group-hover:scale-105 ${st.iconStyle}`}>
-              <Icon className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 text-right">
-              <span className="block text-[12px] font-bold text-muted-foreground truncate">{st.label}</span>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <strong className="text-[22px] font-mono font-black text-foreground dark:text-white leading-none tabular-nums">
-                  {st.value}
-                </strong>
-                <span className="text-[11px] font-medium text-muted-foreground truncate tabular-nums">
-                  {st.sub}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
-    </section>
-  );
-}
-
-// ── Quick Actions Dock (Clean Vercel Tool Shelf) ──
-export function QuickActionsDock({
-  onOpen,
-  unresolvedMistakesCount = 0,
-}: {
-  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "essay-exams" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
-  unresolvedMistakesCount?: number;
-}) {
-  const actions = [
-    {
-      id: "kholasa",
-      title: "الخلاصة",
-      desc: "دروس، تعريفات، خرائط، وتسميع",
-      icon: Sparkles,
-      iconColor: "text-amber-600 dark:text-amber-400",
-      iconBg: "bg-amber-500/10",
-      tab: "kholasa" as const,
-      badge: undefined as string | undefined,
-    },
-    {
-      id: "mistakes",
-      title: "ركن غلطاتي",
-      desc: "راجع أخطاءك وتدرب عليها فوراً",
-      icon: Target,
-      iconColor: "text-rose-600 dark:text-rose-400",
-      iconBg: "bg-rose-500/10",
-      tab: "mistakes" as const,
-      badge: unresolvedMistakesCount > 0 ? `${unresolvedMistakesCount} للمراجعة` : undefined,
-    },
-    {
-      id: "lessons",
-      title: "فيديوهات المنصة",
-      desc: "متابعة شرح الفيديوهات",
-      icon: BookOpen,
-      iconColor: "text-blue-600 dark:text-blue-400",
-      iconBg: "bg-blue-500/10",
-      tab: "lessons" as const,
-      badge: undefined as string | undefined,
-    },
-    {
-      id: "essay-exams",
-      title: "الامتحانات المقالية",
-      desc: "تدرب على الحل ومقارنة النموذج",
-      icon: FileText,
-      iconColor: "text-indigo-600 dark:text-indigo-400",
-      iconBg: "bg-indigo-500/10",
-      tab: "essay-exams" as const,
-      badge: undefined as string | undefined,
-    },
-    {
-      id: "self-assessment",
-      title: "التقييم الذاتي",
-      desc: "اختبار فوري من بنك الأسئلة",
-      icon: ClipboardCheck,
-      iconColor: "text-cyan-600 dark:text-cyan-400",
-      iconBg: "bg-cyan-500/10",
-      tab: "self-assessment" as const,
-      badge: undefined as string | undefined,
-    },
-    {
-      id: "files",
-      title: "الملازم والشيتات",
-      desc: "معاينة الملفات والملازم",
-      icon: FolderOpen,
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      iconBg: "bg-emerald-500/10",
-      tab: "files" as const,
-      badge: undefined as string | undefined,
-    },
-  ];
-
-  return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 shadow-2xs space-y-3" dir="rtl">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-black text-foreground">اختصارات سريعة</h2>
-        <span className="text-[11px] font-bold text-muted-foreground">وصول مباشر للأقسام</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {actions.map((act, idx) => {
-          const Icon = act.icon;
-          return (
-            <motion.button
-              key={act.id}
-              type="button"
-              onClick={() => onOpen(act.tab)}
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2, delay: idx * 0.035 }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="group rounded-xl border border-border/70 bg-muted/20 dark:bg-slate-900/50 p-3 text-right transition-colors hover:border-blue-500/40 hover:bg-muted/50 cursor-pointer flex items-center gap-2.5"
-            >
-              <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${act.iconBg} ${act.iconColor} border border-border/40 transition-transform group-hover:scale-105`}>
-                <Icon className="h-4.5 w-4.5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1">
-                  <strong className="block text-xs font-extrabold text-foreground truncate group-hover:text-primary transition-colors">
-                    {act.title}
-                  </strong>
-                  {act.badge && (
-                    <span className="shrink-0 rounded-full bg-rose-500/15 text-rose-500 px-1.5 py-0.5 text-[9px] font-black">
-                      {act.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="block text-[10.5px] text-muted-foreground truncate mt-0.5">
-                  {act.desc}
-                </span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── 3. Overall Progress Summary Card ──
-export function StudentProgressSummary({
-  overallProgress,
-  completedLessons,
-  totalLessons,
-  completedQuizzes,
-  totalQuizzes,
-}: {
-  overallProgress: number;
-  completedLessons: number;
-  totalLessons: number;
-  completedQuizzes: number;
-  totalQuizzes: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
+    <motion.article
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 shadow-2xs space-y-3"
+      transition={{ duration: 0.2 }}
+      className="group rounded-2xl border border-border bg-card shadow-2xs overflow-hidden grid grid-cols-1 md:grid-cols-[minmax(240px,360px)_1fr]"
       dir="rtl"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm md:text-base font-extrabold text-foreground">
-              نسبة إكمال المنهج العام
-            </h2>
-            <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20 tabular-nums">
-              {overallProgress}%
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {overallProgress === 0
-              ? "ابدأ أول درس لتبدأ رحلة التعلم المنظمة وتفعيل شريط التقدم."
-              : `أنجزت ${overallProgress}% من إجمالي المحتوى المطلوب لمرحلتك.`}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 text-xs font-semibold text-muted-foreground font-mono tabular-nums">
-          <span className="bg-muted/40 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-border/40">الدروس: {completedLessons}/{totalLessons}</span>
-          <span className="bg-muted/40 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-border/40">الاختبارات: {completedQuizzes}/{totalQuizzes}</span>
-        </div>
-      </div>
-
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${Math.max(2, overallProgress)}%` }}
-          transition={{ duration: 0.65, ease: "easeOut" }}
-          className="h-full rounded-full bg-blue-600 dark:bg-blue-500"
-        />
-      </div>
-    </motion.div>
-  );
-}
-
-// ── 4. Continue Learning Card (Vercel Media Card Style) ──
-export function ContinueLearningCard({
-  continueVideo,
-  continueProgress,
-  overallProgress,
-  academicTrackImage,
-  onOpenLessons,
-  onPlayLesson,
-}: {
-  continueVideo?: VideoSummary;
-  continueProgress: number;
-  overallProgress: number;
-  academicTrackImage?: string;
-  onOpenLessons: () => void;
-  onPlayLesson?: (videoId: number) => void;
-}) {
-  const handlePrimaryClick = () => {
-    if (continueVideo && onPlayLesson) {
-      onPlayLesson(continueVideo.id);
-    } else {
-      onOpenLessons();
-    }
-  };
-
-  const thumbnail = continueVideo?.thumbnailUrl || academicTrackImage || "/university-cs-path.webp";
-
-  return (
-    <article className="group rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] shadow-2xs hover:border-blue-500/40 transition-colors duration-300 flex flex-col sm:flex-row overflow-hidden" dir="rtl">
-      <div 
-        onClick={handlePrimaryClick}
-        className="relative sm:w-[42%] min-h-48 overflow-hidden bg-slate-900 cursor-pointer"
+      {/* Thumbnail */}
+      <button
+        type="button"
+        onClick={onExecuteCta}
+        className="relative aspect-video md:aspect-auto md:min-h-[210px] w-full overflow-hidden bg-slate-900 text-right cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        aria-label={cta.label}
       >
         <img
           src={thumbnail}
-          alt={continueVideo?.title || "صورة الدرس"}
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          alt={video?.title || "صورة الدرس الحالي"}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/25 transition-colors" />
-        
-        {/* Play Icon Badge */}
-        <div className="absolute inset-0 grid place-items-center opacity-85 group-hover:opacity-100 transition-opacity">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-600/90 backdrop-blur-md text-white shadow-lg group-hover:scale-110 transition-transform">
+        <div className="absolute inset-0 bg-slate-950/45 group-hover:bg-slate-950/30 transition-colors" />
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-600 text-white shadow-md transition-transform duration-200 group-hover:scale-105">
             <Play className="h-5 w-5 fill-white mr-0.5" />
           </span>
         </div>
-      </div>
-
-      <div className="flex-1 p-5 text-right flex flex-col justify-between space-y-3.5">
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-            {continueProgress > 0 ? "تابع من حيث توقفت" : "الكورس الحالي"}
+        {(lastPositionLabel || video?.durationText) && (
+          <span
+            dir="ltr"
+            className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-lg bg-slate-950/85 px-2.5 py-1 text-[11px] font-mono font-bold text-white"
+          >
+            <Clock className="h-3 w-3 text-blue-400" />
+            {lastPositionLabel ? `وقفت عند ${lastPositionLabel}` : video?.durationText}
           </span>
+        )}
+      </button>
+
+      {/* Content & Primary Action */}
+      <div className="p-5 sm:p-6 flex flex-col justify-between gap-4 min-w-0">
+        <div className="space-y-2 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-0.5 text-[11px] font-bold border ${
+                isCompleted
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
+                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : (
+                <Play className="h-3 w-3 fill-current" />
+              )}
+              <span>
+                {isCompleted
+                  ? "خلصت الدرس ده"
+                  : progressPct > 0
+                    ? "كمّل من آخر نقطة"
+                    : "الدرس الحالي في منهجك"}
+              </span>
+            </span>
+
+            {unitLabel && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground min-w-0">
+                <Layers className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate max-w-[260px]">{unitLabel}</span>
+              </span>
+            )}
+          </div>
 
           <h2
-            dir="ltr"
-            className="mt-2 text-base md:text-lg font-black text-foreground dark:text-white leading-snug text-right line-clamp-2"
+            dir="auto"
             style={{ unicodeBidi: "isolate" }}
+            className="text-lg sm:text-xl font-black text-foreground leading-snug break-words"
           >
-            {continueVideo?.title || "محتواك سيظهر هنا فور التسجيل"}
+            {video?.title || "محتوى منهجك هيظهر هنا بمجرد التفعيل"}
           </h2>
 
-          <p className="mt-1 text-xs font-medium text-muted-foreground truncate">
-            {continueVideo
-              ? `${continueVideo.subject || continueVideo.category} — يتطلب تركيز ومتابعة مستمرة.`
-              : "لا يوجد درس متاح حالياً للتكملة."}
-          </p>
+          {remainingLabel && !isCompleted && (
+            <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>متبقي حوالي</span>
+              <span dir="ltr" className="font-mono font-bold text-foreground">
+                {remainingLabel}
+              </span>
+              <span>لإكمال الدرس</span>
+            </p>
+          )}
         </div>
 
-        <div className="space-y-1.5 pt-1">
-          <div className="flex justify-between text-xs font-bold text-muted-foreground font-mono">
-            <span>تقدم الدرس: {continueProgress}%</span>
-            <span>الإجمالي: {overallProgress}%</span>
+        {/* Lesson Progress Bar */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="text-muted-foreground">تقدّمك في الدرس ده</span>
+            <span className="font-mono text-foreground tabular-nums">{progressPct}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner">
-            <div
-              className="h-full rounded-full bg-blue-600 dark:bg-blue-500 transition-all duration-700 ease-out shadow-xs"
-              style={{ width: `${Math.max(2, continueProgress)}%` }}
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className={`h-full rounded-full ${
+                isCompleted ? "bg-emerald-600 dark:bg-emerald-500" : "bg-blue-600 dark:bg-blue-500"
+              }`}
             />
           </div>
         </div>
 
-        <div className="pt-2 flex flex-wrap items-center gap-2">
+        {/* Single Clear Primary CTA + Secondary Link */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-1">
           <Button
             type="button"
-            onClick={handlePrimaryClick}
-            className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer group/btn"
+            onClick={onExecuteCta}
+            className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer"
           >
-            <Play className="h-3.5 w-3.5 fill-current" />
-            <span>{continueProgress > 0 ? "أكمل الدرس الآن" : "ابدأ أول درس"}</span>
-            <ChevronLeft className="h-4 w-4 transition-transform group-hover/btn:-translate-x-1" />
+            <Play className="h-4 w-4 fill-current" />
+            <span>{cta.label}</span>
+            <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onOpenLessons}
-            className="h-9 px-3 rounded-xl border border-border/80 text-xs font-bold text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+            className="h-10 px-4 rounded-xl text-xs font-bold cursor-pointer"
           >
-            عرض تفاصيل الكورس
-          </button>
+            كل دروس المنهج
+          </Button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
-// ── 5. Next Steps List (Vercel Interactive Checklist) ──
-export function NextStepsList({
-  quizzes,
-  files,
-  videos,
-  onOpen,
-  onPlayLesson,
+// ── C. Today's Learning Plan (خطة مذاكرتك النهارده) ──
+function TodayLearningPlanSection({
+  tasks,
+  onRunTask,
 }: {
-  quizzes: Quiz[];
-  files: LearningFile[];
-  videos: VideoSummary[];
-  onOpen: (tab: "lessons" | "files" | "quizzes") => void;
-  onPlayLesson?: (videoId: number) => void;
-}) {
-  const nextQuiz = quizzes[0];
-  const nextFile = files[0];
-  const nextVideo = videos[0];
-
-  return (
-    <article className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs space-y-3.5 flex flex-col justify-between" dir="rtl">
-      <div>
-        <h2 className="text-base font-black text-foreground">الخطوات القادمة 🎯</h2>
-        <p className="text-xs font-medium text-muted-foreground">
-          مهام مخصصة لمتابعة التحصيل الدراسي بالترتيب.
-        </p>
-      </div>
-
-      <div className="space-y-2.5">
-        {/* Task 1: Lesson */}
-        {nextVideo && (
-          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-primary/40 hover:bg-primary/5 transition-all">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono text-xs font-bold">
-                1
-              </span>
-              <div className="min-w-0">
-                <strong
-                  dir="ltr"
-                  className="block text-xs font-black text-foreground truncate text-right"
-                  style={{ unicodeBidi: "isolate" }}
-                >
-                  {nextVideo.title}
-                </strong>
-                <span className="block text-[11px] font-medium text-muted-foreground">الدرس التالي بالخطة</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => (onPlayLesson ? onPlayLesson(nextVideo.id) : onOpen("lessons"))}
-              className="h-7 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-all shadow-2xs shrink-0 cursor-pointer"
-            >
-              افتح الدرس
-            </button>
-          </div>
-        )}
-
-        {/* Task 2: File */}
-        {nextFile && (
-          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-purple-500/40 hover:bg-purple-500/5 transition-all">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-mono text-xs font-bold">
-                2
-              </span>
-              <div className="min-w-0">
-                <strong
-                  dir="ltr"
-                  className="block text-xs font-black text-foreground truncate text-right"
-                  style={{ unicodeBidi: "isolate" }}
-                >
-                  {nextFile.title}
-                </strong>
-                <span className="block text-[11px] font-medium text-muted-foreground">مذكرة / كود مساعد</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpen("files")}
-              className="h-7 px-3 rounded-lg border border-border bg-card text-foreground text-[11px] font-bold hover:bg-muted transition-colors shrink-0 cursor-pointer"
-            >
-              معاينة
-            </button>
-          </div>
-        )}
-
-        {/* Task 3: Quiz */}
-        {nextQuiz && (
-          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-amber-500/40 hover:bg-amber-500/5 transition-all">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-mono text-xs font-bold">
-                3
-              </span>
-              <div className="min-w-0">
-                <strong
-                  dir="ltr"
-                  className="block text-xs font-black text-foreground truncate text-right"
-                  style={{ unicodeBidi: "isolate" }}
-                >
-                  {nextQuiz.title}
-                </strong>
-                <span className="block text-[11px] font-medium text-muted-foreground">
-                  {nextQuiz.locked ? "يفتح بعد الشروط" : "متاح الآن للحل"}
-                </span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpen("quizzes")}
-              className="h-7 px-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold hover:bg-amber-500/20 transition-colors shrink-0 cursor-pointer"
-            >
-              {nextQuiz.locked ? "عرض الشروط" : "حل الاختبار"}
-            </button>
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
-
-// ── 6. Latest Files Section Component ──
-export function LatestFilesSection({
-  files,
-  onOpenFiles,
-}: {
-  files: LearningFile[];
-  onOpenFiles: () => void;
+  tasks: LearningPlanTask[];
+  onRunTask: (task: LearningPlanTask) => void;
 }) {
   return (
-    <section className="space-y-3.5" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-black text-foreground">أحدث الملفات والملازم</h2>
-          <span className="text-xs font-mono font-bold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full border border-border/40">
-            {files.length}
-          </span>
+    <section
+      aria-label="خطة مذاكرتك النهارده"
+      className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-2xs space-y-3.5"
+      dir="rtl"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base font-black text-foreground">خطة مذاكرتك النهارده</h2>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">
+            أهم الخطوات المطلوبة منك دلوقتي بالترتيب حسب منهجك.
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={onOpenFiles}
-          className="text-xs font-bold text-primary hover:underline cursor-pointer"
-        >
-          عرض الكل ({files.length}) ←
-        </button>
+        <span className="rounded-lg bg-muted px-2.5 py-1 text-[11px] font-mono font-bold text-muted-foreground border border-border shrink-0">
+          {tasks.length} مهام
+        </span>
       </div>
 
-      {files.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {files.slice(0, 3).map((file) => {
-            const typeDetails = getFileTypeDetails(file.mimeType, file.originalName);
-            const IconComponent = typeDetails.icon;
-            const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
+      {tasks.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6 text-center space-y-1.5">
+          <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400 mx-auto" />
+          <p className="text-sm font-bold text-foreground">ممتاز، مفيش مهام متأخرة عليك دلوقتي</p>
+          <p className="text-xs text-muted-foreground">
+            تقدر تراجع دروسك أو تتدرب على أسئلة جديدة من التقييم الذاتي.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+          {tasks.map((task) => {
+            const Icon =
+              task.kind === "mistakes"
+                ? Target
+                : task.kind === "homework"
+                  ? BookCheck
+                  : task.kind === "quiz"
+                    ? ClipboardCheck
+                    : BookOpen;
+
+            const iconTone =
+              task.kind === "mistakes"
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                : task.kind === "homework"
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                  : task.kind === "quiz"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                    : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
 
             return (
-              <motion.article
-                key={file.id}
-                whileHover={{ y: -2 }}
-                className="group rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 shadow-2xs hover:border-blue-500/40 transition-colors duration-200 flex flex-col justify-between space-y-3"
+              <div
+                key={task.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card hover:bg-muted/40 p-3.5 transition-colors"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass} shadow-2xs`}>
-                      <IconComponent className={`h-4 w-4 ${typeDetails.iconColorClass}`} />
-                    </span>
-                    <span className="font-mono text-[11px] font-bold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">{fileSizeMb} MB</span>
-                  </div>
-
-                  <h3 className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                    {file.title}
-                  </h3>
-
-                  <p
-                    dir="ltr"
-                    className="font-mono text-[11px] font-medium text-muted-foreground/80 truncate text-right"
-                    style={{ unicodeBidi: "isolate" }}
+                <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                  <span
+                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border ${iconTone}`}
                   >
-                    {file.originalName}
-                  </p>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+                      <span className="text-muted-foreground">{task.typeLabel}</span>
+                      <span className="text-border">•</span>
+                      <span
+                        className={
+                          task.priority === "urgent"
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-foreground/80"
+                        }
+                      >
+                        {task.statusLabel}
+                      </span>
+                      {task.durationLabel && (
+                        <>
+                          <span className="text-border">•</span>
+                          <span
+                            dir="ltr"
+                            className="font-mono text-muted-foreground"
+                          >
+                            {task.durationLabel}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <strong
+                      dir="auto"
+                      style={{ unicodeBidi: "isolate" }}
+                      className="block text-xs sm:text-[13px] font-extrabold text-foreground leading-snug break-words"
+                    >
+                      {task.title}
+                    </strong>
+                  </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
-                  onClick={onOpenFiles}
-                  className="w-full h-8 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  size="sm"
+                  variant={task.priority === "urgent" ? "default" : "outline"}
+                  onClick={() => onRunTask(task)}
+                  className={`h-8.5 px-3.5 rounded-lg text-xs font-bold shrink-0 self-end sm:self-center cursor-pointer ${
+                    task.priority === "urgent"
+                      ? "bg-rose-600 hover:bg-rose-700 text-white"
+                      : ""
+                  }`}
                 >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>معاينة الملف</span>
-                </button>
-              </motion.article>
+                  {task.actionLabel}
+                </Button>
+              </div>
             );
           })}
         </div>
-      ) : (
-        <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
       )}
     </section>
   );
 }
 
-// ── Main Refactored DashboardTab ──
+// ── D. Unified Student Progress (Single Source of Truth — Zero Duplication) ──
+function UnifiedProgressOverview({
+  progress,
+  onOpenQuizzes,
+}: {
+  progress: UnifiedProgressModel;
+  onOpenQuizzes: () => void;
+}) {
+  return (
+    <section
+      aria-label="تقدّمك في المنهج"
+      className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-2xs space-y-4"
+      dir="rtl"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base font-black text-foreground">تقدّمك في المنهج</h2>
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">
+            ملخص حقيقي لإنجازك في الدروس والاختبارات.
+          </p>
+        </div>
+        <span className="font-mono text-lg font-black text-blue-600 dark:text-blue-400 tabular-nums">
+          {progress.overallCompletionPct}%
+        </span>
+      </div>
+
+      {/* Overall Completion Bar */}
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${progress.overallCompletionPct}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="h-full rounded-full bg-blue-600 dark:bg-blue-500"
+        />
+      </div>
+
+      {/* Clean 3-Metric Breakdown */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1">
+          <span className="block text-[11px] font-bold text-muted-foreground">الدروس</span>
+          <strong className="block text-base sm:text-lg font-black font-mono text-foreground tabular-nums">
+            {progress.completedLessons}
+            <span className="text-xs font-bold text-muted-foreground"> / {progress.totalLessons}</span>
+          </strong>
+          <span className="block text-[10.5px] font-medium text-muted-foreground">
+            {progress.startedLessons > 0 ? `${progress.startedLessons} شغّال فيهم` : "مكتمل"}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1">
+          <span className="block text-[11px] font-bold text-muted-foreground">الاختبارات</span>
+          <strong className="block text-base sm:text-lg font-black font-mono text-foreground tabular-nums">
+            {progress.attemptedExams}
+            <span className="text-xs font-bold text-muted-foreground"> / {progress.availableExams}</span>
+          </strong>
+          <span className="block text-[10.5px] font-medium text-muted-foreground">
+            {progress.passedExams > 0 ? `${progress.passedExams} ناجح` : "متاح للحل"}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1">
+          <span className="block text-[11px] font-bold text-muted-foreground">متوسط الدرجات</span>
+          <strong className="block text-base sm:text-lg font-black font-mono text-foreground tabular-nums">
+            {progress.averageExamScore !== null ? `${progress.averageExamScore}%` : "—"}
+          </strong>
+          <span className="block text-[10.5px] font-medium text-muted-foreground">
+            {progress.averageExamScore !== null
+              ? progress.averageExamScore >= 85
+                ? "مستوى ممتاز"
+                : progress.averageExamScore >= 65
+                  ? "مستوى جيد"
+                  : "محتاج مراجعة"
+              : "لسه مفيش نتائج"}
+          </span>
+        </div>
+      </div>
+
+      {/* Empty Exam Results State or Recent Scores */}
+      {progress.recentAttemptedExams.length === 0 ? (
+        <div className="rounded-xl border border-border bg-muted/30 p-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <strong className="block text-xs font-extrabold text-foreground">لسه مفيش نتائج</strong>
+            <span className="block text-[11px] text-muted-foreground">
+              حل أول اختبار علشان تقدر تتابع مستواك.
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onOpenQuizzes}
+            className="h-8 px-3 rounded-lg text-xs font-bold shrink-0 cursor-pointer"
+          >
+            الاختبارات
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2 pt-1 border-t border-border">
+          <span className="block text-[11px] font-bold text-muted-foreground">آخر اختباراتك</span>
+          <div className="space-y-1.5">
+            {progress.recentAttemptedExams.slice(0, 3).map((qz) => {
+              const score = Math.round(Number(qz.bestScore || 0));
+              const passed = score >= (qz.passingScore || 60);
+              return (
+                <div
+                  key={qz.id}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-muted/35 px-3 py-2 text-xs"
+                >
+                  <span
+                    dir="auto"
+                    style={{ unicodeBidi: "isolate" }}
+                    className="font-bold text-foreground truncate"
+                  >
+                    {qz.title}
+                  </span>
+                  <span
+                    className={`font-mono font-black shrink-0 ${
+                      passed
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {score}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── E. Smart Mistakes Center (ركن غلطاتي) ──
+function SmartMistakesWidget({
+  unresolvedCount,
+  attemptedExams,
+  onOpenMistakes,
+  onOpenSelfAssessment,
+}: {
+  unresolvedCount: number;
+  attemptedExams: number;
+  onOpenMistakes: () => void;
+  onOpenSelfAssessment: () => void;
+}) {
+  const hasAttempted = attemptedExams > 0 || unresolvedCount > 0;
+
+  return (
+    <section
+      aria-label="ركن غلطاتي"
+      className={`rounded-2xl border p-4 sm:p-5 shadow-2xs space-y-3 ${
+        unresolvedCount > 0
+          ? "border-rose-500/35 bg-card"
+          : "border-border bg-card"
+      }`}
+      dir="rtl"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border ${
+              unresolvedCount > 0
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25"
+                : "bg-muted text-muted-foreground border-border"
+            }`}
+          >
+            <Target className="h-4.5 w-4.5" />
+          </span>
+          <div>
+            <h2 className="text-sm sm:text-base font-black text-foreground">ركن غلطاتي</h2>
+            <p className="text-xs text-muted-foreground">
+              {unresolvedCount > 0
+                ? `عندك ${unresolvedCount} ${unresolvedCount === 1 ? "سؤال محتاج" : "أسئلة محتاجة"} مراجعة وإعادة حل.`
+                : !hasAttempted
+                  ? "لسه مفيش أسئلة اتحلت."
+                  : "مفيش أخطاء متراكمة عليك دلوقتي."}
+            </p>
+          </div>
+        </div>
+
+        {unresolvedCount > 0 && (
+          <span className="rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25 px-2.5 py-0.5 text-xs font-mono font-black shrink-0">
+            {unresolvedCount}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {unresolvedCount > 0 ? (
+          <Button
+            type="button"
+            onClick={onOpenMistakes}
+            className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>راجع غلطاتك</span>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onOpenSelfAssessment}
+            className="h-9 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+          >
+            <ClipboardCheck className="h-3.5 w-3.5 text-primary" />
+            <span>اختبر نفسك</span>
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ── F. Learning Tools Grid (أدوات المذاكرة — Complete Readable Labels) ──
+function LearningToolsGrid({
+  counts,
+  onOpen,
+}: {
+  counts: {
+    lessons: number;
+    homeworks: number;
+    files: number;
+    exams: number;
+    mistakes: number;
+  };
+  onOpen: (tab: StudentNavTab) => void;
+}) {
+  const tools: Array<{
+    id: string;
+    title: string;
+    icon: typeof BookOpen;
+    tone: string;
+    count?: number;
+    tab?: StudentNavTab;
+    href?: string;
+  }> = [
+    { id: "lessons", title: "فيديوهات الشرح", icon: BookOpen, tone: "text-blue-600 dark:text-blue-400 bg-blue-500/10", count: counts.lessons, tab: "lessons" },
+    { id: "kholasa", title: "الخلاصة والخرائط", icon: Sparkles, tone: "text-amber-600 dark:text-amber-400 bg-amber-500/10", tab: "kholasa" },
+    { id: "homework", title: "الواجب المنزلي", icon: BookCheck, tone: "text-amber-600 dark:text-amber-400 bg-amber-500/10", count: counts.homeworks, tab: "homework" },
+    { id: "files", title: "الملازم والملفات", icon: FolderOpen, tone: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10", count: counts.files, tab: "files" },
+    { id: "quizzes", title: "الاختبارات", icon: ClipboardCheck, tone: "text-blue-600 dark:text-blue-400 bg-blue-500/10", count: counts.exams, tab: "quizzes" },
+    { id: "essay-exams", title: "الامتحانات المقالية", icon: FileEdit, tone: "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10", tab: "essay-exams" },
+    { id: "mistakes", title: "ركن غلطاتي", icon: Target, tone: "text-rose-600 dark:text-rose-400 bg-rose-500/10", count: counts.mistakes || undefined, tab: "mistakes" },
+    { id: "summaries", title: "مذكراتي وتلخيصاتي", icon: FileText, tone: "text-slate-700 dark:text-slate-300 bg-muted", tab: "summaries" },
+    { id: "offline-vault", title: "محفظة الأوفلاين", icon: FolderDown, tone: "text-slate-700 dark:text-slate-300 bg-muted", tab: "offline-vault" },
+    { id: "self-assessment", title: "التقييم الذاتي", icon: Award, tone: "text-cyan-600 dark:text-cyan-400 bg-cyan-500/10", tab: "self-assessment" },
+    { id: "honor-board", title: "لوحة الشرف", icon: Trophy, tone: "text-amber-600 dark:text-amber-400 bg-amber-500/10", href: "/honor-board" },
+  ];
+
+  return (
+    <section aria-label="أدوات المذاكرة" className="space-y-3" dir="rtl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-black text-foreground">أدوات المذاكرة</h2>
+        <span className="text-xs font-medium text-muted-foreground">وصول مباشر لكل أقسام المنصة</span>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+        {tools.map((tool) => {
+          const Icon = tool.icon;
+          const cardClass =
+            "group flex items-center gap-3 rounded-xl border border-border bg-card hover:border-blue-500/50 hover:bg-muted/40 p-3 text-right transition-colors cursor-pointer min-w-0";
+
+          const inner = (
+            <>
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tool.tone}`}>
+                <Icon className="h-4.5 w-4.5" />
+              </span>
+              <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                <span className="text-xs sm:text-[13px] font-bold text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                  {tool.title}
+                </span>
+                {typeof tool.count === "number" && tool.count > 0 && (
+                  <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10.5px] font-mono font-bold text-muted-foreground">
+                    {tool.count}
+                  </span>
+                )}
+                {tool.href && (
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                )}
+              </div>
+            </>
+          );
+
+          if (tool.href) {
+            return (
+              <a key={tool.id} href={tool.href} className={cardClass}>
+                {inner}
+              </a>
+            );
+          }
+
+          return (
+            <button
+              key={tool.id}
+              type="button"
+              onClick={() => tool.tab && onOpen(tool.tab)}
+              className={cardClass}
+            >
+              {inner}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ── H. Latest Educational Resources (Compact List — Meaningful Titles) ──
+function RecentResourcesSection({
+  resources,
+  totalCount,
+  onOpenFiles,
+  onPreviewFile,
+}: {
+  resources: ReturnType<typeof buildStudentDashboardModel>["latestResources"];
+  totalCount: number;
+  onOpenFiles: () => void;
+  onPreviewFile?: (file: LearningFile) => void;
+}) {
+  return (
+    <section
+      aria-label="أحدث الملازم والملفات"
+      className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-2xs space-y-3.5"
+      dir="rtl"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-black text-foreground">أحدث الملازم والملفات</h2>
+          <span className="rounded-lg bg-muted px-2 py-0.5 text-[11px] font-mono font-bold text-muted-foreground border border-border">
+            {totalCount}
+          </span>
+        </div>
+        {totalCount > 0 && (
+          <button
+            type="button"
+            onClick={onOpenFiles}
+            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+          >
+            <span>عرض الكل</span>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {resources.length === 0 ? (
+        <EmptyState
+          icon={FolderOpen}
+          title="لسه مفيش ملازم مرفوعة"
+          description="أول ما ينزل ملزمة أو ملف جديد لمنهجك هيظهر هنا مباشرة."
+        />
+      ) : (
+        <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+          {resources.map(({ file, displayTitle, subtitle, fileType, sizeLabel, dateLabel }) => {
+            const Icon = getFileIcon(fileType);
+            return (
+              <div
+                key={file.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card hover:bg-muted/40 px-3.5 py-3 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <strong
+                      dir="auto"
+                      style={{ unicodeBidi: "isolate" }}
+                      className="block text-xs sm:text-[13px] font-extrabold text-foreground leading-snug break-words"
+                    >
+                      {displayTitle}
+                    </strong>
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-muted-foreground mt-0.5">
+                      <span className="truncate max-w-[220px]">{subtitle}</span>
+                      <span>•</span>
+                      <span className="font-mono font-bold text-foreground/80">{fileType}</span>
+                      <span>•</span>
+                      <span dir="ltr" className="font-mono">
+                        {sizeLabel}
+                      </span>
+                      {dateLabel && (
+                        <>
+                          <span>•</span>
+                          <span>{dateLabel}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => (onPreviewFile ? onPreviewFile(file) : onOpenFiles())}
+                    className="h-8 px-3 rounded-lg text-xs font-bold gap-1.5 cursor-pointer"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-primary" />
+                    <span>معاينة</span>
+                  </Button>
+                  <a
+                    href={`/api/learning/files/${file.id}/download`}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="تحميل الملف"
+                    aria-label={`تحميل ${displayTitle}`}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Main Redesigned DashboardTab ──
 export function DashboardTab({
   student,
   files,
@@ -727,6 +841,9 @@ export function DashboardTab({
   onRetry,
   onOpen,
   onPlayLesson,
+  onStartQuiz,
+  onPreviewFile,
+  onOpenSearch,
   unresolvedMistakesCount = 0,
 }: {
   student: Student;
@@ -737,120 +854,123 @@ export function DashboardTab({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "essay-exams" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onOpen: (tab: StudentNavTab) => void;
   onPlayLesson?: (videoId: number) => void;
+  onStartQuiz?: (quiz: Quiz) => void;
+  onPreviewFile?: (file: LearningFile) => void;
+  onOpenSearch?: () => void;
   unresolvedMistakesCount?: number;
 }) {
   const academicTrack = getTrackForStage(student.grade);
-  const safeFiles = Array.isArray(files) ? files : [];
-  const safeQuizzes = Array.isArray(quizzes) ? quizzes : [];
-  const safeVideos = Array.isArray(videos) ? videos : [];
-  const safeProgress = Array.isArray(progress) ? progress : [];
-  const progressByVideo = new Map(safeProgress.map((row) => [row.videoId, row]));
 
-  // Progress Calculations
-  const completedLessonsCount = safeVideos.filter(
-    (v) => (progressByVideo.get(v.id)?.progress || 0) >= 90
-  ).length;
+  const model = useMemo(
+    () =>
+      buildStudentDashboardModel({
+        student,
+        videos,
+        quizzes,
+        files,
+        progressRows: progress,
+        unresolvedMistakesCount,
+      }),
+    [student, videos, quizzes, files, progress, unresolvedMistakesCount],
+  );
 
-  const availableQuizzesCount = safeQuizzes.filter((q) => !q.locked).length;
-  const completedQuizzesCount = safeQuizzes.filter((q) => (q.attemptsUsed || 0) > 0).length;
+  const handlePrimaryCta = () => {
+    const { cta } = model.continueLearning;
+    if (cta.kind === "play_video" && cta.videoId && onPlayLesson) {
+      onPlayLesson(cta.videoId);
+      return;
+    }
+    if (cta.kind === "start_quiz" && cta.quiz && onStartQuiz) {
+      onStartQuiz(cta.quiz);
+      return;
+    }
+    onOpen("lessons");
+  };
 
-  const averageProgress = safeVideos.length
-    ? Math.round(
-        safeVideos.reduce(
-          (sum, video) => sum + (progressByVideo.get(video.id)?.progress || 0),
-          0,
-        ) / safeVideos.length,
-      )
-    : 0;
-
-  const continueRow = [...safeProgress]
-    .filter(
-      (row) =>
-        row.progress > 0 &&
-        row.progress < 100 &&
-        safeVideos.some((video) => video.id === row.videoId),
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt || 0).getTime() -
-        new Date(a.updatedAt || 0).getTime(),
-    )[0];
-
-  const continueVideo =
-    safeVideos.find((video) => video.id === continueRow?.videoId) || safeVideos[0];
-  const continueProgress = continueVideo
-    ? progressByVideo.get(continueVideo.id)?.progress || 0
-    : 0;
-
-  const dashMotivation = useMemo(() => getNextMotivationMessage("start"), [student.id]);
+  const handleRunTask = (task: LearningPlanTask) => {
+    if (task.kind === "mistakes") {
+      onOpen("mistakes");
+      return;
+    }
+    if (task.kind === "video" && task.videoId && onPlayLesson) {
+      onPlayLesson(task.videoId);
+      return;
+    }
+    if (task.kind === "homework") {
+      if (task.quiz && onStartQuiz) onStartQuiz(task.quiz);
+      else onOpen("homework");
+      return;
+    }
+    if (task.kind === "quiz") {
+      if (task.quiz && onStartQuiz) onStartQuiz(task.quiz);
+      else onOpen("quizzes");
+      return;
+    }
+    onOpen("lessons");
+  };
 
   if (dataLoading) {
     return (
-      <div className="space-y-4 max-w-[1400px] w-full" dir="rtl">
-        <div className="h-16 animate-pulse rounded-2xl bg-slate-200 dark:bg-[#111D2F]" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200 dark:bg-[#111D2F]" />
-          ))}
+      <div className="space-y-5 max-w-[1320px] w-full" dir="rtl" aria-busy="true">
+        <div className="h-16 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-56 animate-pulse rounded-2xl bg-muted" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-4">
+          <div className="h-64 animate-pulse rounded-2xl bg-muted" />
+          <div className="h-64 animate-pulse rounded-2xl bg-muted" />
         </div>
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200 dark:bg-[#111D2F]" />
       </div>
     );
   }
 
-  const attemptedQuizzes = safeQuizzes.filter((q) => (q.bestScore !== undefined && q.bestScore !== null));
-  const realAverageResult = attemptedQuizzes.length
-    ? Math.round(attemptedQuizzes.reduce((acc, curr) => acc + (curr.bestScore || 0), 0) / attemptedQuizzes.length)
-    : 0;
-
   return (
-    <section className="space-y-4 text-right max-w-[1400px] w-full" dir="rtl">
-      {/* 1. Header */}
-      <DashboardHeader
+    <div className="space-y-5 text-right max-w-[1320px] w-full" dir="rtl">
+      {/* A. Compact Personalized Student Header */}
+      <CompactStudentHeader
         student={student}
-        academicTrackTitle={academicTrack?.title}
-        onContinue={() => onOpen("lessons")}
-        onOpenSummaries={() => onOpen("summaries")}
+        academicTrackTitle={academicTrack?.title || student.grade || undefined}
+        state={model.state}
+        onOpenSearch={onOpenSearch}
       />
 
-      {/* Offline Center Confirmation Warning Banner */}
+      {/* Conditional Actionable Alerts */}
       {student.learningMode === "offline" && !student.centerConfirmed && (
-        <div className="rounded-2xl border-2 border-amber-400 bg-amber-50/90 dark:border-amber-500/50 dark:bg-amber-950/40 p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right">
-          <div className="space-y-1">
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black text-sm">
-              <MapPin className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>تنبيه إلزامي لتثبيت مقعدك واعتماد قيدك بالسنتر:</span>
+              <MapPin className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>تأكيد السنتر والميعاد مطلوب لتثبيت مقعدك</span>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-              لسه مأكدتش السنتر والميعاد بتاعك! ادخل على صفحة "حسابي" واختار السنتر والميعاد المناسب ليك عشان نثبت مقعدك وتقدر تغيّره في أي وقت.
+              ادخل على صفحة حسابي واختار السنتر والميعاد المناسب ليك علشان نثبت قيدك.
             </p>
           </div>
           <Button
             type="button"
-            onClick={() => onOpen("profile" as any)}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5"
+            onClick={() => onOpen("profile")}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer"
           >
-            <MapPin className="h-3.5 w-3.5" /> تأكيد السنتر الآن
+            تأكيد السنتر
           </Button>
         </div>
       )}
 
-      {/* Error Retry Alert */}
       {dataError && (
         <div
           role="alert"
           className="flex flex-col gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive sm:flex-row sm:items-center sm:justify-between"
         >
-          <span>{dataError}</span>
-          <Button type="button" variant="outline" onClick={onRetry} className="font-bold">
-            حاول مرة أخرى
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-bold">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{dataError}</span>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={onRetry} className="font-bold cursor-pointer">
+            حاول مرة تانية
           </Button>
         </div>
       )}
 
-      {/* Payment Warning */}
       {student.paymentStatus !== "paid" && (
         <PaymentBanner
           paymentStatus={student.paymentStatus || "unpaid"}
@@ -860,202 +980,54 @@ export function DashboardTab({
         />
       )}
 
-      {/* 1.5. Motivational Student Activity & Achievement Hero Card */}
-      {(() => {
-        const recentAttempted = safeQuizzes
-          .filter((q) => (q.attemptsUsed || 0) > 0 && typeof q.bestScore === "number")
-          .slice(0, 4);
-        const rankBadge =
-          realAverageResult >= 90 && completedQuizzesCount >= 1
-            ? { label: "بطل متفوق 🏆", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" }
-            : realAverageResult >= 75 && completedQuizzesCount >= 1
-            ? { label: "نجم صاعد ⭐", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" }
-            : completedQuizzesCount >= 1 || completedLessonsCount >= 1
-            ? { label: "ماشي في الطريق الصح 🚀", cls: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30" }
-            : { label: "بداية قوية 💪", cls: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30" };
-
-        return (
-          <div
-            className="rounded-3xl border border-border bg-card dark:bg-[#0D1626] text-foreground p-5 sm:p-6 shadow-sm space-y-4"
-            dir="rtl"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="shrink-0 ring-2 ring-blue-500/40 rounded-full p-0.5">
-                  <StudentAvatar name={student.name} src={student.avatarUrl} size="md" />
-                </div>
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-black border ${rankBadge.cls}`}>
-                      {rankBadge.label}
-                    </span>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      ملخص شغلك على المنصة
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm font-black text-foreground leading-relaxed flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
-                    <span>{dashMotivation}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <a
-                  href="/honor-board"
-                  className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition shadow-2xs"
-                >
-                  <Trophy className="h-4 w-4" />
-                  <span>لوحة الشرف 🏆</span>
-                </a>
-                {unresolvedMistakesCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => onOpen("mistakes")}
-                    className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-xs font-black transition cursor-pointer"
-                  >
-                    <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-                    <span>راجع أخطاءك ({unresolvedMistakesCount})</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Activity Breakdown Tiles (Flat Solid Colors — Clean Light & Dark Mode) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-muted-foreground">إنجاز الدروس</span>
-                <strong className="text-lg font-black font-mono text-foreground">
-                  {completedLessonsCount} <span className="text-xs text-muted-foreground">/ {safeVideos.length}</span>
-                </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                  <div className="h-full rounded-full bg-blue-600 dark:bg-blue-500" style={{ width: `${Math.min(100, averageProgress)}%` }} />
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-muted-foreground">امتحانات حلّيتها</span>
-                <strong className="text-lg font-black font-mono text-foreground">
-                  {completedQuizzesCount} <span className="text-xs text-muted-foreground">/ {safeQuizzes.length}</span>
-                </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-emerald-600 dark:bg-emerald-500"
-                    style={{ width: `${safeQuizzes.length > 0 ? Math.min(100, Math.round((completedQuizzesCount / safeQuizzes.length) * 100)) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-muted-foreground">متوسط درجاتك</span>
-                <strong className="text-lg font-black font-mono text-amber-600 dark:text-amber-400">
-                  {attemptedQuizzes.length > 0 ? `${realAverageResult}%` : "ابدأ أول امتحان"}
-                </strong>
-                <div className="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-amber-500"
-                    style={{ width: `${attemptedQuizzes.length > 0 ? Math.min(100, realAverageResult) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-muted/40 dark:bg-[#132036] border border-border p-3 text-right">
-                <span className="block text-[10.5px] font-bold text-muted-foreground">بنك الأخطاء</span>
-                <strong className="text-lg font-black font-mono text-foreground">
-                  {unresolvedMistakesCount === 0 ? "0 ✓" : `${unresolvedMistakesCount} سؤال`}
-                </strong>
-                <span className="block text-[10px] font-bold text-muted-foreground mt-0.5">
-                  {unresolvedMistakesCount === 0 ? "ممتاز! مفيش أخطاء متراكمة" : "اضغط فوق وراجعهم"}
-                </span>
-              </div>
-            </div>
-
-            {/* Latest Exam Scores Strip */}
-            {recentAttempted.length > 0 && (
-              <div className="pt-2.5 border-t border-border space-y-2">
-                <div className="text-[11px] font-black text-muted-foreground">آخر امتحاناتك ودرجاتك:</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                  {recentAttempted.map((qz) => {
-                    const sc = Math.round(Number(qz.bestScore || 0));
-                    return (
-                      <div key={qz.id} className="rounded-xl bg-muted/40 dark:bg-[#132036] border border-border px-3 py-2 space-y-1">
-                        <div className="flex items-center justify-between gap-2 text-[11px]">
-                          <span className="font-bold text-foreground truncate">{qz.title}</span>
-                          <span className={`font-mono font-black shrink-0 ${sc >= qz.passingScore ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                            {sc}%
-                          </span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${sc >= qz.passingScore ? "bg-emerald-600 dark:bg-emerald-500" : "bg-rose-600 dark:bg-rose-500"}`}
-                            style={{ width: `${Math.min(100, sc)}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* 2. KPI Statistics Cards */}
-      <StudentStatistics
-        completedLessonsCount={completedLessonsCount}
-        totalLessonsCount={safeVideos.length}
-        availableQuizzesCount={availableQuizzesCount}
-        completedQuizzesCount={completedQuizzesCount}
-        newFilesCount={safeFiles.length}
-        hasQuizResults={attemptedQuizzes.length > 0}
-        averageResult={realAverageResult}
+      {/* B. Intelligent Learning Continuation Hero */}
+      <ContinueLearningHero
+        model={model.continueLearning}
+        fallbackImage={academicTrack?.image}
+        onExecuteCta={handlePrimaryCta}
+        onOpenLessons={() => onOpen("lessons")}
       />
 
-      {/* 3. Overall Progress Summary */}
-      <StudentProgressSummary
-        overallProgress={averageProgress}
-        completedLessons={completedLessonsCount}
-        totalLessons={safeVideos.length}
-        completedQuizzes={completedQuizzesCount}
-        totalQuizzes={safeQuizzes.length}
-      />
-
-      {/* 4. Organized 2-Column Main Workspace */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: 0.08 }}
-        className="grid grid-cols-1 xl:grid-cols-[1.35fr_1fr] gap-4 items-start"
-      >
-        <div className="space-y-4">
-          <ContinueLearningCard
-            continueVideo={continueVideo}
-            continueProgress={continueProgress}
-            overallProgress={averageProgress}
-            academicTrackImage={academicTrack?.image}
-            onOpenLessons={() => onOpen("lessons")}
-            onPlayLesson={onPlayLesson}
-          />
-
+      {/* C + D + E + G: Focused 2-Column Learning Workspace */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_1fr] gap-5 items-start">
+        <div className="space-y-5 min-w-0">
+          <TodayLearningPlanSection tasks={model.todayPlan} onRunTask={handleRunTask} />
           <DailyChallengeCard isPaid={student.status === "approved" && student.paymentStatus === "paid"} />
         </div>
 
-        <div className="space-y-4">
-          <QuickActionsDock onOpen={onOpen} unresolvedMistakesCount={unresolvedMistakesCount} />
-
-          <NextStepsList
-            quizzes={safeQuizzes}
-            files={safeFiles}
-            videos={safeVideos}
-            onOpen={onOpen}
-            onPlayLesson={onPlayLesson}
+        <div className="space-y-5 min-w-0">
+          <UnifiedProgressOverview
+            progress={model.progress}
+            onOpenQuizzes={() => onOpen("quizzes")}
+          />
+          <SmartMistakesWidget
+            unresolvedCount={model.progress.unresolvedMistakesCount}
+            attemptedExams={model.progress.attemptedExams}
+            onOpenMistakes={() => onOpen("mistakes")}
+            onOpenSelfAssessment={() => onOpen("self-assessment")}
           />
         </div>
-      </motion.div>
+      </div>
 
-      {/* 5. Latest Files Section */}
-      <LatestFilesSection files={safeFiles} onOpenFiles={() => onOpen("files")} />
-    </section>
+      {/* F. Learning Tools Grid */}
+      <LearningToolsGrid
+        counts={{
+          lessons: model.progress.totalLessons,
+          homeworks: model.progress.totalHomeworks,
+          files: Array.isArray(files) ? files.length : 0,
+          exams: model.progress.availableExams,
+          mistakes: model.progress.unresolvedMistakesCount,
+        }}
+        onOpen={onOpen}
+      />
+
+      {/* H. Latest Educational Resources */}
+      <RecentResourcesSection
+        resources={model.latestResources}
+        totalCount={Array.isArray(files) ? files.length : 0}
+        onOpenFiles={() => onOpen("files")}
+        onPreviewFile={onPreviewFile}
+      />
+    </div>
   );
 }

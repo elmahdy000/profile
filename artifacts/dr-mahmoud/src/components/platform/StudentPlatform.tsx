@@ -7,6 +7,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ClipboardCheck,
   Clock,
@@ -16,6 +17,7 @@ import {
   Loader2,
   Lock,
   LogOut,
+  MessageCircle,
   Play,
   ShieldCheck,
   Trophy,
@@ -604,6 +606,23 @@ export function StudentPlatform() {
 
   // Global Command Palette Shortcut (Ctrl + K or Cmd + K)
   const [openCommandPalette, setOpenCommandPalette] = useState(false);
+  const [collapsedNavGroups, setCollapsedNavGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("dr_mahmoud_student_nav_groups");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const toggleNavGroup = (groupKey: string) => {
+    setCollapsedNavGroups((prev) => {
+      const next = { ...prev, [groupKey]: !prev[groupKey] };
+      try {
+        localStorage.setItem("dr_mahmoud_student_nav_groups", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
@@ -1352,65 +1371,80 @@ export function StudentPlatform() {
   };
 
   const nav = [
-    ["dashboard", "الرئيسية", Home],
-    ["lessons", "فيديوهات المنصة", BookOpen],
-    ["homework", "الواجب المنزلي 📚", BookCheck],
-    ["kholasa", "الخلاصة", Sparkles],
-    ["mistakes", "ركن غلطاتي 🎯", Target],
-    ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
-    ["quizzes", "الاختبارات", ClipboardCheck],
-    ["summaries", "مذكراتي 📝", FileText],
-    ["files", "الملفات", FolderOpen],
-    ["self-assessment", "التقييم الذاتي 🎯", Sparkles],
-    ["card", "كارت الحضور QR", QrCode],
-    ["profile", "حسابي", User],
+    ["dashboard", "الصفحة الرئيسية", Home],
+    ["lessons", "فيديوهات الشرح", BookOpen],
+    ["homework", "الواجب المنزلي", BookCheck],
+    ["kholasa", "الخلاصة والخرائط", Sparkles],
+    ["mistakes", "ركن غلطاتي", Target],
+    ["essay-exams", "الامتحانات المقالية", FileEdit],
+    ["quizzes", "الاختبارات الدورية", ClipboardCheck],
+    ["summaries", "مذكراتي وتلخيصاتي", FileText],
+    ["files", "الملازم والملفات", FolderOpen],
+    ["self-assessment", "التقييم الذاتي", Sparkles],
+    ["card", "بطاقة الحضور QR", QrCode],
+    ["profile", "الإعدادات وحسابي", User],
   ] as const;
 
   const navSections = [
     {
+      id: "main",
+      title: "الرئيسية",
+      items: [
+        { id: "dashboard" as const, label: "الصفحة الرئيسية", icon: Home },
+      ],
+    },
+    {
+      id: "study",
       title: "المذاكرة والمنهج",
       items: [
-        { id: "dashboard" as const, label: "الرئيسية", icon: Home },
-        { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
+        { id: "lessons" as const, label: "فيديوهات الشرح", icon: BookOpen },
         { id: "kholasa" as const, label: "الخلاصة والخرائط", icon: Sparkles },
-        { id: "homework" as const, label: "الواجب المنزلي", icon: BookCheck },
-        { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
+        { id: "files" as const, label: "الملازم والملفات", icon: FolderOpen },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
         { id: "offline-vault" as const, label: "محفظة الأوفلاين", icon: FolderDown },
       ],
     },
     {
+      id: "exams",
       title: "الامتحانات والتقييم",
       items: [
+        { id: "homework" as const, label: "الواجب المنزلي", icon: BookCheck },
         { id: "quizzes" as const, label: "الاختبارات الدورية", icon: ClipboardCheck },
         { id: "essay-exams" as const, label: "الامتحانات المقالية", icon: FileEdit },
         { id: "self-assessment" as const, label: "التقييم الذاتي", icon: Sparkles },
+      ],
+    },
+    {
+      id: "performance",
+      title: "مستواك الدراسي",
+      items: [
         { id: "mistakes" as const, label: "ركن غلطاتي", icon: Target },
       ],
     },
     {
-      title: "الحساب والسنتر",
+      id: "account",
+      title: "الحساب والدعم",
       items: [
         { id: "card" as const, label: "بطاقة الحضور QR", icon: QrCode },
-        { id: "profile" as const, label: "بيانات حسابي", icon: User },
+        { id: "profile" as const, label: "الإعدادات وحسابي", icon: User },
       ],
     },
   ] as const;
 
   const navLabels: Record<string, string> = {
-    dashboard: "الرئيسية",
-    lessons: "فيديوهات المنصة",
-    homework: "الواجب المنزلي 📚",
-    "offline-vault": "محفظة الأوفلاين ⚡",
-    kholasa: "الخلاصة",
+    dashboard: "الصفحة الرئيسية",
+    lessons: "فيديوهات الشرح",
+    homework: "الواجب المنزلي",
+    "offline-vault": "محفظة الأوفلاين",
+    kholasa: "الخلاصة والخرائط",
     mistakes: "ركن غلطاتي",
     "essay-exams": "الامتحانات المقالية",
-    quizzes: "الاختبارات",
-    summaries: "مذكراتي",
-    files: "الملفات",
+    quizzes: "الاختبارات الدورية",
+    summaries: "مذكراتي وتلخيصاتي",
+    files: "الملازم والملفات",
     "self-assessment": "التقييم الذاتي",
     card: "بطاقة الحضور QR",
-    profile: "حسابي",
+    profile: "الإعدادات وحسابي",
   };
 
   return (
@@ -1437,17 +1471,17 @@ export function StudentPlatform() {
           />
         )}
 
-        {/* Responsive Sidebar (Vercel Precision Style) */}
+        {/* Responsive Sidebar */}
         <aside
           aria-label="قائمة التنقل الجانبية"
-          className={`fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-l border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#070D18] text-slate-800 dark:text-slate-200 shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-[256px] lg:translate-x-0 lg:shadow-none ${
+          className={`fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-l border-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-[256px] lg:translate-x-0 lg:shadow-none ${
             sidebarOpen
               ? "translate-x-0 visible pointer-events-auto"
               : "translate-x-full invisible pointer-events-none lg:visible lg:pointer-events-auto"
           }`}
         >
           {/* Top Brand & Close Button Header */}
-          <div className="shrink-0 flex items-center justify-between border-b border-slate-200/80 dark:border-[#1E2E48] px-3.5 py-2.5 bg-slate-50/70 dark:bg-[#0A1220]">
+          <div className="shrink-0 flex items-center justify-between border-b border-border px-3.5 py-2.5 bg-card/60">
             <div className="flex items-center gap-2.5">
               <img
                 src="/logo.webp"
@@ -1492,7 +1526,8 @@ export function StudentPlatform() {
                 </span>
               ) : (
                 <span className="whitespace-nowrap inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                  مشترك مفعّل ✅
+                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                  <span>مشترك مفعّل</span>
                 </span>
               )}
               {student.accessCode && (
@@ -1510,105 +1545,124 @@ export function StudentPlatform() {
             </div>
           </div>
 
-          {/* Navigation Items (Categorized Clean Hierarchy) */}
-          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-2.5 px-2.5 space-y-2.5">
-            {navSections.map((section, sIdx) => (
-              <div
-                key={section.title}
-                className={`space-y-0.5 ${
-                  sIdx > 0 ? "pt-2 border-t border-slate-100 dark:border-[#162238]" : ""
-                }`}
-              >
-                <div className="px-2.5 pb-1 text-[10px] font-extrabold tracking-wide text-slate-400 dark:text-slate-500">
-                  {section.title}
-                </div>
-                {section.items.map((item) => {
-                  const isLockedTab = isUnpaid && ["quizzes", "homework", "essay-exams", "self-assessment", "kholasa", "mistakes", "files", "summaries"].includes(item.id);
-                  const isPreviewTab = isUnpaid && item.id === "lessons";
-                  const isActive = tab === item.id;
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setTab(item.id);
-                        setSidebarOpen(false);
-                      }}
-                      aria-current={isActive ? "page" : undefined}
-                      className={`group relative flex min-h-[36px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold transition-all duration-150 cursor-pointer ${
-                        isActive
-                          ? "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-extrabold border border-blue-200/80 dark:border-blue-500/30"
-                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-[#122034] hover:text-slate-900 dark:hover:text-white border border-transparent"
-                      }`}
-                    >
-                      {isActive && (
-                        <span className="absolute right-0 top-1.5 bottom-1.5 w-1 rounded-l-full bg-blue-600 dark:bg-blue-500" />
-                      )}
-                      <Icon className={`h-[16px] w-[16px] shrink-0 transition-colors ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200"}`} />
-                      <span className="truncate flex-1">{item.label}</span>
-                      {isLockedTab && (
-                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
-                          <Lock className="h-2.5 w-2.5" /> مقفول
-                        </span>
-                      )}
-                      {!isLockedTab && item.id === "mistakes" && unresolvedMistakesCount > 0 && (
-                        <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[9.5px] font-black text-white shrink-0">
-                          {unresolvedMistakesCount}
-                        </span>
-                      )}
-                      {isPreviewTab && (
-                        <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                          معاينة ✨
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-                {section.title === "الحساب والسنتر" && (
-                  <a
-                    href="/honor-board"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group relative flex min-h-[36px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 hover:border-amber-500/30 transition-all cursor-pointer mt-1"
+          {/* Navigation Items (Collapsible Categorized Hierarchy — Zero Emojis) */}
+          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-2.5 px-2.5 space-y-2">
+            {navSections.map((section, sIdx) => {
+              const isCollapsed = Boolean(collapsedNavGroups[section.id]);
+              return (
+                <div
+                  key={section.id}
+                  className={`space-y-0.5 ${
+                    sIdx > 0 ? "pt-2 border-t border-border/70" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleNavGroup(section.id)}
+                    aria-expanded={!isCollapsed}
+                    className="flex w-full items-center justify-between px-2.5 py-1 text-[10.5px] font-extrabold tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-lg"
                   >
-                    <Trophy className="h-[16px] w-[16px] shrink-0 text-amber-500" />
-                    <span className="truncate flex-1">لوحة الشرف 🏆</span>
-                    <ExternalLink className="h-3 w-3 text-amber-500/70" />
-                  </a>
-                )}
-              </div>
-            ))}
+                    <span>{section.title}</span>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                        isCollapsed ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {!isCollapsed && (
+                    <div className="space-y-0.5 pt-0.5">
+                      {section.items.map((item) => {
+                        const isLockedTab = isUnpaid && ["quizzes", "homework", "essay-exams", "self-assessment", "kholasa", "mistakes", "files", "summaries"].includes(item.id);
+                        const isPreviewTab = isUnpaid && item.id === "lessons";
+                        const isActive = tab === item.id;
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setTab(item.id);
+                              setSidebarOpen(false);
+                            }}
+                            aria-current={isActive ? "page" : undefined}
+                            className={`group relative flex min-h-[36px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold transition-colors duration-150 cursor-pointer ${
+                              isActive
+                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 font-extrabold border border-blue-500/25"
+                                : "text-muted-foreground hover:bg-muted/70 hover:text-foreground border border-transparent"
+                            }`}
+                          >
+                            {isActive && (
+                              <span className="absolute right-0 top-1.5 bottom-1.5 w-1 rounded-l-full bg-blue-600 dark:bg-blue-500" />
+                            )}
+                            <Icon className={`h-[16px] w-[16px] shrink-0 transition-colors ${isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground group-hover:text-foreground"}`} />
+                            <span className="truncate flex-1">{item.label}</span>
+                            {isLockedTab && (
+                              <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
+                                <Lock className="h-2.5 w-2.5" /> مقفول
+                              </span>
+                            )}
+                            {!isLockedTab && item.id === "mistakes" && unresolvedMistakesCount > 0 && (
+                              <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[9.5px] font-mono font-black text-white shrink-0">
+                                {unresolvedMistakesCount}
+                              </span>
+                            )}
+                            {isPreviewTab && (
+                              <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                معاينة
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+
+                      {section.id === "performance" && (
+                        <a
+                          href="/honor-board"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group relative flex min-h-[36px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 bg-amber-500/10 border border-amber-500/20 transition-colors cursor-pointer mt-1"
+                        >
+                          <Trophy className="h-[16px] w-[16px] shrink-0 text-amber-600 dark:text-amber-400" />
+                          <span className="truncate flex-1">لوحة الشرف</span>
+                          <ExternalLink className="h-3 w-3 opacity-70" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
 
           {/* Compact Bottom Footer Actions */}
-          <div className="shrink-0 mt-auto space-y-1.5 border-t border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#070D18] p-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <ThemeToggle className="h-8.5 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
+          <div className="shrink-0 mt-auto space-y-1.5 border-t border-border bg-card/60 p-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <ThemeToggle className="h-8.5 w-full text-foreground border-border bg-card shadow-2xs" />
             <div className="grid grid-cols-2 gap-1.5">
               <a
                 href={`https://wa.me/201066711545?text=${encodeURIComponent(
-                  `مرحباً د. محمود 👋\n\nأود الاستفسار وحجز الكورس من داخل حسابي بالمنصة:\n- الاسم: ${student.name}\n- رقم الهاتف: ${student.phone}\n- المرحلة الدراسية: ${student.grade || "غير محدد"}\n- نظام التعليم: ${student.educationSystem || "غير محدد"}\n- المحافظة/المدينة: ${student.governorate || "غير محدد"} - ${student.city || ""}\n- وضع التعلم: ${student.learningMode === "offline" ? "أوفلاين بالزقازيق" : "أونلاين"}`
+                  `مرحباً د. محمود، أود الاستفسار من داخل حسابي بالمنصة:\n- الاسم: ${student.name}\n- رقم الهاتف: ${student.phone}\n- المرحلة الدراسية: ${student.grade || "غير محدد"}\n- نظام التعليم: ${student.educationSystem || "غير محدد"}\n- وضع التعلم: ${student.learningMode === "offline" ? "سنتر" : "أونلاين"}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-8.5 items-center justify-center gap-1 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                className="flex h-8.5 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-2 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-500/20"
               >
-                <span className="truncate">الدعم / واتساب</span>
-                <span>💬</span>
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">الدعم والمساعدة</span>
               </a>
               <button
                 type="button"
                 onClick={logout}
-                className="flex h-8.5 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] px-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/25 cursor-pointer"
+                className="flex h-8.5 w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-2 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-500/25 cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5 shrink-0" />
-                <span>خروج</span>
+                <span>تسجيل الخروج</span>
               </button>
             </div>
           </div>
         </aside>
-        <section className="min-w-0 bg-[#F8FAFC] dark:bg-[#070D18] min-h-screen">
-          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/80 dark:border-[#1E2E48] bg-white/80 dark:bg-[#070D18]/80 px-4 backdrop-blur-xl md:px-6 shadow-2xs">
+        <section className="min-w-0 bg-background min-h-screen">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/90 px-4 backdrop-blur-md md:px-6 shadow-2xs">
             {/* Right in RTL: Menu + Breadcrumbs + Live Status */}
             <div className="flex items-center gap-3">
               <button
@@ -1884,6 +1938,9 @@ export function StudentPlatform() {
                 setInitialVideoId(videoId);
                 setTab("lessons");
               }}
+              onStartQuiz={startQuiz}
+              onPreviewFile={(file) => setLinkedPreviewFile(file)}
+              onOpenSearch={() => setOpenCommandPalette(true)}
               unresolvedMistakesCount={isUnpaid ? 0 : unresolvedMistakesCount}
             />
           ) : tab === "lessons" ? (
@@ -2033,62 +2090,48 @@ export function StudentPlatform() {
         </section>
       </div>
 
-      {/* Mobile Bottom Navigation Dock (Centered الخلاصة) */}
+      {/* Mobile Bottom Navigation Dock (5 Clean Student Tabs — Zero Emojis) */}
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#070D18]/90 px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur-md lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5 gap-1 items-center">
           <button
             type="button"
             onClick={() => { setTab("dashboard"); setSidebarOpen(false); }}
             aria-current={tab === "dashboard" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
               tab === "dashboard"
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Home className={`h-[20px] w-[20px] ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
             <span>الرئيسية</span>
           </button>
+
           <button
             type="button"
             onClick={() => { setTab("lessons"); setSidebarOpen(false); }}
             aria-current={tab === "lessons" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              tab === "lessons"
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
+              tab === "lessons" || tab === "kholasa" || tab === "files"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
-            <span className="truncate">الفيديوهات</span>
-          </button>
-
-          {/* Center: الخلاصة */}
-          <button
-            type="button"
-            onClick={() => { setTab("kholasa"); setSidebarOpen(false); }}
-            aria-current={tab === "kholasa" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              tab === "kholasa"
-                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-amber-500 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400"
-            }`}
-          >
-            <Sparkles className={`h-[20px] w-[20px] ${tab === "kholasa" ? "text-amber-500 stroke-[2.5]" : "text-amber-500/70"}`} />
-            <span className="font-extrabold text-amber-600 dark:text-amber-400">الخلاصة</span>
+            <span>المذاكرة</span>
           </button>
 
           <button
             type="button"
             onClick={() => { setTab("quizzes"); setSidebarOpen(false); }}
             aria-current={tab === "quizzes" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              tab === "quizzes"
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
+              tab === "quizzes" || tab === "homework" || tab === "essay-exams"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <ClipboardCheck className={`h-[20px] w-[20px] ${tab === "quizzes" ? "stroke-[2.5]" : ""}`} />
@@ -2097,16 +2140,33 @@ export function StudentPlatform() {
 
           <button
             type="button"
+            onClick={() => { setTab("mistakes"); setSidebarOpen(false); }}
+            aria-current={tab === "mistakes" ? "page" : undefined}
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
+              tab === "mistakes" || tab === "self-assessment"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className={`h-[20px] w-[20px] ${tab === "mistakes" ? "stroke-[2.5]" : ""}`} />
+            <span>مستوايا</span>
+            {!isUnpaid && unresolvedMistakesCount > 0 && (
+              <span className="absolute top-1.5 left-2 h-2 w-2 rounded-full bg-rose-600" aria-hidden="true" />
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              sidebarOpen || ["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries", "homework"].includes(tab)
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10.5px] font-bold transition-colors cursor-pointer relative ${
+              sidebarOpen || ["profile", "summaries", "offline-vault", "card"].includes(tab)
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
-            <span className="truncate max-w-[60px]">{["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries", "homework"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
+            <span>المزيد</span>
           </button>
         </div>
       </nav>

@@ -69,7 +69,7 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
         method: "POST",
         body: JSON.stringify({ answers: arr }),
       });
-      toast({ title: "تم تسجيل التحدي اليومي بنجاح! 🔥" });
+      toast({ title: "تم تسجيل التحدي اليومي بنجاح" });
       window.dispatchEvent(new Event("kholasa:mistakes-updated"));
       await loadDaily();
     } catch (err: any) {
@@ -83,29 +83,28 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
     <>
       <motion.div
         dir="rtl"
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -2 }}
-        transition={{ duration: 0.25 }}
-        className="rounded-2xl border border-amber-500/35 bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-amber-500/60 transition-colors"
+        transition={{ duration: 0.2 }}
+        className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-amber-500/50 transition-colors"
       >
-        <div className="flex items-start sm:items-center gap-3.5">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-white shadow-sm">
-            <Flame className="h-6 w-6" />
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+            <Flame className="h-5 w-5" />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm sm:text-base font-black text-foreground">
-                التحدي اليومي السريع ({ch?.totalQuestions || 5} أسئلة)
+                تحدي النهارده ({ch?.totalQuestions || 5} أسئلة)
               </h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 text-xs font-extrabold border border-amber-500/25">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[11px] font-bold border border-amber-500/25 font-mono tabular-nums">
                 <Flame className="h-3 w-3" /> {streak} يوم التزام
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {ch?.completed
-                ? `أتممت تحدي اليوم بنجاح بنتيجة ${ch.score ?? 0} من ${ch.totalQuestions}! نراك غداً للحفاظ على سلسلتك.`
-                : "حل 5 أسئلة سريعة من منهجك في دقيقتين للحفاظ على سلسلة التزامك اليومية!"}
+                ? `خلصت تحدي النهارده بنتيجة ${ch.score ?? 0} من ${ch.totalQuestions}. كمّل بكرة علشان تحافظ على سلسلتك.`
+                : "أسئلة سريعة من منهجك في دقيقتين لتثبيت المعلومة والحفاظ على التزامك."}
             </p>
           </div>
         </div>
@@ -115,17 +114,17 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
           onClick={() => setModalOpen(true)}
           disabled={loading}
           variant={ch?.completed ? "outline" : "default"}
-          className="h-10 px-5 rounded-xl font-bold text-xs gap-2 shrink-0 cursor-pointer"
+          className="h-10 px-4 rounded-xl font-bold text-xs gap-2 shrink-0 cursor-pointer"
         >
           {ch?.completed ? (
             <>
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              مراجعة إجابات اليوم ({ch.score}/{ch.totalQuestions})
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              شوف نتيجتك ({ch.score}/{ch.totalQuestions})
             </>
           ) : (
             <>
               <Play className="h-4 w-4 fill-current" />
-              ابدأ تحدي اليوم
+              ابدأ تحدي النهارده
             </>
           )}
         </Button>
@@ -156,7 +155,7 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
               {ch.completed && (
                 <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
                   <strong className="text-base font-black text-emerald-600 dark:text-emerald-400">
-                    نتيجة اليوم: {ch.score} من {ch.totalQuestions} 🎉
+                    نتيجة اليوم: {ch.score} من {ch.totalQuestions}
                   </strong>
                 </div>
               )}
