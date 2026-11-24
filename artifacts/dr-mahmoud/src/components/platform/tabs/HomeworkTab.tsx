@@ -177,7 +177,6 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
           {filteredHomework.map((hw) => {
             const isLocked = Boolean(hw.locked);
             const questionsCount = hw.questionsToShow && hw.questionsToShow > 0 ? hw.questionsToShow : hw.questions.length;
-            const effectiveDuration = getEffectiveQuizDurationMinutes(hw);
             const hwDateInfo = formatExamDayAndTime(hw.createdAt);
 
             return (
@@ -186,25 +185,17 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
                 className="group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200 overflow-hidden border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-amber-500/50"
               >
                 <div className="space-y-3">
-                  {/* Top Status, Timer & Questions Count */}
+                  {/* Top Status & Questions Count */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80">
                       <BookCheck className="h-3.5 w-3.5 text-amber-600" />
                       <span>تسليم يدوي ورقي 📝</span>
                     </span>
 
-                    <div className="flex items-center gap-2">
-                      {effectiveDuration && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/90 dark:bg-amber-950/50 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
-                          <Clock className="h-3 w-3 text-amber-500" />
-                          <span className="font-mono tabular-nums">{effectiveDuration}</span> دقيقة
-                        </span>
-                      )}
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                        <BookOpen className="h-3.5 w-3.5 text-amber-600" />
-                        <span>{questionsCount} سؤال</span>
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      <BookOpen className="h-3.5 w-3.5 text-amber-600" />
+                      <span>{questionsCount} سؤال</span>
+                    </span>
                   </div>
 
                   {/* Day & Time Badge */}
@@ -243,6 +234,14 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
                     <span className="shrink-0 text-xs">✍️</span>
                     <span>
                       <strong>تسليم ورقي بالحصة:</strong> يُحل هذا الواجب في كشكول الواجب الخاص بك، ويُسلّم يدوياً لمساعد المعلم في الحصة القادمة بالسنتر.
+                    </span>
+                  </div>
+
+                  {/* Pre-Solving Responsibility Advice */}
+                  <div className="text-[11px] text-blue-900 dark:text-blue-200 font-medium bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/25 flex items-start gap-1.5 leading-relaxed">
+                    <span className="shrink-0 text-xs">💡</span>
+                    <span>
+                      <strong>نصيحة قبل الحل:</strong> خليك قد المسؤولية وحلّ الواجب بمجهودك من غير نقل؛ الواجب ده معمول علشان يثبّت فهمك ويعوّدك على مستوى الامتحان الحقيقي.
                     </span>
                   </div>
                 </div>

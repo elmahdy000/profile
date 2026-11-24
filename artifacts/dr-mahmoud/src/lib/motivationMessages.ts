@@ -163,18 +163,12 @@ export function isQuizHomework(quiz?: Partial<Quiz> | null): boolean {
 }
 
 /**
- * Guarantees every homework has a countdown timer (even older homeworks in DB
- * that had durationMinutes = null).
+ * Returns the explicit duration set by the admin, or null if untimed.
  */
 export function getEffectiveQuizDurationMinutes(quiz?: Partial<Quiz> | null): number | null {
   if (!quiz) return null;
   if (quiz.durationMinutes && quiz.durationMinutes > 0) {
     return quiz.durationMinutes;
-  }
-  if (isQuizHomework(quiz)) {
-    const qCount =
-      (quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions?.length) || 10;
-    return Math.max(15, Math.min(60, qCount * 2));
   }
   return null;
 }
