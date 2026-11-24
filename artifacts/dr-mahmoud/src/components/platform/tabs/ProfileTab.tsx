@@ -281,7 +281,7 @@ export function ProfileTab({
             )}
 
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
-              <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
+              <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
                 <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : student.avatarUrl ? "تغيير الصورة" : "رفع صورة البروفايل (إلزامي)"}
               </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Search,
   UserCheck,
@@ -113,6 +113,15 @@ export function StudentsTab({
   const [stageModalTarget, setStageModalTarget] = useState<ExtendedStudent | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "gallery">("table");
   const [photoFilter, setPhotoFilter] = useState<"all" | "with_photo" | "without_photo">("all");
+  const [brokenAvatarIds, setBrokenAvatarIds] = useState<Set<number>>(() => new Set());
+  const markAvatarBroken = useCallback((id: number) => {
+    setBrokenAvatarIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
   const [previewAvatarStudent, setPreviewAvatarStudent] = useState<ExtendedStudent | null>(null);
 
   // Keep an open profile in sync after a successful parent-list update.
@@ -845,7 +854,7 @@ export function StudentsTab({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
             {paginatedStudents.map((s) => {
-              const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null");
+              const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarIds.has(s.id));
               return (
                 <article
                   key={s.id}
@@ -860,6 +869,7 @@ export function StudentsTab({
                         alt={s.name}
                         loading="lazy"
                         decoding="async"
+                        onError={() => markAvatarBroken(s.id)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setPreviewAvatarStudent(s);
@@ -945,7 +955,7 @@ export function StudentsTab({
           </div>
         ) : paginatedStudents.map((student) => {
           const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
-          const hasPhoto = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null");
+          const hasPhoto = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null" && !brokenAvatarIds.has(student.id));
           return (
             <article key={student.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
               <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] rounded-xl">
@@ -957,6 +967,7 @@ export function StudentsTab({
                         alt={student.name}
                         loading="lazy"
                         decoding="async"
+                        onError={() => markAvatarBroken(student.id)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setPreviewAvatarStudent(student);
@@ -1077,7 +1088,7 @@ export function StudentsTab({
                     {/* Student Primary Info + Profile Photo */}
                     <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <div className="flex items-center gap-2.5">
-                        {s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" ? (
+                        {s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarIds.has(s.id) ? (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1092,6 +1103,7 @@ export function StudentsTab({
                               alt={s.name}
                               loading="lazy"
                               decoding="async"
+                              onError={() => markAvatarBroken(s.id)}
                               className="h-full w-full object-cover"
                             />
                           </button>

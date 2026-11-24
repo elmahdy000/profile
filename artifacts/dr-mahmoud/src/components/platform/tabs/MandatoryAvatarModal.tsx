@@ -114,7 +114,7 @@ export function MandatoryAvatarModal({
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="sr-only"
             onChange={(e) => handleFilePick(e.target.files?.[0])}
           />
