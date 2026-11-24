@@ -355,9 +355,13 @@ export function UploadQuestionsTab({
     if (isLang) {
       unitSet.add("الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)");
       unitSet.add("الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)");
+      unitSet.add("الوحدة الثالثة: تطبيقات الويب (Unit 3: Web Applications)");
+      unitSet.add("الوحدة الرابعة: تصميم الويب والوسائط (Unit 4: Web Design and Media)");
     } else if (uploadStage.includes("عربي")) {
       unitSet.add("الوحدة الأولى: الذكاء الاصطناعي والمجتمع");
       unitSet.add("الوحدة الثانية: الأمن السيبراني والتشفير");
+      unitSet.add("الوحدة الثالثة: تطبيقات الويب");
+      unitSet.add("الوحدة الرابعة: تصميم الويب والوسائط");
     }
 
     // 3. From courses/videos matching this stage
@@ -395,19 +399,30 @@ export function UploadQuestionsTab({
 
     // 2. Curriculum standards by stage & unit
     const isLang = uploadStage.includes("لغات") || uploadStage.toLowerCase().includes("languages");
-    const isUnit1 = uploadUnit.includes("الأولى") || uploadUnit.includes("1") || uploadUnit.toLowerCase().includes("artificial");
-    const isUnit2 = uploadUnit.includes("الثانية") || uploadUnit.includes("2") || uploadUnit.toLowerCase().includes("cybersecurity") || uploadUnit.includes("الأمن");
+    const isUnit1 = uploadUnit.includes("الأولى") || uploadUnit.includes("Unit 1") || uploadUnit.toLowerCase().includes("artificial");
+    const isUnit2 = uploadUnit.includes("الثانية") || uploadUnit.includes("Unit 2") || uploadUnit.toLowerCase().includes("cybersecurity") || uploadUnit.includes("الأمن");
+    const isUnit3 = uploadUnit.includes("الثالثة") || uploadUnit.includes("Unit 3") || uploadUnit.toLowerCase().includes("web applications") || uploadUnit.includes("تطبيقات الويب");
+    const isUnit4 = uploadUnit.includes("الرابعة") || uploadUnit.includes("Unit 4") || uploadUnit.toLowerCase().includes("web design") || uploadUnit.includes("الوسائط");
 
     if (isLang) {
       if (isUnit1) {
-        lessonSet.add("Lesson 1-1: Information Technology");
+        lessonSet.add("Lesson 1-1: Development of Information Technology and Social Transformation");
         lessonSet.add("Lesson 1-2: How AI Works");
-        lessonSet.add("Lesson 1-3: AI in Our Daily Life");
-        lessonSet.add("Lesson 1-4: AI Ethics");
+        lessonSet.add("Lesson 1-3: AI in Daily Life and Industry");
+        lessonSet.add("Lesson 1-4: Ethical Issues with AI");
       } else if (isUnit2) {
-        lessonSet.add("Lesson 2-1: Cryptographic and Authentications");
-        lessonSet.add("Lesson 2-2: Network Encryption Technologies");
-        lessonSet.add("Lesson 2-3: Security Incident (التعامل مع الحوادث الأمنية)");
+        lessonSet.add("Lesson 2-1: Cryptographic Technologies and Authentication");
+        lessonSet.add("Lesson 2-2: Network Security Design");
+        lessonSet.add("Lesson 2-3: Incident Response and Risk Management");
+      } else if (isUnit3) {
+        lessonSet.add("Lesson 3-1: The Overall Structure of Web Applications");
+        lessonSet.add("Lesson 3-2: Web Application Communication Methods");
+        lessonSet.add("Lesson 3-3: Fundamentals of Frontend Technology");
+      } else if (isUnit4) {
+        lessonSet.add("Lesson 4-1: Types and Characteristics of Media");
+        lessonSet.add("Lesson 4-2: Information Design and User Experience for Websites");
+        lessonSet.add("Lesson 4-3: Methods for Evaluating Websites");
+        lessonSet.add("Lesson 4-4: The Iterative Improvement Process for Websites");
       }
     } else {
       if (isUnit1) {
@@ -417,8 +432,17 @@ export function UploadQuestionsTab({
         lessonSet.add("الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي");
       } else if (isUnit2) {
         lessonSet.add("الدرس الأول: التشفير والمصادقة");
-        lessonSet.add("الدرس الثاني: حماية البيانات والمعلومات");
-        lessonSet.add("الدرس الثالث: التعامل مع الحوادث الأمنية وإدارة المخاطر");
+        lessonSet.add("الدرس الثاني: تصميم أمن الشبكات");
+        lessonSet.add("الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر");
+      } else if (isUnit3) {
+        lessonSet.add("الدرس الأول: البنية العامة لتطبيقات الويب");
+        lessonSet.add("الدرس الثاني: طرق الاتصال في تطبيقات الويب");
+        lessonSet.add("الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية");
+      } else if (isUnit4) {
+        lessonSet.add("الدرس الأول: أنواع الوسائط وخصائصها");
+        lessonSet.add("الدرس الثاني: تصميم المعلومات وتجربة المستخدم للمواقع");
+        lessonSet.add("الدرس الثالث: أساليب تقييم المواقع الإلكترونية");
+        lessonSet.add("الدرس الرابع: عملية التحسين التكراري للمواقع");
       }
     }
 

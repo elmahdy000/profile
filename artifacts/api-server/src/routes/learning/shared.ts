@@ -343,7 +343,7 @@ export const CANONICAL_CURRICULUM_DATA: CanonicalCurriculumStage[] = [
         unit: "الوحدة الثانية: الأمن السيبراني والتشفير",
         lessons: [
           "الدرس الأول: التشفير والمصادقة",
-          "الدرس الثاني: تقنيات تشفير الشبكات وحماية البيانات",
+          "الدرس الثاني: تصميم أمن الشبكات",
           "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
           "شامل مراجعة الوحدة الثانية",
         ],
@@ -364,6 +364,7 @@ export const CANONICAL_CURRICULUM_DATA: CanonicalCurriculumStage[] = [
           "الدرس الثاني: تصميم المعلومات وتجربة المستخدم للمواقع",
           "الدرس الثالث: أساليب تقييم المواقع الإلكترونية",
           "الدرس الرابع: عملية التحسين التكراري للمواقع",
+          "شامل مراجعة الوحدة الرابعة",
         ],
       },
     ],
@@ -374,38 +375,39 @@ export const CANONICAL_CURRICULUM_DATA: CanonicalCurriculumStage[] = [
       {
         unit: "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)",
         lessons: [
-          "Lesson 1-1 – Development of Information Technology and Social Transformation",
-          "Lesson 1-2 – How AI Works",
-          "Lesson 1-3 – AI in Our Daily Life",
-          "Lesson 1-4 – AI Ethics",
+          "Lesson 1-1: Development of Information Technology and Social Transformation",
+          "Lesson 1-2: How AI Works",
+          "Lesson 1-3: AI in Daily Life and Industry",
+          "Lesson 1-4: Ethical Issues with AI",
           "Unit 1 Comprehensive Review",
         ],
       },
       {
         unit: "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)",
         lessons: [
-          "Lesson 2-1 – Cryptographic and Authentications",
-          "Lesson 2-2 – Network Security Design & Encryption Technologies",
-          "Lesson 2-3 – Security Incident Response & Risk Management",
+          "Lesson 2-1: Cryptographic Technologies and Authentication",
+          "Lesson 2-2: Network Security Design",
+          "Lesson 2-3: Incident Response and Risk Management",
           "Unit 2 Comprehensive Review",
         ],
       },
       {
         unit: "الوحدة الثالثة: تطبيقات الويب (Unit 3: Web Applications)",
         lessons: [
-          "Lesson 3-1 – General Architecture of Web Applications",
-          "Lesson 3-2 – Communication Methods in Web Applications",
-          "Lesson 3-3 – Fundamentals of Front-End Technology",
+          "Lesson 3-1: The Overall Structure of Web Applications",
+          "Lesson 3-2: Web Application Communication Methods",
+          "Lesson 3-3: Fundamentals of Frontend Technology",
           "Unit 3 Comprehensive Review",
         ],
       },
       {
         unit: "الوحدة الرابعة: تصميم الويب والوسائط (Unit 4: Web Design and Media)",
         lessons: [
-          "Lesson 4-1 – Media Types and Their Characteristics",
-          "Lesson 4-2 – Information Design and User Experience for Websites",
-          "Lesson 4-3 – Website Evaluation Methods",
-          "Lesson 4-4 – Iterative Website Improvement Process",
+          "Lesson 4-1: Types and Characteristics of Media",
+          "Lesson 4-2: Information Design and User Experience for Websites",
+          "Lesson 4-3: Methods for Evaluating Websites",
+          "Lesson 4-4: The Iterative Improvement Process for Websites",
+          "Unit 4 Comprehensive Review",
         ],
       },
     ],
@@ -676,8 +678,8 @@ export function normalizeCanonicalLesson(
       if (raw.includes("الثالث") || lower.includes("3") || raw.includes("حوادث") || raw.includes("مخاطر")) {
         return "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر";
       }
-      if (raw.includes("الثاني") || raw.includes("الثانى") || lower.includes("2") || raw.includes("حماية") || raw.includes("شبكات")) {
-        return "الدرس الثاني: تقنيات تشفير الشبكات وحماية البيانات";
+      if (raw.includes("الثاني") || raw.includes("الثانى") || lower.includes("2") || raw.includes("حماية") || raw.includes("شبكات") || raw.includes("تصميم أمن")) {
+        return "الدرس الثاني: تصميم أمن الشبكات";
       }
       if (raw.includes("الأول") || raw.includes("الاول") || lower.includes("1") || raw.includes("تشفير") || raw.includes("مصادقة")) {
         return "الدرس الأول: التشفير والمصادقة";
@@ -689,7 +691,7 @@ export function normalizeCanonicalLesson(
 
     // 3.5. Stage 1: تانية بكالوريا عربي - الوحدة الثالثة: تطبيقات الويب
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي" && canonicalUnit.includes("الثالثة")) {
-      if (raw.includes("الثالث") || lower.includes("3") || raw.includes("واجهة") || raw.includes("أمامية") || raw.includes("html")) {
+      if (raw.includes("الثالث") || lower.includes("3") || raw.includes("واجهة") || raw.includes("أمامية") || lower.includes("html")) {
         return "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية";
       }
       if (raw.includes("الثاني") || raw.includes("الثانى") || lower.includes("2") || raw.includes("اتصال")) {
@@ -717,21 +719,24 @@ export function normalizeCanonicalLesson(
       if (raw.includes("الأول") || raw.includes("الاول") || lower.includes("1") || raw.includes("وسائط")) {
         return "الدرس الأول: أنواع الوسائط وخصائصها";
       }
+      if (raw.includes("شامل") || raw.includes("مراجعة")) {
+        return "شامل مراجعة الوحدة الرابعة";
+      }
     }
 
     // 4. Stage 2: تانية بكالوريا لغات - Unit 1: AI
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Artificial Intelligence")) {
-      if (lower.includes("1-4") || lower.includes("ethics") || lower.includes("fourth")) {
-        return "Lesson 1-4 – AI Ethics";
+      if (lower.includes("1-4") || lower.includes("ethics") || lower.includes("ethical") || lower.includes("fourth")) {
+        return "Lesson 1-4: Ethical Issues with AI";
       }
-      if (lower.includes("1-3") || lower.includes("daily") || lower.includes("third")) {
-        return "Lesson 1-3 – AI in Our Daily Life";
+      if (lower.includes("1-3") || lower.includes("daily") || lower.includes("industry") || lower.includes("third")) {
+        return "Lesson 1-3: AI in Daily Life and Industry";
       }
       if (lower.includes("1-2") || lower.includes("how ai works") || lower.includes("second")) {
-        return "Lesson 1-2 – How AI Works";
+        return "Lesson 1-2: How AI Works";
       }
       if (lower.includes("1-1") || lower.includes("information technology") || lower.includes("social") || lower.includes("first")) {
-        return "Lesson 1-1 – Development of Information Technology and Social Transformation";
+        return "Lesson 1-1: Development of Information Technology and Social Transformation";
       }
       if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
         return "Unit 1 Comprehensive Review";
@@ -741,13 +746,13 @@ export function normalizeCanonicalLesson(
     // 5. Stage 2: تانية بكالوريا لغات - Unit 2: Cybersecurity
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Cybersecurity")) {
       if (lower.includes("2-3") || lower.includes("incident") || lower.includes("risk") || lower.includes("third")) {
-        return "Lesson 2-3 – Security Incident Response & Risk Management";
+        return "Lesson 2-3: Incident Response and Risk Management";
       }
       if (lower.includes("2-2") || lower.includes("network") || lower.includes("encryption") || lower.includes("second")) {
-        return "Lesson 2-2 – Network Security Design & Encryption Technologies";
+        return "Lesson 2-2: Network Security Design";
       }
       if (lower.includes("2-1") || lower.includes("cryptographic") || lower.includes("auth") || lower.includes("first")) {
-        return "Lesson 2-1 – Cryptographic and Authentications";
+        return "Lesson 2-1: Cryptographic Technologies and Authentication";
       }
       if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
         return "Unit 2 Comprehensive Review";
@@ -757,13 +762,13 @@ export function normalizeCanonicalLesson(
     // 5.5. Stage 2: تانية بكالوريا لغات - Unit 3: Web Applications
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Web Applications")) {
       if (lower.includes("3-3") || lower.includes("front-end") || lower.includes("frontend") || lower.includes("third")) {
-        return "Lesson 3-3 – Fundamentals of Front-End Technology";
+        return "Lesson 3-3: Fundamentals of Frontend Technology";
       }
       if (lower.includes("3-2") || lower.includes("communication") || lower.includes("second")) {
-        return "Lesson 3-2 – Communication Methods in Web Applications";
+        return "Lesson 3-2: Web Application Communication Methods";
       }
-      if (lower.includes("3-1") || lower.includes("architecture") || lower.includes("general") || lower.includes("first")) {
-        return "Lesson 3-1 – General Architecture of Web Applications";
+      if (lower.includes("3-1") || lower.includes("architecture") || lower.includes("structure") || lower.includes("general") || lower.includes("first")) {
+        return "Lesson 3-1: The Overall Structure of Web Applications";
       }
       if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
         return "Unit 3 Comprehensive Review";
@@ -773,16 +778,19 @@ export function normalizeCanonicalLesson(
     // 5.6. Stage 2: تانية بكالوريا لغات - Unit 4: Web Design and Media
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Web Design")) {
       if (lower.includes("4-4") || lower.includes("iterative") || lower.includes("improvement")) {
-        return "Lesson 4-4 – Iterative Website Improvement Process";
+        return "Lesson 4-4: The Iterative Improvement Process for Websites";
       }
-      if (lower.includes("4-3") || lower.includes("evaluation")) {
-        return "Lesson 4-3 – Website Evaluation Methods";
+      if (lower.includes("4-3") || lower.includes("evaluat")) {
+        return "Lesson 4-3: Methods for Evaluating Websites";
       }
       if (lower.includes("4-2") || lower.includes("user experience") || lower.includes("information design")) {
-        return "Lesson 4-2 – Information Design and User Experience for Websites";
+        return "Lesson 4-2: Information Design and User Experience for Websites";
       }
-      if (lower.includes("4-1") || lower.includes("media types") || lower.includes("characteristics")) {
-        return "Lesson 4-1 – Media Types and Their Characteristics";
+      if (lower.includes("4-1") || lower.includes("media") || lower.includes("characteristics")) {
+        return "Lesson 4-1: Types and Characteristics of Media";
+      }
+      if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
+        return "Unit 4 Comprehensive Review";
       }
     }
 
