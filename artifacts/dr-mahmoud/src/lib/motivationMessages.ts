@@ -173,6 +173,31 @@ export function getEffectiveQuizDurationMinutes(quiz?: Partial<Quiz> | null): nu
   return null;
 }
 
+/** Formats duration in minutes cleanly in Arabic (e.g. 2880 -> "48 ساعة", 90 -> "90 دقيقة"). */
+export function formatQuizDurationAr(minutes?: number | null): string {
+  if (!minutes || minutes <= 0) return "مفتوح";
+  if (minutes >= 60 && minutes % 60 === 0) {
+    const hours = minutes / 60;
+    if (hours === 1) return "ساعة واحدة";
+    if (hours === 2) return "ساعتان";
+    if (hours >= 3 && hours <= 10) return `${hours} ساعات`;
+    return `${hours} ساعة`;
+  }
+  return `${minutes} دقيقة`;
+}
+
+/** Formats countdown seconds as HH:MM:SS when >= 1 hour, otherwise MM:SS. */
+export function formatTimerClock(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const mins = Math.floor((safe % 3600) / 60);
+  const secs = safe % 60;
+  if (hours > 0) {
+    return `${hours}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
 export function formatExamDayAndTime(isoDate?: string | null): {
   dayName: string;
   dateLabel: string;

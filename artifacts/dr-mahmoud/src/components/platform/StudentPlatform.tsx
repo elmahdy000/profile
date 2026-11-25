@@ -50,6 +50,8 @@ import {
 } from "lucide-react";
 import {
   formatExamDayAndTime,
+  formatQuizDurationAr,
+  formatTimerClock,
   getEffectiveQuizDurationMinutes,
   getMotivationTierForScore,
   getNextMotivationMessage,
@@ -711,7 +713,7 @@ export function StudentPlatform() {
             const extended = currentDuration !== null && incomingDuration !== null && incomingDuration > currentDuration;
             toast({
               title: extended ? "⏱️ تم زيادة الوقت!" : "⏱️ تم تحديث الوقت",
-              description: `الوقت الجديد: ${nextEffective} دقيقة (اتحدّث تلقائياً).`,
+              description: `الوقت الجديد: ${formatQuizDurationAr(nextEffective)} (اتحدّث تلقائياً).`,
             });
           } else {
             setQuizTimeRemaining(null);
@@ -2478,13 +2480,13 @@ export function StudentPlatform() {
                         <Clock className="h-4 w-4 shrink-0" />
                         <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
                           {quizTimeRemaining !== null
-                            ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
-                            : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                            ? formatTimerClock(quizTimeRemaining)
+                            : formatTimerClock(quizElapsedSeconds)
                           }
                         </span>
                         {quizTimeRemaining !== null && effectiveDurationMinutes && (
                           <span className="text-[10px] font-bold font-mono opacity-70 hidden sm:inline">
-                            {`/ ${effectiveDurationMinutes}:00`}
+                            {`/ ${formatTimerClock(effectiveDurationMinutes * 60)}`}
                           </span>
                         )}
                       </div>

@@ -800,7 +800,7 @@ export function ExamWizard({
                   <input
                     type="number"
                     min={1}
-                    max={240}
+                    max={10080}
                     value={quizForm.durationMinutes}
                     onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.value })}
                     className="h-11 w-16 rounded-xl border border-border bg-background text-center text-xs font-mono font-black text-foreground focus:outline-none"

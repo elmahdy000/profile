@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Quiz } from "@/types/platform";
-import { formatExamDayAndTime, getEffectiveQuizDurationMinutes } from "@/lib/motivationMessages";
+import { formatExamDayAndTime, formatQuizDurationAr, getEffectiveQuizDurationMinutes } from "@/lib/motivationMessages";
 
 // ── 1. Compact Page Header ──
 export function ExamsPageHeader({ totalCount }: { totalCount: number }) {
@@ -285,7 +285,7 @@ export function ExamCard({
           {effectiveDuration && (
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
               <Clock className="h-3 w-3 text-amber-500" />
-              <span className="font-mono tabular-nums">{effectiveDuration}</span> دقيقة
+              <span>{formatQuizDurationAr(effectiveDuration)}</span>
             </span>
           )}
         </div>

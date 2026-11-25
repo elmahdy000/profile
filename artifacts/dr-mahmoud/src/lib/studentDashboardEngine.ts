@@ -5,7 +5,7 @@ import type {
   Student,
   VideoSummary,
 } from "@/types/platform";
-import { isQuizHomework } from "@/lib/motivationMessages";
+import { formatQuizDurationAr, isQuizHomework } from "@/lib/motivationMessages";
 
 export type StudentDashboardState =
   | "new"
@@ -463,7 +463,7 @@ export function buildStudentDashboardModel({
       completed: false,
       durationLabel:
         nextAvailableExam.durationMinutes && nextAvailableExam.durationMinutes > 0
-          ? `${nextAvailableExam.durationMinutes} دقيقة`
+          ? formatQuizDurationAr(nextAvailableExam.durationMinutes)
           : undefined,
       actionLabel: "ابدأ الاختبار",
       kind: "quiz",
