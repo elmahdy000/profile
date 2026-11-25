@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useDeferredValue, useEffect } from "react";
 import {
   FileSpreadsheet,
   Search,
@@ -13,6 +13,8 @@ import {
   GraduationCap,
   Sparkles,
   ArrowUpDown,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +49,35 @@ interface StudentQuizGradesSheetProps {
   onRefresh?: () => void;
 }
 
+const ARABIC_DATE_FORMATTER =
+  typeof Intl !== "undefined"
+    ? new Intl.DateTimeFormat("ar-EG", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+function formatTimeSpent(seconds: number) {
+  if (!seconds || seconds <= 0) return "أقل من دقيقة";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs} ثانية`;
+  return `${mins}د و ${secs}ث`;
+}
+
+function formatDate(dateStr: string) {
+  try {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    return ARABIC_DATE_FORMATTER ? ARABIC_DATE_FORMATTER.format(d) : d.toLocaleString("ar-EG");
+  } catch {
+    return dateStr;
+  }
+}
+
 export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
   attempts,
   stages = [],
@@ -54,17 +85,27 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
   onRefresh,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearch = useDeferredValue(searchQuery);
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedQuiz, setSelectedQuiz] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all"); // all, passed, failed
   const [sortBy, setSortBy] = useState<"latest" | "scoreDesc" | "scoreAsc" | "name">("latest");
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [grantingStudentId, setGrantingStudentId] = useState<number | null>(null);
+  const [bulkGranting, setBulkGranting] = useState<boolean>(false);
+
+  // Reset to page 1 whenever filters or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredSearch, selectedStage, selectedQuiz, selectedStatus, sortBy, pageSize]);
 
   const handleGrantExtraAttempt = async (attempt: ExtendedAttempt) => {
     try {
       setGrantingStudentId(attempt.studentId);
       const res = await fetch(`/api/admin/learning/quizzes/${attempt.quizId}/extra-attempts`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId: attempt.studentId, extraAttempts: 1 }),
       });
@@ -79,6 +120,80 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
     }
   };
 
+  // Extract unique stages & quizzes from attempts if not provided
+  const availableStages = useMemo(() => {
+    const set = new Set<string>();
+    if (stages && stages.length > 0) {
+      stages.forEach((s) => set.add(s));
+    }
+    for (let i = 0; i < attempts.length; i++) {
+      const a = attempts[i];
+      if (a.studentGrade) set.add(a.studentGrade);
+      if (a.quizStage) set.add(a.quizStage);
+    }
+    return Array.from(set).filter(Boolean);
+  }, [attempts, stages]);
+
+  const availableQuizzes = useMemo(() => {
+    const set = new Set<string>();
+    quizzes.forEach((q) => {
+      if (q.title) set.add(q.title);
+    });
+    for (let i = 0; i < attempts.length; i++) {
+      if (attempts[i].quizTitle) set.add(attempts[i].quizTitle);
+    }
+    return Array.from(set);
+  }, [attempts, quizzes]);
+
+  // Filtered & Sorted Attempts (fast linear pass + O(N log N) sort without constructing Date objects)
+  const filteredAttempts = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    const hasSearch = q.length > 0;
+    const hasStage = selectedStage !== "all";
+    const hasQuiz = selectedQuiz !== "all";
+    const wantPassed = selectedStatus === "passed";
+    const wantFailed = selectedStatus === "failed";
+
+    const result: ExtendedAttempt[] = [];
+    for (let i = 0; i < attempts.length; i++) {
+      const item = attempts[i];
+      if (hasStage && item.studentGrade !== selectedStage && item.quizStage !== selectedStage) {
+        continue;
+      }
+      if (hasQuiz && item.quizTitle !== selectedQuiz) {
+        continue;
+      }
+      if (wantPassed && !item.passed) continue;
+      if (wantFailed && item.passed) continue;
+
+      if (hasSearch) {
+        const matched =
+          item.studentName.toLowerCase().includes(q) ||
+          item.studentCode.toLowerCase().includes(q) ||
+          item.studentPhone.includes(q) ||
+          item.parentPhone.includes(q) ||
+          item.quizTitle.toLowerCase().includes(q);
+        if (!matched) continue;
+      }
+      result.push(item);
+    }
+
+    if (sortBy === "latest") {
+      // Backend already orders by createdAt DESC; preserve order or compare ISO strings directly
+      return result;
+    }
+    if (sortBy === "scoreDesc") {
+      return result.sort((a, b) => (b.percentage ?? 0) - (a.percentage ?? 0));
+    }
+    if (sortBy === "scoreAsc") {
+      return result.sort((a, b) => (a.percentage ?? 0) - (b.percentage ?? 0));
+    }
+    if (sortBy === "name") {
+      return result.sort((a, b) => a.studentName.localeCompare(b.studentName, "ar"));
+    }
+    return result;
+  }, [attempts, selectedStage, selectedQuiz, selectedStatus, deferredSearch, sortBy]);
+
   const handleBulkGrantFailed = async () => {
     const failedStudents = filteredAttempts.filter((a) => !a.passed);
     if (failedStudents.length === 0) {
@@ -86,147 +201,77 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
       return;
     }
 
-    if (!confirm(`هل أنت محقق من منح محاولة إضافية لعدد ${failedStudents.length} طالب راسب؟`)) return;
+    // Group unique studentIds per quizId so we send 1 batched request per quiz instead of N sequential requests
+    const byQuiz = new Map<number, Set<number>>();
+    for (const attempt of failedStudents) {
+      let set = byQuiz.get(attempt.quizId);
+      if (!set) {
+        set = new Set<number>();
+        byQuiz.set(attempt.quizId, set);
+      }
+      set.add(attempt.studentId);
+    }
+    let totalUniquePairs = 0;
+    byQuiz.forEach((set) => {
+      totalUniquePairs += set.size;
+    });
+
+    if (!confirm(`هل أنت متأكد من منح محاولة إضافية لعدد ${totalUniquePairs} طالب راسب؟`)) return;
 
     try {
-      let count = 0;
-      for (const attempt of failedStudents) {
-        await fetch(`/api/admin/learning/quizzes/${attempt.quizId}/extra-attempts`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ studentId: attempt.studentId, extraAttempts: 1 }),
-        });
-        count++;
-      }
-      alert(`تم منح محاولة إضافية لعدد ${count} طالب راسب بنجاح 🎓`);
+      setBulkGranting(true);
+      await Promise.all(
+        Array.from(byQuiz.entries()).map(([quizId, sIds]) =>
+          fetch(`/api/admin/learning/quizzes/${quizId}/extra-attempts`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentIds: Array.from(sIds), extraAttempts: 1 }),
+          }),
+        ),
+      );
+      alert(`تم منح محاولة إضافية لعدد ${totalUniquePairs} طالب راسب بنجاح 🎓`);
       if (onRefresh) onRefresh();
     } catch (err) {
       alert((err as Error).message);
+    } finally {
+      setBulkGranting(false);
     }
   };
 
-  // Extract unique stages & quizzes from attempts if not provided
-  const availableStages = useMemo(() => {
-    const set = new Set<string>();
-    if (stages && stages.length > 0) {
-      stages.forEach((s) => set.add(s));
-    }
-    attempts.forEach((a) => {
-      if (a.studentGrade) set.add(a.studentGrade);
-      if (a.quizStage) set.add(a.quizStage);
-    });
-    return Array.from(set).filter(Boolean);
-  }, [attempts, stages]);
-
-  const availableQuizzes = useMemo(() => {
-    const map = new Map<string, string>();
-    quizzes.forEach((q) => map.set(q.title, q.title));
-    attempts.forEach((a) => {
-      if (a.quizTitle) map.set(a.quizTitle, a.quizTitle);
-    });
-    return Array.from(map.values());
-  }, [attempts, quizzes]);
-
-  // Filtered & Sorted Attempts
-  const filteredAttempts = useMemo(() => {
-    return attempts.filter((item) => {
-      // Stage Filter
-      if (selectedStage !== "all") {
-        const matchesStudentStage = item.studentGrade === selectedStage;
-        const matchesQuizStage = item.quizStage === selectedStage;
-        if (!matchesStudentStage && !matchesQuizStage) return false;
-      }
-
-      // Quiz Filter
-      if (selectedQuiz !== "all" && item.quizTitle !== selectedQuiz) {
-        return false;
-      }
-
-      // Status Filter
-      if (selectedStatus === "passed" && !item.passed) return false;
-      if (selectedStatus === "failed" && item.passed) return false;
-
-      // Search Query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const nameMatch = item.studentName.toLowerCase().includes(q);
-        const codeMatch = item.studentCode.toLowerCase().includes(q);
-        const phoneMatch = item.studentPhone.includes(q);
-        const parentPhoneMatch = item.parentPhone.includes(q);
-        const quizMatch = item.quizTitle.toLowerCase().includes(q);
-
-        if (!nameMatch && !codeMatch && !phoneMatch && !parentPhoneMatch && !quizMatch) {
-          return false;
-        }
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === "latest") {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (sortBy === "scoreDesc") {
-        return b.percentage - a.percentage;
-      }
-      if (sortBy === "scoreAsc") {
-        return a.percentage - b.percentage;
-      }
-      if (sortBy === "name") {
-        return a.studentName.localeCompare(b.studentName, "ar");
-      }
-      return 0;
-    });
-  }, [attempts, selectedStage, selectedQuiz, selectedStatus, searchQuery, sortBy]);
-
-  // Summary Metrics
+  // Summary Metrics across ALL filteredAttempts
   const metrics = useMemo(() => {
     const total = filteredAttempts.length;
     if (total === 0) {
       return { totalAttempts: 0, passRate: 0, avgScore: 0, uniqueStudents: 0 };
     }
-    const passedCount = filteredAttempts.filter((a) => a.passed).length;
-    const passRate = Math.round((passedCount / total) * 100);
-    const sumPercentage = filteredAttempts.reduce((acc, a) => {
-      const pct = Math.min(100, Math.max(0, a.percentage ?? 0));
-      return acc + pct;
-    }, 0);
-    const avgScore = Math.round(sumPercentage / total);
-    const uniqueStudents = new Set(filteredAttempts.map((a) => a.studentId)).size;
-
+    let passedCount = 0;
+    let sumPercentage = 0;
+    const studentSet = new Set<number>();
+    for (let i = 0; i < total; i++) {
+      const a = filteredAttempts[i];
+      if (a.passed) passedCount++;
+      sumPercentage += Math.min(100, Math.max(0, a.percentage ?? 0));
+      studentSet.add(a.studentId);
+    }
     return {
       totalAttempts: total,
-      passRate,
-      avgScore,
-      uniqueStudents,
+      passRate: Math.round((passedCount / total) * 100),
+      avgScore: Math.round(sumPercentage / total),
+      uniqueStudents: studentSet.size,
     };
   }, [filteredAttempts]);
 
-  // Format time spent helper
-  const formatTimeSpent = (seconds: number) => {
-    if (!seconds || seconds <= 0) return "أقل من دقيقة";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    if (mins === 0) return `${secs} ثانية`;
-    return `${mins}د و ${secs}ث`;
-  };
+  // Pagination slice (renders only 50-250 DOM rows instead of 9,500+ rows!)
+  const totalPages = Math.max(1, Math.ceil(filteredAttempts.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedAttempts = useMemo(
+    () => filteredAttempts.slice(startIndex, startIndex + pageSize),
+    [filteredAttempts, startIndex, pageSize],
+  );
 
-  // Format Date helper
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString("ar-EG", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Export to CSV / Excel
+  // Export ALL filteredAttempts to CSV / Excel
   const exportToCSV = () => {
     if (filteredAttempts.length === 0) return;
 
@@ -299,14 +344,14 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
             <Button
               onClick={exportToCSV}
               disabled={filteredAttempts.length === 0}
-              className="bg-white text-emerald-800 hover:bg-emerald-50 font-bold shadow-md gap-2"
+              className="bg-white text-emerald-800 hover:bg-emerald-50 font-bold shadow-md gap-2 cursor-pointer"
             >
-              <Download className="w-4 h-4" /> تصدير شيت Excel (.csv)
+              <Download className="w-4 h-4" /> تصدير شيت Excel (.csv) ({filteredAttempts.length})
             </Button>
             <Button
               onClick={() => window.print()}
               variant="outline"
-              className="border-white/40 bg-white/10 text-white hover:bg-white/20 font-medium gap-2"
+              className="border-white/40 bg-white/10 text-white hover:bg-white/20 font-medium gap-2 cursor-pointer"
             >
               <Printer className="w-4 h-4" /> طباعة الشيت
             </Button>
@@ -431,20 +476,43 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
           </div>
         </div>
 
-        {/* Active Filters Display & Count */}
+        {/* Active Filters Display, Page Size & Bulk Action */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-500 pt-1">
-          <div>
-            عرض <span className="font-bold text-slate-900 dark:text-white">{filteredAttempts.length}</span> من إجمالي{" "}
-            <span className="font-bold">{attempts.length}</span> محاولة
+          <div className="flex flex-wrap items-center gap-3">
+            <span>
+              عرض{" "}
+              <span className="font-bold text-slate-900 dark:text-white">
+                {filteredAttempts.length === 0 ? 0 : startIndex + 1}–
+                {Math.min(startIndex + pageSize, filteredAttempts.length)}
+              </span>{" "}
+              من{" "}
+              <span className="font-bold text-slate-900 dark:text-white">
+                {filteredAttempts.length}
+              </span>{" "}
+              نتيجة مطابقة (إجمالي السجل: <span className="font-bold">{attempts.length}</span>)
+            </span>
+            <label className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+              <span>صفوف الصفحة:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value) || 50)}
+                className="bg-transparent font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+              >
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={250}>250</option>
+              </select>
+            </label>
           </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="outline"
+              disabled={bulkGranting}
               onClick={handleBulkGrantFailed}
-              className="h-8 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+              className="h-8 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 cursor-pointer"
             >
-              🎓 منح محاولة إضافية للطلاب الراسبين
+              {bulkGranting ? "⏳ جاري المنح..." : "🎓 منح محاولة إضافية للطلاب الراسبين"}
             </Button>
             {(selectedStage !== "all" || selectedQuiz !== "all" || selectedStatus !== "all" || searchQuery) && (
               <button
@@ -454,7 +522,7 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                   setSelectedStatus("all");
                   setSearchQuery("");
                 }}
-                className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold text-xs"
+                className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold text-xs cursor-pointer"
               >
                 إلغاء كل الفلاتر
               </button>
@@ -472,63 +540,65 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
             <p className="text-xs text-slate-400 mt-1">جرب تغيير كلمة البحث أو إعادة تعيين الفلاتر من الأعلى.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-bold border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <th className="py-3.5 px-4">#</th>
-                  <th className="py-3.5 px-4">اسم الطالب</th>
-                  <th className="py-3.5 px-4">الكود والمهاتف</th>
-                  <th className="py-3.5 px-4">المرحلة الدراسية</th>
-                  <th className="py-3.5 px-4">اسم الاختبار</th>
-                  <th className="py-3.5 px-4 text-center">الدرجة النهائية</th>
-                  <th className="py-3.5 px-4 text-center">النسبة / إعادة الاختبار</th>
-                  <th className="py-3.5 px-4 text-center">الحالة</th>
-                  <th className="py-3.5 px-4 text-center">الوقت المستغرق</th>
-                  <th className="py-3.5 px-4">التاريخ والوقت</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredAttempts.map((item, idx) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors text-slate-800 dark:text-slate-200"
-                  >
-                    <td className="py-3.5 px-4 text-xs font-medium text-slate-400">{idx + 1}</td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                      {item.studentName}
-                      {item.studentCenter && (
-                        <span className="block text-[11px] font-normal text-slate-400">سنتر: {item.studentCenter}</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      <div className="font-mono font-semibold text-slate-700 dark:text-slate-300">{item.studentCode || "-"}</div>
-                      <div className="text-slate-500 font-mono dir-ltr text-right">{item.studentPhone || "-"}</div>
-                      {item.parentPhone && (
-                        <div className="text-[11px] text-slate-400 font-mono dir-ltr text-right">
-                          ولي أمر: {item.parentPhone}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      <Badge variant="outline" className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                        {item.studentGrade || item.quizStage || "عام"}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 font-medium max-w-xs truncate" title={item.quizTitle}>
-                      {item.quizTitle}
-                    </td>
-                    <td className="py-3.5 px-4 text-center font-bold text-base">
-                      {item.score > item.totalQuestions && item.totalQuestions > 0
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-right text-sm">
+                <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-bold border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="py-3.5 px-4">#</th>
+                    <th className="py-3.5 px-4">اسم الطالب</th>
+                    <th className="py-3.5 px-4">الكود والهاتف</th>
+                    <th className="py-3.5 px-4">المرحلة الدراسية</th>
+                    <th className="py-3.5 px-4">اسم الاختبار</th>
+                    <th className="py-3.5 px-4 text-center">الدرجة النهائية</th>
+                    <th className="py-3.5 px-4 text-center">النسبة / إعادة الاختبار</th>
+                    <th className="py-3.5 px-4 text-center">الحالة</th>
+                    <th className="py-3.5 px-4 text-center">الوقت المستغرق</th>
+                    <th className="py-3.5 px-4">التاريخ والوقت</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {paginatedAttempts.map((item, idx) => {
+                    const displayPct = Math.min(100, Math.max(0, item.percentage ?? 0));
+                    const displayScore =
+                      item.score > item.totalQuestions && item.totalQuestions > 0
                         ? Math.round(((item.score || 0) / 100) * item.totalQuestions)
-                        : item.score}{" "}
-                      <span className="text-xs font-normal text-slate-400">/ {item.totalQuestions}</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="flex flex-col items-center gap-1.5">
-                        {(() => {
-                          const displayPct = Math.min(100, Math.max(0, item.percentage ?? 0));
-                          return (
+                        : item.score;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors text-slate-800 dark:text-slate-200"
+                      >
+                        <td className="py-3.5 px-4 text-xs font-medium text-slate-400">{startIndex + idx + 1}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                          {item.studentName}
+                          {item.studentCenter && (
+                            <span className="block text-[11px] font-normal text-slate-400">سنتر: {item.studentCenter}</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-xs">
+                          <div className="font-mono font-semibold text-slate-700 dark:text-slate-300">{item.studentCode || "-"}</div>
+                          <div className="text-slate-500 font-mono dir-ltr text-right">{item.studentPhone || "-"}</div>
+                          {item.parentPhone && (
+                            <div className="text-[11px] text-slate-400 font-mono dir-ltr text-right">
+                              ولي أمر: {item.parentPhone}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-xs">
+                          <Badge variant="outline" className="bg-slate-50 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            {item.studentGrade || item.quizStage || "عام"}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 font-medium max-w-xs truncate" title={item.quizTitle}>
+                          {item.quizTitle}
+                        </td>
+                        <td className="py-3.5 px-4 text-center font-bold text-base">
+                          {displayScore}{" "}
+                          <span className="text-xs font-normal text-slate-400">/ {item.totalQuestions}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <div className="flex flex-col items-center gap-1.5">
                             <span
                               className={`inline-block font-extrabold text-sm px-2.5 py-0.5 rounded-full ${
                                 displayPct >= 85
@@ -540,41 +610,102 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                             >
                               {displayPct}%
                             </span>
-                          );
-                        })()}
-                        <Button size="sm" variant="outline" disabled={grantingStudentId === item.studentId} onClick={() => handleGrantExtraAttempt(item)} className="h-6 text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-400 dark:border-amber-700/50 whitespace-nowrap px-2 rounded-lg">
-                          {grantingStudentId === item.studentId ? "⏳ جاري..." : "↺ إعادة الاختبار"}
-                        </Button>
-                        {Boolean(item.extraAttemptsGranted && item.extraAttemptsGranted > 0) && (
-                          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
-                            +{item.extraAttemptsGranted} 🟢
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={grantingStudentId === item.studentId}
+                              onClick={() => handleGrantExtraAttempt(item)}
+                              className="h-6 text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-400 dark:border-amber-700/50 whitespace-nowrap px-2 rounded-lg cursor-pointer"
+                            >
+                              {grantingStudentId === item.studentId ? "⏳ جاري..." : "↺ إعادة الاختبار"}
+                            </Button>
+                            {Boolean(item.extraAttemptsGranted && item.extraAttemptsGranted > 0) && (
+                              <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                                +{item.extraAttemptsGranted} 🟢
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          {item.passed ? (
+                            <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 gap-1 inline-flex items-center">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> ناجح
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="gap-1 inline-flex items-center">
+                              <XCircle className="w-3.5 h-3.5" /> راسب
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-center text-xs text-slate-500">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            {formatTimeSpent(item.timeSpentSeconds)}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      {item.passed ? (
-                        <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 gap-1 inline-flex items-center">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> ناجح
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="gap-1 inline-flex items-center">
-                          <XCircle className="w-3.5 h-3.5" /> راسب
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-center text-xs text-slate-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        {formatTimeSpent(item.timeSpentSeconds)}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-500 dir-ltr text-right">{formatDate(item.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-slate-500 dir-ltr text-right">{formatDate(item.createdAt)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Fast Pagination Footer */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 text-xs">
+                <div className="text-slate-600 dark:text-slate-400 font-semibold">
+                  صفحة <span className="font-black text-slate-900 dark:text-white">{safePage}</span> من{" "}
+                  <span className="font-black text-slate-900 dark:text-white">{totalPages}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage(1)}
+                    className="h-8 px-2.5 text-xs font-bold cursor-pointer"
+                  >
+                    الأولى
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="h-8 px-2.5 text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" /> السابق
+                  </Button>
+                  <span className="px-3 py-1 rounded-md bg-emerald-600 text-white font-mono font-bold">
+                    {safePage} / {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-8 px-2.5 text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    التالي <ChevronLeft className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage(totalPages)}
+                    className="h-8 px-2.5 text-xs font-bold cursor-pointer"
+                  >
+                    الأخيرة
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

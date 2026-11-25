@@ -260,12 +260,51 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
   try {
     const [students, progressRows, attempts, videos] = await Promise.all([
       db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
-      db.select().from(videoProgressTable),
-      db.select().from(quizAttemptsTable),
-      db.select().from(videosTable),
+      db
+        .select({
+          studentId: videoProgressTable.studentId,
+          progress: videoProgressTable.progress,
+          completed: videoProgressTable.completed,
+          updatedAt: videoProgressTable.updatedAt,
+        })
+        .from(videoProgressTable),
+      db
+        .select({
+          studentId: quizAttemptsTable.studentId,
+          score: quizAttemptsTable.score,
+          passed: quizAttemptsTable.passed,
+          createdAt: quizAttemptsTable.createdAt,
+        })
+        .from(quizAttemptsTable),
+      db
+        .select({
+          id: videosTable.id,
+          category: videosTable.category,
+          stage: videosTable.stage,
+          stages: videosTable.stages,
+          courseId: videosTable.courseId,
+          learningMode: videosTable.learningMode,
+          isPublished: videosTable.isPublished,
+        })
+        .from(videosTable)
+        .where(eq(videosTable.isPublished, true)),
     ]);
     const now = Date.now();
     const activeCutoff = now - 14 * 24 * 60 * 60 * 1000;
+
+    // Pre-group progress & attempts by studentId in O(N + M) instead of O(Students * Attempts)
+    const progressByStudent = new Map<number, typeof progressRows>();
+    for (const row of progressRows) {
+      const list = progressByStudent.get(row.studentId);
+      if (list) list.push(row);
+      else progressByStudent.set(row.studentId, [row]);
+    }
+    const attemptsByStudent = new Map<number, typeof attempts>();
+    for (const row of attempts) {
+      const list = attemptsByStudent.get(row.studentId);
+      if (list) list.push(row);
+      else attemptsByStudent.set(row.studentId, [row]);
+    }
 
     // Geographic and Grade Aggregations
     const governorateCounts: Record<string, number> = {};
@@ -302,18 +341,21 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
       .sort((a, b) => b.count - a.count);
 
     const studentRows = students.map((student) => {
-      const ownProgress = progressRows.filter((row) => row.studentId === student.id);
-      const ownAttempts = attempts.filter((row) => row.studentId === student.id);
+      const ownProgress = progressByStudent.get(student.id) ?? [];
+      const ownAttempts = attemptsByStudent.get(student.id) ?? [];
       const eligibleVideos = videos.filter((video) =>
-        video.isPublished &&
         canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId) &&
         canStudentAccessLearningMode(student, video.learningMode),
       );
-      const activityTimes = [
-        ...ownProgress.map((row) => row.updatedAt.getTime()),
-        ...ownAttempts.map((row) => row.createdAt.getTime()),
-      ];
-      const lastActivityMs = activityTimes.length ? Math.max(...activityTimes) : 0;
+      let lastActivityMs = 0;
+      for (const row of ownProgress) {
+        const t = row.updatedAt.getTime();
+        if (t > lastActivityMs) lastActivityMs = t;
+      }
+      for (const row of ownAttempts) {
+        const t = row.createdAt.getTime();
+        if (t > lastActivityMs) lastActivityMs = t;
+      }
       return {
         studentId: student.id,
         name: student.name,
@@ -371,25 +413,65 @@ router.get("/admin/learning/analytics/export", requireAdmin, async (_req, res, n
   try {
     const [students, progressRows, attempts, videos] = await Promise.all([
       db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
-      db.select().from(videoProgressTable),
-      db.select().from(quizAttemptsTable),
-      db.select().from(videosTable),
+      db
+        .select({
+          studentId: videoProgressTable.studentId,
+          progress: videoProgressTable.progress,
+          completed: videoProgressTable.completed,
+          updatedAt: videoProgressTable.updatedAt,
+        })
+        .from(videoProgressTable),
+      db
+        .select({
+          studentId: quizAttemptsTable.studentId,
+          score: quizAttemptsTable.score,
+          passed: quizAttemptsTable.passed,
+          createdAt: quizAttemptsTable.createdAt,
+        })
+        .from(quizAttemptsTable),
+      db
+        .select({
+          id: videosTable.id,
+          category: videosTable.category,
+          stage: videosTable.stage,
+          stages: videosTable.stages,
+          courseId: videosTable.courseId,
+          learningMode: videosTable.learningMode,
+          isPublished: videosTable.isPublished,
+        })
+        .from(videosTable)
+        .where(eq(videosTable.isPublished, true)),
     ]);
+    const progressByStudent = new Map<number, typeof progressRows>();
+    for (const row of progressRows) {
+      const list = progressByStudent.get(row.studentId);
+      if (list) list.push(row);
+      else progressByStudent.set(row.studentId, [row]);
+    }
+    const attemptsByStudent = new Map<number, typeof attempts>();
+    for (const row of attempts) {
+      const list = attemptsByStudent.get(row.studentId);
+      if (list) list.push(row);
+      else attemptsByStudent.set(row.studentId, [row]);
+    }
     const now = Date.now();
     const activeCutoff = now - 14 * 24 * 60 * 60 * 1000;
     const studentRows = students.map((student) => {
-      const ownProgress = progressRows.filter((row) => row.studentId === student.id);
-      const ownAttempts = attempts.filter((row) => row.studentId === student.id);
+      const ownProgress = progressByStudent.get(student.id) ?? [];
+      const ownAttempts = attemptsByStudent.get(student.id) ?? [];
       const eligibleVideos = videos.filter((video) =>
-        video.isPublished &&
         canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId) &&
         canStudentAccessLearningMode(student, video.learningMode),
       );
-      const activityTimes = [
-        ...ownProgress.map((row) => row.updatedAt.getTime()),
-        ...ownAttempts.map((row) => row.createdAt.getTime()),
-      ];
-      const lastActivityMs = activityTimes.length ? Math.max(...activityTimes) : 0;
+      let lastActivityMs = 0;
+      for (const row of ownProgress) {
+        const t = row.updatedAt.getTime();
+        if (t > lastActivityMs) lastActivityMs = t;
+      }
+      for (const row of ownAttempts) {
+        const t = row.createdAt.getTime();
+        if (t > lastActivityMs) lastActivityMs = t;
+      }
       return {
         name: student.name,
         phone: student.phone,
@@ -1669,7 +1751,7 @@ router.get(
           score: quizAttemptsTable.score,
           passed: quizAttemptsTable.passed,
           timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
-          details: quizAttemptsTable.details,
+          detailsCorrectCount: sql<number | null>`${quizAttemptsTable}.correct_count`,
           createdAt: quizAttemptsTable.createdAt,
           studentName: studentsTable.name,
           studentPhone: studentsTable.phone,
@@ -1681,7 +1763,7 @@ router.get(
           quizStage: quizzesTable.stage,
           quizStages: quizzesTable.stages,
           passingScore: quizzesTable.passingScore,
-          questions: quizzesTable.questions,
+          questionsCount: sql<number>`COALESCE(${quizzesTable}.questions_count, 0)`,
           questionsToShow: quizzesTable.questionsToShow,
         })
         .from(quizAttemptsTable)
@@ -1705,18 +1787,16 @@ router.get(
       const extraGrantsMap = new Map(extraGrants.map((g) => [`${g.quizId}_${g.studentId}`, g.extraAttempts]));
 
       const formattedAttempts = attempts.map((a) => {
-        const questionsList = Array.isArray(a.questions) ? a.questions : [];
+        const qLen = Number(a.questionsCount) || 0;
         const totalQuestions =
-          a.questionsToShow && a.questionsToShow > 0 && a.questionsToShow < questionsList.length
+          a.questionsToShow && a.questionsToShow > 0 && a.questionsToShow < qLen
             ? a.questionsToShow
-            : (questionsList.length || 1);
+            : (qLen || 1);
 
-        // Count correct answers:
-        // Priority 1: Check attempt details if stored
-        // Priority 2: Derive from stored score percentage (which is 0-100)
+        // Count correct answers computed directly in PostgreSQL without transferring JSONB:
         let correctCount = 0;
-        if (Array.isArray(a.details) && a.details.length > 0) {
-          correctCount = a.details.filter((d: any) => d && d.isCorrect === true).length;
+        if (a.detailsCorrectCount !== null && a.detailsCorrectCount !== undefined) {
+          correctCount = Number(a.detailsCorrectCount) || 0;
         } else {
           correctCount = Math.round(((Number(a.score) || 0) / 100) * totalQuestions);
         }

@@ -392,6 +392,7 @@ export function AdminLearning({
   >([]);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [attemptsLoading, setAttemptsLoading] = useState(true);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileSearch, setFileSearch] = useState("");
@@ -601,96 +602,129 @@ export function AdminLearning({
     }
   };
 
+  const checkNotificationDeltas = (
+    s: Student[],
+    recoveryData: RecoveryRequest[],
+    receiptsData: PaymentReceipt[],
+  ) => {
+    const newPendingReceipts = receiptsData.filter((r) => r.status === "pending").length;
+    const newPendingStudents = s.filter((st) => st.status !== "approved" && st.status !== "suspended").length;
+    const newPendingRecovery = recoveryData.filter((r) => r.status === "pending" || r.status === "open").length;
+
+    if (lastCountsRef.current.pendingReceipts !== null) {
+      if (newPendingReceipts > lastCountsRef.current.pendingReceipts) {
+        playAdminNotificationChime();
+        toast({
+          title: "💳 إشعار جديد: إيصال تحويل مرفوع للمراجعة!",
+          description: "قام طالب برفع إيصال تحويل جديد ينتظر موافقتك وتأكيد التفعيل.",
+          variant: "warning",
+          action: (
+            <ToastAction
+              altText="مراجعة الإيصالات"
+              onClick={() => setTab("payments")}
+            >
+              مراجعة الإيصالات ←
+            </ToastAction>
+          ),
+          onClick: () => setTab("payments"),
+        });
+      }
+      if (newPendingStudents > lastCountsRef.current.pendingStudents!) {
+        playAdminNotificationChime();
+        toast({
+          title: "👤 إشعار جديد: طالب جديد ينتظر التفعيل!",
+          description: "قام طالب جديد بالتسجيل وينتظر مراجعة حسابه وتفعيله.",
+          action: (
+            <ToastAction
+              altText="مراجعة الطلاب"
+              onClick={() => {
+                setStudentStatusFilter("pending");
+                setTab("students");
+              }}
+            >
+              عرض الطلاب ←
+            </ToastAction>
+          ),
+          onClick: () => {
+            setStudentStatusFilter("pending");
+            setTab("students");
+          },
+        });
+      }
+      if (newPendingRecovery > lastCountsRef.current.pendingRecovery!) {
+        playAdminNotificationChime();
+        toast({
+          title: "🔑 إشعار جديد: طلب استرجاع كود!",
+          description: "وصل طلب جديد لاسترجاع كود الدخول من أحد الطلاب.",
+          variant: "destructive",
+          action: (
+            <ToastAction
+              altText="استرجاع الأكواد"
+              onClick={() => setTab("reports")}
+            >
+              عرض الطلب ←
+            </ToastAction>
+          ),
+          onClick: () => setTab("reports"),
+        });
+      }
+    }
+
+    lastCountsRef.current = {
+      pendingReceipts: newPendingReceipts,
+      pendingStudents: newPendingStudents,
+      pendingRecovery: newPendingRecovery,
+    };
+  };
+
+  const refreshAttemptsOnly = async () => {
+    try {
+      const a = await adminApi<Attempt[]>("/api/admin/learning/attempts");
+      setAttempts(a);
+      setAttemptsLoading(false);
+    } catch (e) {
+      toast({ variant: "destructive", title: "خطأ في التحديث", description: (e as Error).message });
+    }
+  };
+
   const load = async (silent = false) => {
     if (!silent) setIsRefreshingData(true);
     try {
-      const [s, f, q, a, v, c, analyticsData, recoveryData, receiptsData] = await Promise.all([
+      // Independent ultra-fast fetch for grades-sheet so it renders immediately (~50ms) without waiting on quizzes/students
+      const attemptsPromise = adminApi<Attempt[]>("/api/admin/learning/attempts").then((a) => {
+        setAttempts(a);
+        setAttemptsLoading(false);
+        return a;
+      });
+
+      // Phase 1: Core admin datasets
+      const priorityPromise = Promise.all([
         adminApi<Student[]>("/api/admin/students"),
-        adminApi<FileItem[]>("/api/admin/learning/files"),
         adminApi<Quiz[]>("/api/admin/learning/quizzes"),
-        adminApi<Attempt[]>("/api/admin/learning/attempts"),
-        adminApi<VideoOption[]>("/api/videos"),
+        attemptsPromise,
         adminApi<Array<{ id: number; title: string; category: string; stages?: string[] }>>("/api/courses"),
+      ]);
+
+      // Phase 2: Secondary datasets run concurrently in the background without blocking initial paint
+      const secondaryPromise = Promise.all([
+        adminApi<FileItem[]>("/api/admin/learning/files"),
+        adminApi<VideoOption[]>("/api/videos"),
         adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
         adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch((): PaymentReceipt[] => []),
       ]);
 
-      const newPendingReceipts = receiptsData.filter((r) => r.status === "pending").length;
-      const newPendingStudents = s.filter((st) => st.status !== "approved" && st.status !== "suspended").length;
-      const newPendingRecovery = recoveryData.filter((r) => r.status === "pending" || r.status === "open").length;
-
-      if (lastCountsRef.current.pendingReceipts !== null) {
-        if (newPendingReceipts > lastCountsRef.current.pendingReceipts) {
-          playAdminNotificationChime();
-          toast({
-            title: "💳 إشعار جديد: إيصال تحويل مرفوع للمراجعة!",
-            description: "قام طالب برفع إيصال تحويل جديد ينتظر موافقتك وتأكيد التفعيل.",
-            variant: "warning",
-            action: (
-              <ToastAction
-                altText="مراجعة الإيصالات"
-                onClick={() => setTab("payments")}
-              >
-                مراجعة الإيصالات ←
-              </ToastAction>
-            ),
-            onClick: () => setTab("payments"),
-          });
-        }
-        if (newPendingStudents > lastCountsRef.current.pendingStudents!) {
-          playAdminNotificationChime();
-          toast({
-            title: "👤 إشعار جديد: طالب جديد ينتظر التفعيل!",
-            description: "قام طالب جديد بالتسجيل وينتظر مراجعة حسابه وتفعيله.",
-            action: (
-              <ToastAction
-                altText="مراجعة الطلاب"
-                onClick={() => {
-                  setStudentStatusFilter("pending");
-                  setTab("students");
-                }}
-              >
-                عرض الطلاب ←
-              </ToastAction>
-            ),
-            onClick: () => {
-              setStudentStatusFilter("pending");
-              setTab("students");
-            },
-          });
-        }
-        if (newPendingRecovery > lastCountsRef.current.pendingRecovery!) {
-          playAdminNotificationChime();
-          toast({
-            title: "🔑 إشعار جديد: طلب استرجاع كود!",
-            description: "وصل طلب جديد لاسترجاع كود الدخول من أحد الطلاب.",
-            variant: "destructive",
-            action: (
-              <ToastAction
-                altText="استرجاع الأكواد"
-                onClick={() => setTab("reports")}
-              >
-                عرض الطلب ←
-              </ToastAction>
-            ),
-            onClick: () => setTab("reports"),
-          });
-        }
-      }
-
-      lastCountsRef.current = {
-        pendingReceipts: newPendingReceipts,
-        pendingStudents: newPendingStudents,
-        pendingRecovery: newPendingRecovery,
-      };
-
+      const [s, q, , c] = await priorityPromise;
       setStudents(s);
+      setQuizzes(q);
+      setLearningCourses(c);
+      setLoading(false);
+
+      const [f, v, analyticsData, recoveryData, receiptsData] = await secondaryPromise;
+      checkNotificationDeltas(s, recoveryData, receiptsData);
+
       setPaymentReceipts(receiptsData);
       setFiles(f);
-      setQuizzes(q);
-      setAttempts(a);
-      setLearningCourses(c);
       setAnalytics(analyticsData);
       setRecoveryRequests(recoveryData);
       setVideoOptions(v);
@@ -720,6 +754,7 @@ export function AdminLearning({
         });
       }
     } finally {
+      setAttemptsLoading(false);
       setLoading(false);
       if (!silent) setIsRefreshingData(false);
     }
@@ -746,9 +781,36 @@ export function AdminLearning({
     // First load: silent (no toast) — user just opened the admin panel
     void load(true);
 
-    // Auto-poll every 30 seconds for live notifications (was 6s = 90 API calls/min)
-    const interval = setInterval(() => {
-      void load(true);
+    // Lightweight 30-second poller: checks fast SQL counts first (~3ms), and only pulls lists if pending counts changed
+    const interval = setInterval(async () => {
+      try {
+        const counts = await adminApi<{
+          pendingReceipts?: number;
+          pendingStudents?: number;
+          pendingRecovery?: number;
+        }>("/api/admin/learning/counts");
+
+        const prev = lastCountsRef.current;
+        const changed =
+          prev.pendingReceipts === null ||
+          (counts.pendingReceipts ?? 0) !== prev.pendingReceipts ||
+          (counts.pendingStudents ?? 0) !== prev.pendingStudents ||
+          (counts.pendingRecovery ?? 0) !== prev.pendingRecovery;
+
+        if (changed) {
+          const [s, recoveryData, receiptsData] = await Promise.all([
+            adminApi<Student[]>("/api/admin/students"),
+            adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
+            adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch((): PaymentReceipt[] => []),
+          ]);
+          checkNotificationDeltas(s, recoveryData, receiptsData);
+          setStudents(s);
+          setRecoveryRequests(recoveryData);
+          setPaymentReceipts(receiptsData);
+        }
+      } catch {
+        // Ignore transient background poll errors
+      }
     }, 30000);
 
     return () => {
@@ -1560,7 +1622,7 @@ export function AdminLearning({
         );
       })()}
 
-      {loading && !SELF_CONTAINED_ADMIN_TABS.has(tab) ? (
+      {(tab === "grades-sheet" ? attemptsLoading : (loading && !SELF_CONTAINED_ADMIN_TABS.has(tab))) ? (
         <div className="grid place-items-center py-24">
           <Loader2 className="animate-spin text-primary" />
         </div>
@@ -1660,7 +1722,7 @@ export function AdminLearning({
               attempts={attempts as any}
               stages={studentStages}
               quizzes={quizzes}
-              onRefresh={load}
+              onRefresh={refreshAttemptsOnly}
             />
           )}
           {tab === "center-bookings" && (

@@ -49,9 +49,45 @@ import {
 
 const router: IRouter = Router();
 
+let lastSubscriptionExpirationCheckAt = 0;
+
+router.get("/admin/learning/counts", requireAdmin, async (_req, res, next) => {
+  try {
+    const [[stRow], [qzRow], [rcRow], [pendStRow], [pendRecRow]] = await Promise.all([
+      db.select({ cnt: sql<number>`count(*)::int` }).from(studentsTable),
+      db.select({ cnt: sql<number>`count(*)::int` }).from(quizzesTable),
+      db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(paymentReceiptsTable)
+        .where(eq(paymentReceiptsTable.status, "pending")),
+      db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(studentsTable)
+        .where(eq(studentsTable.status, "pending")),
+      db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(codeRecoveryRequestsTable)
+        .where(eq(codeRecoveryRequestsTable.status, "pending")),
+    ]);
+    res.json({
+      students: Number(stRow?.cnt) || 0,
+      quizzes: Number(qzRow?.cnt) || 0,
+      pendingReceipts: Number(rcRow?.cnt) || 0,
+      pendingStudents: Number(pendStRow?.cnt) || 0,
+      pendingRecovery: Number(pendRecRow?.cnt) || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get(["/admin/students", "/admin/learning/students"], requireAdmin, async (_req, res, next) => {
   try {
-    await processSubscriptionExpirations();
+    const now = Date.now();
+    if (now - lastSubscriptionExpirationCheckAt > 60_000) {
+      lastSubscriptionExpirationCheckAt = now;
+      await processSubscriptionExpirations();
+    }
     const students = await db
       .select()
       .from(studentsTable)
@@ -236,7 +272,17 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
       db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
       db.select().from(videoProgressTable),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage, durationText: videosTable.durationText }).from(videosTable),
-      db.select().from(quizAttemptsTable),
+      db
+        .select({
+          id: quizAttemptsTable.id,
+          studentId: quizAttemptsTable.studentId,
+          quizId: quizAttemptsTable.quizId,
+          score: quizAttemptsTable.score,
+          passed: quizAttemptsTable.passed,
+          timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
+          createdAt: quizAttemptsTable.createdAt,
+        })
+        .from(quizAttemptsTable),
       db.select({ id: quizzesTable.id, title: quizzesTable.title, scope: quizzesTable.scope, passingScore: quizzesTable.passingScore }).from(quizzesTable),
       db.execute(sql`
         SELECT student_id, COUNT(*)::int AS cnt

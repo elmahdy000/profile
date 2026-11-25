@@ -530,17 +530,18 @@ export default function AdminDashboard() {
   });
   useEffect(() => {
     if (isAuthenticated) {
-      Promise.all([
-        fetch("/api/admin/students", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        fetch("/api/admin/learning/quizzes", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-        fetch("/api/admin/payment-receipts", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-      ]).then(([st, qz, rc]) => {
-        setLearningCounts({
-          students: Array.isArray(st) ? st.length : 0,
-          quizzes: Array.isArray(qz) ? qz.length : 0,
-          pendingReceipts: Array.isArray(rc) ? rc.filter((r: any) => r.status === "pending").length : 0,
-        });
-      });
+      fetch("/api/admin/learning/counts", { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && typeof data === "object") {
+            setLearningCounts({
+              students: Number(data.students) || 0,
+              quizzes: Number(data.quizzes) || 0,
+              pendingReceipts: Number(data.pendingReceipts) || 0,
+            });
+          }
+        })
+        .catch(() => undefined);
     }
   }, [isAuthenticated]);
 
