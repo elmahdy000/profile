@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Clock, ShieldCheck, Camera, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { getStudentAuthHeaders, isLikelyImageFile } from "@/lib/studentUploadHelpers";
 
 export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; onUploaded: () => void }) {
   const [uploading, setUploading] = useState(false);
@@ -11,8 +12,8 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast({ title: "خطأ", description: "يرجى اختيار صورة إيصال دمج من نوع PNG أو JPG أو WEBP", variant: "destructive" });
+    if (!isLikelyImageFile(file, true)) {
+      toast({ title: "خطأ", description: "يرجى اختيار صورة إيصال من نوع PNG أو JPG أو WEBP أو HEIC أو PDF", variant: "destructive" });
       return;
     }
     setSelectedFile(file);
@@ -26,13 +27,10 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
     try {
       const formData = new FormData();
       formData.append("receipt", selectedFile);
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/payment-receipt", {
         method: "POST",
         credentials: "include",
-        headers: {
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
-        },
+        headers: getStudentAuthHeaders(false),
         body: formData,
       });
       const data = await res.json();

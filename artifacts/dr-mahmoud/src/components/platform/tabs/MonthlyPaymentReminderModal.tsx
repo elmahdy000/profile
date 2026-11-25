@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
+import { getStudentAuthHeaders, isLikelyImageFile } from "@/lib/studentUploadHelpers";
 
 interface MonthlyPaymentReminderModalProps {
   student: Student;
@@ -62,10 +63,10 @@ export function MonthlyPaymentReminderModal({
   };
 
   const handleFileSelect = (file: File) => {
-    if (!file.type.startsWith("image/")) {
+    if (!isLikelyImageFile(file, true)) {
       toast({
         title: "صيغة غير مدعومة",
-        description: "يرجى اختيار صورة إيصال واضحة من نوع PNG أو JPG أو WEBP",
+        description: "يرجى اختيار صورة إيصال واضحة (PNG أو JPG أو WEBP أو HEIC) أو PDF",
         variant: "destructive",
       });
       return;
@@ -80,13 +81,10 @@ export function MonthlyPaymentReminderModal({
     try {
       const formData = new FormData();
       formData.append("receipt", selectedFile);
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/payment-receipt", {
         method: "POST",
         credentials: "include",
-        headers: {
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
-        },
+        headers: getStudentAuthHeaders(false),
         body: formData,
       });
       const data = await res.json();

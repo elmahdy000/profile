@@ -1,3 +1,39 @@
+export const MAX_CLIENT_AVATAR_BYTES = 25 * 1024 * 1024;
+
+const IMAGE_FILE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "jfif",
+  "png",
+  "webp",
+  "heic",
+  "heif",
+  "avif",
+  "gif",
+  "bmp",
+  "tif",
+  "tiff",
+  "dng",
+  "ico",
+]);
+
+/**
+ * Checks whether a selected file is an image (tolerating mobile/WebView pickers
+ * that report `application/octet-stream` or empty MIME type alongside a photo extension).
+ */
+export function isLikelyImageFile(file: File, allowPdf = false): boolean {
+  const mime = (file.type || "").toLowerCase().trim();
+  const ext = (file.name || "").split(".").pop()?.toLowerCase().trim() || "";
+  if (allowPdf && (mime === "application/pdf" || mime === "application/x-pdf" || ext === "pdf")) {
+    return true;
+  }
+  if (mime.startsWith("image/")) return true;
+  if (ext && IMAGE_FILE_EXTENSIONS.has(ext)) return true;
+  // Many Android/WebView pickers send empty or generic MIME without preserving extension in name
+  if (!mime || mime.includes("octet-stream")) return !ext;
+  return false;
+}
+
 export function getStudentAuthHeaders(includeJson = false): Record<string, string> {
   const headers: Record<string, string> = {};
   if (includeJson) headers["Content-Type"] = "application/json";

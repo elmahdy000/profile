@@ -43,7 +43,7 @@ export function errorHandler(
     const tooLarge = err.code === "LIMIT_FILE_SIZE";
     res.status(tooLarge ? 413 : 400).json({
       error: tooLarge
-        ? "حجم الملف أكبر من الحد المسموح (150 MB). اضغط الملف أو اختر ملفًا أصغر."
+        ? "حجم الملف أكبر من الحد المسموح. اضغط الملف أو اختر ملفًا أصغر."
         : err.message,
     });
     return;
@@ -52,7 +52,7 @@ export function errorHandler(
   // Upload fileFilter rejections surface as plain Errors with a known message.
   if (
     err instanceof Error &&
-    /allowed|Only (images|audio)/i.test(err.message)
+    /allowed|Only (images|audio)|صيغة|مدعوم|حجم|الصورة/i.test(err.message)
   ) {
     res.status(400).json({ error: err.message });
     return;

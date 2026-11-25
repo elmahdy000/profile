@@ -508,8 +508,19 @@ export async function getApprovedStudent(
       )
       .limit(1);
 
-    if (foundStudent && foundStudent.status === "approved") {
-      student = foundStudent;
+    if (foundStudent) {
+      // Allow approved accounts everywhere, and allow pending (non-suspended) accounts
+      // for profile, avatar, and payment-receipt actions (consistent with studentSessionsTable).
+      const reqUrl = req.originalUrl || req.url || "";
+      const isPendingAllowedEndpoint =
+        reqUrl.includes("/avatar") ||
+        reqUrl.includes("/payment-receipt") ||
+        reqUrl.includes("/payment-status") ||
+        reqUrl.includes("/student/me") ||
+        reqUrl.includes("/student/profile");
+      if (foundStudent.status === "approved" || isPendingAllowedEndpoint) {
+        student = foundStudent;
+      }
     }
   }
 
@@ -537,14 +548,17 @@ export async function getApprovedStudent(
         } else {
           // Device limit reached.
           // CRITICAL: Never drop active session-token requests (already verified at login)
-          // and NEVER reject quiz/exam/progress saving for an authenticated student!
+          // and NEVER reject quiz/exam/progress/avatar/receipt saving for an authenticated student!
           const reqUrl = req.originalUrl || req.url || "";
           const isProtectedSaveOrSession =
             authenticatedViaSessionToken ||
             reqUrl.includes("/submit") ||
             reqUrl.includes("/progress") ||
             reqUrl.includes("/self-assess") ||
-            reqUrl.includes("/grade-essay");
+            reqUrl.includes("/grade-essay") ||
+            reqUrl.includes("/avatar") ||
+            reqUrl.includes("/payment-receipt") ||
+            reqUrl.includes("/summaries");
           if (!isProtectedSaveOrSession) {
             return null;
           }

@@ -1,10 +1,5 @@
 import { Router, type IRouter } from "express";
-import { execFileSync } from "child_process";
-import fs from "fs";
-import os from "os";
-import path from "path";
 import { createHash, randomBytes } from "crypto";
-import multer from "multer";
 import { and, desc, eq, ilike, inArray, isNull, or, sql, lt } from "drizzle-orm";
 import {
   db,
@@ -37,6 +32,10 @@ import {
 } from "../../lib/academic-stages";
 import { fixedWindowRateLimit } from "../../middleware/rate-limit";
 import { logAudit } from "../../lib/audit";
+import {
+  processAndSaveStudentAvatar,
+  runAvatarUploadMiddleware,
+} from "../../lib/avatar-upload";
 import {
   publicStudent,
   normalizeEgyptianPhone,
@@ -586,122 +585,29 @@ router.get("/student/me", async (req, res, next) => {
   }
 });
 
-const studentAvatarUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, callback) => {
-    const mime = (file.mimetype || "").toLowerCase();
-    const ext = path.extname(file.originalname || "").toLowerCase();
-    const validMime =
-      mime.startsWith("image/") ||
-      ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif", "image/pjpeg"].includes(mime);
-    const validExt = [".png", ".jpg", ".jpeg", ".webp", ".heic", ".heif"].includes(ext);
-    if (!validMime && !validExt) return callback(new Error("صيغة الصورة غير مدعومة"));
-    callback(null, true);
-  },
-}).single("avatar");
-
-function detectImageMagicFormat(
-  buf: Buffer,
-): "jpeg" | "png" | "webp" | "gif" | "avif" | "heic" | "unknown" {
-  if (!buf || buf.length < 12) return "unknown";
-  // JPEG: FF D8 FF
-  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpeg";
-  // PNG: 89 50 4E 47 0D 0A 1A 0A
-  if (
-    buf[0] === 0x89 &&
-    buf[1] === 0x50 &&
-    buf[2] === 0x4e &&
-    buf[3] === 0x47
-  ) {
-    return "png";
-  }
-  // GIF: GIF87a or GIF89a
-  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) {
-    return "gif";
-  }
-  // WebP: RIFF....WEBP
-  if (
-    buf.toString("ascii", 0, 4) === "RIFF" &&
-    buf.toString("ascii", 8, 12) === "WEBP"
-  ) {
-    return "webp";
-  }
-  // ISO BMFF (HEIC / HEIF / AVIF): ....ftyp<brand>
-  if (buf.toString("ascii", 4, 8) === "ftyp") {
-    const brand = buf.toString("ascii", 8, 12).toLowerCase();
-    if (brand === "avif" || brand === "avis") return "avif";
-    if (["heic", "heix", "hevc", "hevx", "mif1", "msf1"].includes(brand)) {
-      return "heic";
-    }
-  }
-  return "unknown";
-}
-
-router.post("/student/avatar", requireStudent, studentAvatarUpload, async (req, res, next) => {
+router.post("/student/avatar", requireStudent, async (req, res, next) => {
   try {
+    const uploadedOk = await runAvatarUploadMiddleware(req, res);
+    if (!uploadedOk) return;
     if (!req.file || !req.file.buffer?.length) {
       res.status(400).json({ error: "اختر صورة صالحة" });
       return;
     }
     const student = res.locals.student as typeof studentsTable.$inferSelect;
-    const directory = path.join(process.cwd(), "public", "uploads", "avatars");
-    fs.mkdirSync(directory, { recursive: true });
-
-    let finalBuffer = req.file.buffer;
-    const magic = detectImageMagicFormat(finalBuffer);
-    let extension = ".jpg";
-
-    if (magic === "png") {
-      extension = ".png";
-    } else if (magic === "webp") {
-      extension = ".webp";
-    } else if (magic === "gif") {
-      extension = ".gif";
-    } else if (magic === "avif") {
-      extension = ".avif";
-    } else if (magic === "jpeg") {
-      extension = ".jpg";
-    } else if (magic === "heic") {
-      // Transcode iPhone / Samsung HEIC/HEIF into universal JPEG via libheif
-      const stamp = `${student.id}-${Date.now()}`;
-      const tmpIn = path.join(os.tmpdir(), `avatar-in-${stamp}.heic`);
-      const tmpOut = path.join(os.tmpdir(), `avatar-out-${stamp}.jpg`);
-      try {
-        fs.writeFileSync(tmpIn, finalBuffer);
-        execFileSync("heif-convert", ["-q", "86", tmpIn, tmpOut], {
-          timeout: 15000,
-          stdio: "ignore",
-        });
-        if (!fs.existsSync(tmpOut)) {
-          throw new Error("HEIC conversion produced no output");
-        }
-        finalBuffer = fs.readFileSync(tmpOut);
-        if (detectImageMagicFormat(finalBuffer) !== "jpeg") {
-          throw new Error("Converted buffer is not valid JPEG");
-        }
-        extension = ".jpg";
-      } catch {
-        res.status(400).json({
-          error: "صيغة الصورة (HEIC) غير مدعومة حالياً — اختر صورة JPG أو PNG أو التقط صورة مباشرة بالكاميرا",
-        });
-        return;
-      } finally {
-        try { if (fs.existsSync(tmpIn)) fs.unlinkSync(tmpIn); } catch {}
-        try { if (fs.existsSync(tmpOut)) fs.unlinkSync(tmpOut); } catch {}
-      }
-    } else {
-      res.status(400).json({
-        error: "الملف المرفوع ليس صورة صالحة (استخدم JPG أو PNG أو WebP)",
-      });
+    const saved = processAndSaveStudentAvatar(
+      req.file.buffer,
+      req.file.originalname || "",
+      student.id,
+    );
+    if (!saved.ok) {
+      res.status(400).json({ error: saved.error });
       return;
     }
-
-    const filename = `student-${student.id}-${Date.now()}${extension}`;
-    fs.writeFileSync(path.join(directory, filename), finalBuffer);
-    const avatarUrl = `/uploads/avatars/${filename}`;
-    await db.update(studentsTable).set({ avatarUrl }).where(eq(studentsTable.id, student.id));
-    res.json({ avatarUrl });
+    await db
+      .update(studentsTable)
+      .set({ avatarUrl: saved.avatarUrl, updatedAt: new Date() })
+      .where(eq(studentsTable.id, student.id));
+    res.json({ avatarUrl: saved.avatarUrl });
   } catch (error) {
     next(error);
   }

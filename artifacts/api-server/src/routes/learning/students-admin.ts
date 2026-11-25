@@ -40,6 +40,10 @@ import {
 } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
 import {
+  processAndSaveStudentAvatar,
+  runAvatarUploadMiddleware,
+} from "../../lib/avatar-upload";
+import {
   processSubscriptionExpirations,
   ensureAutomaticCourseAssignments,
   normalizeStringList,
@@ -133,7 +137,7 @@ router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) 
           for (const s of allApproved) {
             await ensureAutomaticCourseAssignments(s);
           }
-        } catch {}
+        } catch { }
       }
       return res.json({ success: true, message: `تم تحديث حالة كافة الطلاب إلى ${status}` });
     }
@@ -161,7 +165,7 @@ router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) 
           for (const s of approvedStudents) {
             await ensureAutomaticCourseAssignments(s);
           }
-        } catch {}
+        } catch { }
       }
       return res.json({ success: true, count: studentIds.length, message: `تم تحديث حالة ${studentIds.length} طالب` });
     }
@@ -434,7 +438,7 @@ router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) =>
       const recencyPts = neverLoggedIn
         ? 0
         : (daysInactive === 0 ? 20 : daysInactive <= 2 ? 14 : daysInactive <= 6 ? 7 : 0) +
-          (checkedInToday ? 5 : Math.min(5, dailyCheckinsCount));
+        (checkedInToday ? 5 : Math.min(5, dailyCheckinsCount));
       const quizPts =
         uniqueQuizzesCount > 0
           ? Math.min(40, Math.round(((avgScore || 0) / 100) * 28 + Math.min(12, uniqueQuizzesCount * 3)))
@@ -545,21 +549,21 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
     }
     const requestedCourseIds = Array.isArray(req.body.enrolledCourseIds)
       ? Array.from(
-          new Set<number>(
-            (req.body.enrolledCourseIds as unknown[])
-              .map(Number)
-              .filter((value) => Number.isInteger(value) && value > 0),
-          ),
-        ).slice(0, 50)
+        new Set<number>(
+          (req.body.enrolledCourseIds as unknown[])
+            .map(Number)
+            .filter((value) => Number.isInteger(value) && value > 0),
+        ),
+      ).slice(0, 50)
       : current.enrolledCourseIds;
     let requestedCategories = Array.isArray(req.body.enrolledCategories)
       ? Array.from(
-          new Set<string>(
-            (req.body.enrolledCategories as unknown[])
-              .map((value) => String(value).trim())
-              .filter(Boolean),
-          ),
-        ).slice(0, 20)
+        new Set<string>(
+          (req.body.enrolledCategories as unknown[])
+            .map((value) => String(value).trim())
+            .filter(Boolean),
+        ),
+      ).slice(0, 20)
       : current.enrolledCategories;
     const adminExplicitlySetEnrollment =
       req.body.enrolledCourseIds !== undefined ||
@@ -616,7 +620,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         enrolledCourseIds: finalCourseIds,
         learningMode:
           req.body.learningMode !== undefined &&
-          ["online", "offline"].includes(String(req.body.learningMode))
+            ["online", "offline"].includes(String(req.body.learningMode))
             ? String(req.body.learningMode)
             : current.learningMode,
         centerName:
@@ -649,11 +653,11 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
             : current.languageTrack,
         paymentStatus:
           req.body.paymentStatus !== undefined &&
-          ["paid", "pending_review", "unpaid"].includes(String(req.body.paymentStatus))
+            ["paid", "pending_review", "unpaid"].includes(String(req.body.paymentStatus))
             ? String(req.body.paymentStatus)
             : status === "approved"
-            ? "paid"
-            : current.paymentStatus,
+              ? "paid"
+              : current.paymentStatus,
         subscriptionStartDate:
           req.body.paymentStatus === "paid" || status === "approved"
             ? new Date()
@@ -662,8 +666,8 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           req.body.paymentStatus === "paid" || status === "approved"
             ? "active"
             : req.body.paymentStatus === "unpaid"
-            ? "expired"
-            : current.subscriptionStatus,
+              ? "expired"
+              : current.subscriptionStatus,
         approvedAt:
           status === "approved" || req.body.paymentStatus === "paid"
             ? (current.approvedAt || new Date())
@@ -834,6 +838,65 @@ router.post(
         message: maxDevices === 2 ? "تمت الموافقة والسماح بفتح جهاز ثانٍ للطالب بنجاح" : "تم ضبط الحد الأقصى للأجهزة إلى جهاز واحد",
         student: updated,
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// Admin Endpoint: Upload or replace a student's profile photo directly
+router.post(
+  "/admin/students/:id/avatar",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const uploadedOk = await runAvatarUploadMiddleware(req, res);
+      if (!uploadedOk) return;
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "معرّف الطالب غير صحيح" });
+        return;
+      }
+      if (!req.file || !req.file.buffer?.length) {
+        res.status(400).json({ error: "اختر صورة صالحة" });
+        return;
+      }
+
+      const [existing] = await db
+        .select({ id: studentsTable.id, name: studentsTable.name })
+        .from(studentsTable)
+        .where(eq(studentsTable.id, id))
+        .limit(1);
+      if (!existing) {
+        res.status(404).json({ error: "الطالب غير موجود" });
+        return;
+      }
+
+      const saved = processAndSaveStudentAvatar(
+        req.file.buffer,
+        req.file.originalname || "",
+        id,
+      );
+      if (!saved.ok) {
+        res.status(400).json({ error: saved.error });
+        return;
+      }
+
+      const [updated] = await db
+        .update(studentsTable)
+        .set({ avatarUrl: saved.avatarUrl, updatedAt: new Date() })
+        .where(eq(studentsTable.id, id))
+        .returning();
+
+      await logAudit(
+        req,
+        "ADMIN_UPLOAD_STUDENT_AVATAR",
+        "student",
+        String(id),
+        `رفع/تحديث صورة البروفايل للطالب (${existing.name}) بواسطة الإدارة`,
+      );
+
+      res.json({ avatarUrl: saved.avatarUrl, student: updated });
     } catch (error) {
       next(error);
     }

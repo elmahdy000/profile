@@ -5,7 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { PageHeader, StudentAvatar, ProfileInfoRow, StatusBadge } from "../StudentDashboardUI";
 import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
-import { getStudentAuthHeaders, prepareAvatarUploadFile } from "@/lib/studentUploadHelpers";
+import { getStudentAuthHeaders, isLikelyImageFile, MAX_CLIENT_AVATAR_BYTES, prepareAvatarUploadFile } from "@/lib/studentUploadHelpers";
 
 export function ProfileTab({
   student,
@@ -130,8 +130,12 @@ export function ProfileTab({
 
   const uploadAvatar = async (file?: File) => {
     if (!file) return;
-    if ((file.type && !file.type.startsWith("image/")) || file.size > 15 * 1024 * 1024) {
-      toast({ variant: "destructive", title: "صورة غير صالحة", description: "اختار صورة حجمها أقل من 15 ميجا." });
+    if (!isLikelyImageFile(file)) {
+      toast({ variant: "destructive", title: "صيغة الملف غير مدعومة", description: "اختار صورة صالحة من الموبايل أو الكاميرا." });
+      return;
+    }
+    if (file.size > MAX_CLIENT_AVATAR_BYTES) {
+      toast({ variant: "destructive", title: "حجم الصورة كبير جداً", description: "اختار صورة حجمها أقل من 25 ميجا." });
       return;
     }
     setAvatarLoading(true);
@@ -157,8 +161,7 @@ export function ProfileTab({
   const removeAvatar = async () => {
     setAvatarLoading(true);
     try {
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-      const res = await fetch("/api/student/avatar", { method: "DELETE", credentials: "include", headers: deviceId ? { "X-Device-Id": deviceId } : {} });
+      const res = await fetch("/api/student/avatar", { method: "DELETE", credentials: "include", headers: getStudentAuthHeaders(false) });
       if (!res.ok) throw new Error("تعذر حذف الصورة");
       onStudentChange({ ...student, avatarUrl: null });
       toast({ title: "تم حذف الصورة" });
@@ -281,7 +284,7 @@ export function ProfileTab({
             )}
 
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
-              <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
+              <input ref={inputRef} type="file" accept="image/*,.heic,.heif,.avif,.jfif,.bmp,.tif,.tiff" className="sr-only" onChange={(event) => { void uploadAvatar(event.target.files?.[0]); event.target.value = ""; }} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
                 <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : student.avatarUrl ? "تغيير الصورة" : "رفع صورة البروفايل (إلزامي)"}
               </Button>

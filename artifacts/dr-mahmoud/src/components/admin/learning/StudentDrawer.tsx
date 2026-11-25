@@ -31,6 +31,7 @@ import {
   Sparkles,
   ExternalLink,
   GraduationCap,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -187,6 +188,8 @@ export function StudentDrawer({
   const [activeTab, setActiveTab] = useState<"overview" | "payments" | "summaries" | "courses" | "attendance" | "quizzes" | "files" | "security">("overview");
   const [copied, setCopied] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const adminAvatarInputRef = useRef<HTMLInputElement>(null);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [localStudent, setLocalStudent] = useState<ExtendedStudent | null>(student);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -449,6 +452,40 @@ export function StudentDrawer({
     }
   };
 
+  const handleAdminAvatarUpload = async (file?: File) => {
+    if (!file || !currentStudent?.id) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "حجم الصورة كبير جداً", description: "الحد الأقصى 25 ميجابايت." });
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file, file.name || "avatar.jpg");
+      const res = await fetch(`/api/admin/students/${currentStudent.id}/avatar`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "تعذر رفع الصورة");
+      }
+      const updated = { ...currentStudent, avatarUrl: data.avatarUrl };
+      setLocalStudent(updated);
+      onStudentUpdated?.(updated);
+      toast({ title: "تم حفظ صورة الطالب بنجاح 📸" });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "تعذر رفع الصورة",
+        description: err.message || "حاول مرة أخرى بصورة أخرى",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const triggerConfirm = (
     title: string,
     description: string,
@@ -476,23 +513,59 @@ export function StudentDrawer({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-4 sm:px-7 sm:py-5">
             <div className="flex items-center gap-3.5">
-              {student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null" ? (
+              <input
+                ref={adminAvatarInputRef}
+                type="file"
+                accept="image/*,.heic,.heif,.avif,.jfif,.bmp,.tif,.tiff"
+                className="sr-only"
+                onChange={(e) => {
+                  void handleAdminAvatarUpload(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+              {currentStudent.avatarUrl && currentStudent.avatarUrl.trim() && currentStudent.avatarUrl !== "null" ? (
+                <div className="relative h-14 w-14 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowPhotoModal(true)}
+                    title="اضغط لتكبير صورة الطالب"
+                    className="h-14 w-14 overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-muted shadow-xs hover:border-blue-600 transition cursor-zoom-in"
+                  >
+                    <img
+                      src={currentStudent.avatarUrl}
+                      alt={currentStudent.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={uploadingAvatar}
+                    onClick={() => adminAvatarInputRef.current?.click()}
+                    title="تغيير صورة الطالب"
+                    className="absolute -bottom-1 -left-1 grid h-6 w-6 place-items-center rounded-lg border border-border bg-card text-blue-600 shadow-sm hover:bg-blue-50 cursor-pointer"
+                  >
+                    {uploadingAvatar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => setShowPhotoModal(true)}
-                  title="اضغط لتكبير صورة الطالب"
-                  className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-muted shadow-xs hover:border-blue-600 transition cursor-zoom-in"
+                  disabled={uploadingAvatar}
+                  onClick={() => adminAvatarInputRef.current?.click()}
+                  title="رفع صورة للطالب"
+                  className="relative flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-blue-500/50 bg-blue-500/10 text-xl font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition cursor-pointer"
                 >
-                  <img
-                    src={student.avatarUrl}
-                    alt={student.name}
-                    className="h-full w-full object-cover"
-                  />
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <span>{currentStudent.name.charAt(0)}</span>
+                      <span className="absolute -bottom-1 -left-1 grid h-5 w-5 place-items-center rounded-md bg-blue-600 text-white shadow-xs">
+                        <Camera className="h-3 w-3" />
+                      </span>
+                    </>
+                  )}
                 </button>
-              ) : (
-                <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl border border-blue-500/30 bg-blue-500/10 text-xl font-bold text-blue-600 dark:text-blue-400">
-                  <span>{student.name.charAt(0)}</span>
-                </div>
               )}
               <div>
                 <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -1559,7 +1632,7 @@ export function StudentDrawer({
         }}
       />
       {/* Full-Size Student Photo Modal */}
-      {showPhotoModal && student.avatarUrl && (
+      {showPhotoModal && currentStudent.avatarUrl && (
         <div
           className="fixed inset-0 z-[160] flex items-center justify-center bg-black/80 p-4"
           dir="rtl"
@@ -1570,7 +1643,7 @@ export function StudentDrawer({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative bg-slate-950 aspect-square w-full flex items-center justify-center overflow-hidden">
-              <img src={student.avatarUrl} alt={student.name} className="h-full w-full object-contain" />
+              <img src={currentStudent.avatarUrl} alt={currentStudent.name} className="h-full w-full object-contain" />
               <button
                 type="button"
                 onClick={() => setShowPhotoModal(false)}
@@ -1580,11 +1653,24 @@ export function StudentDrawer({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-4">
-              <h3 className="text-sm font-black text-foreground">{student.name}</h3>
-              <p className="text-xs text-muted-foreground font-mono mt-0.5" dir="ltr">
-                {student.accessCode || student.phone}
-              </p>
+            <div className="p-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-black text-foreground">{currentStudent.name}</h3>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5" dir="ltr">
+                  {currentStudent.accessCode || currentStudent.phone}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={uploadingAvatar}
+                onClick={() => adminAvatarInputRef.current?.click()}
+                className="rounded-xl text-xs font-bold gap-1.5 cursor-pointer"
+              >
+                {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                تغيير الصورة
+              </Button>
             </div>
           </div>
         </div>

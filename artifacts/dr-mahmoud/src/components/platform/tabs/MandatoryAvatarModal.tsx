@@ -1,9 +1,14 @@
-import React, { useRef, useState } from "react";
-import { Camera, CheckCircle2, Loader2, ShieldAlert, Sparkles, Upload } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Camera, CheckCircle2, Image as ImageIcon, Loader2, ShieldAlert, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
-import { getStudentAuthHeaders, prepareAvatarUploadFile } from "@/lib/studentUploadHelpers";
+import {
+  getStudentAuthHeaders,
+  isLikelyImageFile,
+  MAX_CLIENT_AVATAR_BYTES,
+  prepareAvatarUploadFile,
+} from "@/lib/studentUploadHelpers";
 
 interface MandatoryAvatarModalProps {
   student: Student;
@@ -17,15 +22,21 @@ export function MandatoryAvatarModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const hasAvatar = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null");
   if (hasAvatar) return null;
 
   const handleFilePick = (file?: File) => {
     if (!file) return;
-    const isImageType = !file.type || file.type.startsWith("image/");
-    if (!isImageType) {
+    if (!isLikelyImageFile(file)) {
       toast({
         variant: "destructive",
         title: "صيغة الملف غير مدعومة",
@@ -33,18 +44,20 @@ export function MandatoryAvatarModal({
       });
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > MAX_CLIENT_AVATAR_BYTES) {
       toast({
         variant: "destructive",
         title: "حجم الصورة كبير جداً",
-        description: "اختار صورة حجمها أقل من 15 ميجا.",
+        description: "اختار صورة حجمها أقل من 25 ميجا.",
       });
       return;
     }
     setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setPreviewUrl(String(reader.result || ""));
-    reader.readAsDataURL(file);
+    setPreviewFailed(false);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   const handleUpload = async () => {
@@ -114,9 +127,12 @@ export function MandatoryAvatarModal({
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*,.heic,.heif,.avif,.jfif,.bmp,.tif,.tiff"
             className="sr-only"
-            onChange={(e) => handleFilePick(e.target.files?.[0])}
+            onChange={(e) => {
+              handleFilePick(e.target.files?.[0]);
+              e.target.value = "";
+            }}
           />
 
           <button
@@ -124,12 +140,19 @@ export function MandatoryAvatarModal({
             onClick={() => inputRef.current?.click()}
             className="group relative h-36 w-36 rounded-full border-4 border-dashed border-blue-400/70 hover:border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 flex items-center justify-center overflow-hidden transition-all cursor-pointer shadow-md"
           >
-            {previewUrl ? (
+            {previewUrl && !previewFailed ? (
               <img
                 src={previewUrl}
                 alt="معاينة الصورة"
+                onError={() => setPreviewFailed(true)}
                 className="h-full w-full object-cover"
               />
+            ) : selectedFile ? (
+              <div className="flex flex-col items-center gap-1 text-emerald-600 dark:text-emerald-400 px-3 text-center">
+                <ImageIcon className="h-8 w-8" />
+                <span className="text-[11px] font-black leading-tight">تم اختيار الصورة</span>
+                <span className="text-[9px] font-medium opacity-80 truncate max-w-[110px]">{selectedFile.name}</span>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-1.5 text-blue-600 dark:text-blue-400 px-3 text-center">
                 <Upload className="h-8 w-8 group-hover:scale-110 transition-transform" />
@@ -138,7 +161,7 @@ export function MandatoryAvatarModal({
             )}
           </button>
 
-          {previewUrl && (
+          {selectedFile && (
             <button
               type="button"
               onClick={() => inputRef.current?.click()}

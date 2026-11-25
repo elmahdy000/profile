@@ -113,12 +113,13 @@ export function StudentsTab({
   const [stageModalTarget, setStageModalTarget] = useState<ExtendedStudent | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "gallery">("table");
   const [photoFilter, setPhotoFilter] = useState<"all" | "with_photo" | "without_photo">("all");
-  const [brokenAvatarIds, setBrokenAvatarIds] = useState<Set<number>>(() => new Set());
-  const markAvatarBroken = useCallback((id: number) => {
-    setBrokenAvatarIds((prev) => {
-      if (prev.has(id)) return prev;
+  const [brokenAvatarKeys, setBrokenAvatarKeys] = useState<Set<string>>(() => new Set());
+  const markAvatarBroken = useCallback((id: number, avatarUrl?: string | null) => {
+    const key = `${id}:${avatarUrl || ""}`;
+    setBrokenAvatarKeys((prev) => {
+      if (prev.has(key)) return prev;
       const next = new Set(prev);
-      next.add(id);
+      next.add(key);
       return next;
     });
   }, []);
@@ -854,7 +855,7 @@ export function StudentsTab({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5">
             {paginatedStudents.map((s) => {
-              const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarIds.has(s.id));
+              const hasPhoto = Boolean(s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarKeys.has(`${s.id}:${s.avatarUrl}`));
               return (
                 <article
                   key={s.id}
@@ -869,7 +870,7 @@ export function StudentsTab({
                         alt={s.name}
                         loading="lazy"
                         decoding="async"
-                        onError={() => markAvatarBroken(s.id)}
+                        onError={() => markAvatarBroken(s.id, s.avatarUrl)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setPreviewAvatarStudent(s);
@@ -955,7 +956,7 @@ export function StudentsTab({
           </div>
         ) : paginatedStudents.map((student) => {
           const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
-          const hasPhoto = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null" && !brokenAvatarIds.has(student.id));
+          const hasPhoto = Boolean(student.avatarUrl && student.avatarUrl.trim() && student.avatarUrl !== "null" && !brokenAvatarKeys.has(`${student.id}:${student.avatarUrl}`));
           return (
             <article key={student.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
               <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] rounded-xl">
@@ -967,7 +968,7 @@ export function StudentsTab({
                         alt={student.name}
                         loading="lazy"
                         decoding="async"
-                        onError={() => markAvatarBroken(student.id)}
+                        onError={() => markAvatarBroken(student.id, student.avatarUrl)}
                         onClick={(e) => {
                           e.stopPropagation();
                           setPreviewAvatarStudent(student);
@@ -1088,7 +1089,7 @@ export function StudentsTab({
                     {/* Student Primary Info + Profile Photo */}
                     <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <div className="flex items-center gap-2.5">
-                        {s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarIds.has(s.id) ? (
+                        {s.avatarUrl && s.avatarUrl.trim() && s.avatarUrl !== "null" && !brokenAvatarKeys.has(`${s.id}:${s.avatarUrl}`) ? (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1103,7 +1104,7 @@ export function StudentsTab({
                               alt={s.name}
                               loading="lazy"
                               decoding="async"
-                              onError={() => markAvatarBroken(s.id)}
+                              onError={() => markAvatarBroken(s.id, s.avatarUrl)}
                               className="h-full w-full object-cover"
                             />
                           </button>
