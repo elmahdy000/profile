@@ -458,9 +458,11 @@ export async function getApprovedStudent(
   const authHeader = typeof req.headers.authorization === "string" ? req.headers.authorization : null;
   const bearerToken = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
   const headerToken = typeof req.headers["x-student-token"] === "string" ? req.headers["x-student-token"].trim() : null;
-  const token = cookieToken || bearerToken || headerToken;
+  const queryToken = typeof req.query?.token === "string" ? req.query.token.trim() : null;
+  const token = cookieToken || bearerToken || headerToken || queryToken;
 
   let student: ApprovedStudent | null = null;
+  let authenticatedViaSessionToken = false;
 
   if (token) {
     const tokenHash = createHash("sha256").update(token).digest("hex");
@@ -480,6 +482,9 @@ export async function getApprovedStudent(
       )
       .limit(1);
     student = row?.student ?? null;
+    if (student) {
+      authenticatedViaSessionToken = true;
+    }
   }
 
   const reqDeviceId = String(req.headers["x-device-id"] ?? req.query.deviceId ?? "").trim();
@@ -531,9 +536,16 @@ export async function getApprovedStudent(
           student.deviceId = boundDevices[0];
         } else {
           // Device limit reached.
-          // CRITICAL: NEVER reject an active quiz/exam submission for an authenticated student!
-          const isQuizSubmit = (req.originalUrl || req.url || "").includes("/submit");
-          if (!isQuizSubmit) {
+          // CRITICAL: Never drop active session-token requests (already verified at login)
+          // and NEVER reject quiz/exam/progress saving for an authenticated student!
+          const reqUrl = req.originalUrl || req.url || "";
+          const isProtectedSaveOrSession =
+            authenticatedViaSessionToken ||
+            reqUrl.includes("/submit") ||
+            reqUrl.includes("/progress") ||
+            reqUrl.includes("/self-assess") ||
+            reqUrl.includes("/grade-essay");
+          if (!isProtectedSaveOrSession) {
             return null;
           }
         }

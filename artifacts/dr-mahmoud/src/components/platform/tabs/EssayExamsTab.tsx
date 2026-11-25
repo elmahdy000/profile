@@ -41,6 +41,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
+import { getStudentAuthHeaders } from "@/lib/studentUploadHelpers";
 import {
   isPrimarilyEnglish,
   splitModelAnswerTranslation,
@@ -219,7 +220,10 @@ export function EssayExamsTab({
   const loadExams = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/learning/essay-exams", { credentials: "include" });
+      const res = await fetch("/api/learning/essay-exams", {
+        credentials: "include",
+        headers: getStudentAuthHeaders(false),
+      });
       if (!res.ok) throw new Error("تعذر تحميل الامتحانات المقالية");
       const data = await res.json();
       setExams(Array.isArray(data) ? data : (data?.exams || []));
@@ -238,7 +242,10 @@ export function EssayExamsTab({
   const loadBank = async () => {
     try {
       setLoadingBank(true);
-      const res = await fetch("/api/learning/essay-question-bank/browse", { credentials: "include" });
+      const res = await fetch("/api/learning/essay-question-bank/browse", {
+        credentials: "include",
+        headers: getStudentAuthHeaders(false),
+      });
       if (!res.ok) throw new Error("تعذر تحميل بنك الأسئلة المقالية");
       const data = await res.json();
       if (data.success) {
@@ -261,7 +268,10 @@ export function EssayExamsTab({
   const handleOpenExam = async (examId: number, autoStart = false) => {
     try {
       setLoadingExam(true);
-      const res = await fetch(`/api/learning/essay-exams/${examId}`, { credentials: "include" });
+      const res = await fetch(`/api/learning/essay-exams/${examId}`, {
+        credentials: "include",
+        headers: getStudentAuthHeaders(false),
+      });
       if (!res.ok) throw new Error("تعذر جلب تفاصيل الامتحان");
       const rawData = await res.json();
       const examObj = rawData.exam || rawData;
@@ -309,6 +319,7 @@ export function EssayExamsTab({
           const startRes = await fetch(`/api/learning/essay-exams/${examId}/start`, {
             method: "POST",
             credentials: "include",
+            headers: getStudentAuthHeaders(false),
           });
           if (!startRes.ok) throw new Error("تعذر بدء مؤقت الامتحان");
           const startData = await startRes.json();
@@ -417,6 +428,7 @@ export function EssayExamsTab({
       const res = await fetch("/api/learning/essay-exams/upload-answer-image", {
         method: "POST",
         credentials: "include",
+        headers: getStudentAuthHeaders(false),
         body: formData,
       });
 
@@ -471,7 +483,7 @@ export function EssayExamsTab({
       setSavingSelfScore(true);
       const res = await fetch(`/api/learning/essay-exams/${activeExam.id}/self-assess`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getStudentAuthHeaders(true),
         credentials: "include",
         body: JSON.stringify({
           questionScores: selfScores,
@@ -536,7 +548,7 @@ export function EssayExamsTab({
 
       const res = await fetch(`/api/learning/essay-exams/${activeExam.id}/submit`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getStudentAuthHeaders(true),
         credentials: "include",
         body: JSON.stringify({
           answers: formattedAnswers,

@@ -40,6 +40,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
+import { getStudentAuthHeaders } from "@/lib/studentUploadHelpers";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
 import { ProtectedKholasaImage } from "@/components/kholasa/ProtectedKholasaImage";
 import { isPrimarilyEnglish, splitModelAnswerTranslation } from "@/components/kholasa/kholasa-speech";
@@ -325,7 +326,7 @@ export function SelfAssessmentTab({
       setTaxonomyLoading(true);
       const p = targetPhone || student?.phone || "";
       const url = `/api/learning/self-assessment/taxonomy${p ? `?phone=${encodeURIComponent(p)}` : ""}`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, { credentials: "include", headers: getStudentAuthHeaders(false) });
       const data = await res.json();
       if (data.stages && data.stages.length > 0) {
         setStages(data.stages);
@@ -360,7 +361,7 @@ export function SelfAssessmentTab({
     try {
       const qPhone = phoneToCheck !== undefined ? phoneToCheck : guestPhone;
       const url = `/api/learning/self-assessment/eligibility${qPhone ? `?phone=${encodeURIComponent(qPhone)}` : ""}`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, { credentials: "include", headers: getStudentAuthHeaders(false) });
       const data = await res.json();
       setEligibilityData(data);
       setEligibilityChecked(true);
@@ -387,6 +388,7 @@ export function SelfAssessmentTab({
     try {
       const res = await fetch(`/api/learning/self-assessment/eligibility?code=${encodeURIComponent(code)}`, {
         credentials: "include",
+        headers: getStudentAuthHeaders(false),
       });
       const data = await res.json();
       if (data.hasActiveCode) {
@@ -422,6 +424,7 @@ export function SelfAssessmentTab({
       const res = await fetch("/api/learning/self-assessment/upload-receipt", {
         method: "POST",
         credentials: "include",
+        headers: getStudentAuthHeaders(false),
         body: form,
       });
       const data = await res.json();
@@ -443,7 +446,7 @@ export function SelfAssessmentTab({
     setHistoryLoading(true);
     try {
       const url = `/api/learning/self-assessment/my-history${phone ? `?phone=${encodeURIComponent(phone)}` : ""}`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await fetch(url, { credentials: "include", headers: getStudentAuthHeaders(false) });
       const data = await res.json();
       if (data.sessions) setHistoryData(data.sessions);
     } catch {
@@ -578,7 +581,7 @@ export function SelfAssessmentTab({
       const res = await fetch("/api/learning/self-assessment/generate", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: getStudentAuthHeaders(true),
         body: JSON.stringify({
           stage: selectedStageName,
           unit: selectedUnitName,
@@ -641,7 +644,7 @@ export function SelfAssessmentTab({
       const res = await fetch("/api/learning/self-assessment/submit", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: getStudentAuthHeaders(true),
         body: JSON.stringify({
           sessionId,
           answers,
@@ -685,7 +688,7 @@ export function SelfAssessmentTab({
       const res = await fetch("/api/learning/self-assessment/grade-essay", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: getStudentAuthHeaders(true),
         body: JSON.stringify({ sessionId, questionIndex, isCorrect }),
       });
       const data = await res.json();

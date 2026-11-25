@@ -1199,7 +1199,65 @@ router.post(
         .limit(1);
       const extraGranted = extraGrant?.extraAttempts ?? 0;
       const effectiveMaxAttempts = unlimitedAttempts ? null : quiz.maxAttempts + extraGranted;
-      const previousAttempts = await db.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
+      const clientSubmissionId =
+        typeof req.body.clientSubmissionId === "string"
+          ? req.body.clientSubmissionId.trim().slice(0, 120)
+          : "";
+
+      const effectiveTotal =
+        quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
+          ? quiz.questionsToShow
+          : quiz.questions.length;
+
+      if (effectiveTotal === 0) {
+        res.status(400).json({ error: "الاختبار لا يحتوي على أسئلة" });
+        return;
+      }
+
+      const previousAttempts = await db
+        .select()
+        .from(quizAttemptsTable)
+        .where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)))
+        .orderBy(desc(quizAttemptsTable.id));
+
+      // Idempotency guard: if a mobile network dropped right after DB commit (e.g. HTTP 499)
+      // and the client auto-retries with the same clientSubmissionId (or retries within 90s when attempts are exhausted),
+      // return the already-saved attempt cleanly instead of consuming another attempt or throwing 409!
+      if (previousAttempts.length > 0) {
+        const latest = previousAttempts[0];
+        const latestDetails = Array.isArray(latest.details) ? (latest.details as any[]) : [];
+        const latestSubId = typeof latestDetails[0]?.clientSubmissionId === "string" ? latestDetails[0].clientSubmissionId : "";
+        const ageMs = latest.createdAt ? Date.now() - new Date(latest.createdAt).getTime() : Infinity;
+        const isExactDuplicateRetry = Boolean(clientSubmissionId && latestSubId && clientSubmissionId === latestSubId);
+        const isExhaustedImmediateRetry =
+          !unlimitedAttempts &&
+          previousAttempts.length >= (effectiveMaxAttempts ?? 0) &&
+          ageMs >= 0 &&
+          ageMs < 90_000;
+
+        if (isExactDuplicateRetry || isExhaustedImmediateRetry) {
+          const savedCorrect = latestDetails.length > 0
+            ? latestDetails.reduce((cnt, d) => cnt + (d?.isCorrect ? 1 : 0), 0)
+            : Math.round(((latest.score ?? 0) / 100) * effectiveTotal);
+          const showExplanations = quiz.showExplanations !== false;
+          res.json({
+            attemptId: latest.id,
+            score: latest.score,
+            passed: latest.passed,
+            correct: savedCorrect,
+            total: effectiveTotal,
+            attemptsUsed: previousAttempts.length,
+            attemptsRemaining: unlimitedAttempts ? null : Math.max(0, (effectiveMaxAttempts ?? 0) - previousAttempts.length),
+            details: latestDetails,
+            deduplicated: true,
+            ...(showExplanations && {
+              explanations: quiz.questions.map((q) => q.explanation ?? null),
+            }),
+          });
+          return;
+        }
+      }
+
       if (!unlimitedAttempts && previousAttempts.length >= (effectiveMaxAttempts ?? 0)) {
         res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" }); return;
       }
@@ -1240,17 +1298,6 @@ router.post(
         }
         return -1;
       };
-
-      // effectiveTotal = how many questions the student actually saw.
-      const effectiveTotal =
-        quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
-          ? quiz.questionsToShow
-          : quiz.questions.length;
-
-      if (effectiveTotal === 0) {
-        res.status(400).json({ error: "الاختبار لا يحتوي على أسئلة" });
-        return;
-      }
 
       // Build full resolved answers array (matching quiz.questions[i])
       const resolvedAnswers = quiz.questions.map((q, i) => getStudentAnswerForQuestion(q, i));
@@ -1308,6 +1355,7 @@ router.post(
           isEssay,
           textAnswer: studentTextAnswer,
           modelAnswer: question.correctAnswer || question.explanation || "",
+          ...(index === 0 && clientSubmissionId ? { clientSubmissionId } : {}),
         };
       });
 
@@ -1431,41 +1479,84 @@ router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next
       res.status(403).json({ error: "غير مسموح لك بالوصول لهذا الاختبار" });
       return;
     }
-    const [lastAttempt] = await db
+    const attemptsList = await db
       .select()
       .from(quizAttemptsTable)
       .where(and(eq(quizAttemptsTable.quizId, quizId), eq(quizAttemptsTable.studentId, student.id)))
-      .orderBy(desc(quizAttemptsTable.id))
-      .limit(1);
+      .orderBy(desc(quizAttemptsTable.id));
 
-    if (!lastAttempt) {
+    if (!attemptsList.length) {
       res.status(404).json({ error: "لم تقم بحل هذا الاختبار بعد، يرجى بدئه أولاً." });
       return;
     }
 
-    const studentAnswers = lastAttempt.answers || [];
-    const storedDetails = (lastAttempt.details as any[]) || [];
+    const requestedAttemptId = req.query.attemptId ? Number(req.query.attemptId) : null;
+    const chosenAttempt =
+      (requestedAttemptId && attemptsList.find((a) => a.id === requestedAttemptId)) ||
+      [...attemptsList].sort((a, b) => {
+        if ((b.score ?? 0) !== (a.score ?? 0)) return (b.score ?? 0) - (a.score ?? 0);
+        return b.id - a.id;
+      })[0];
+
+    const studentAnswers = chosenAttempt.answers || [];
+    const storedDetails = Array.isArray(chosenAttempt.details) ? (chosenAttempt.details as any[]) : [];
+    const effectiveTotal =
+      quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
+        ? quiz.questionsToShow
+        : quiz.questions.length;
 
     const details = quiz.questions.map((q, idx) => {
-      const stored = storedDetails.find((d: any) => d.questionIndex === idx || d.originalIndex === idx);
-      const selected = stored ? stored.selectedOption : (studentAnswers[idx] ?? -1);
-      const isCorrect = selected === q.correctIndex;
+      const stored = storedDetails.find((d: any) => d && (d.questionIndex === idx || d.originalIndex === idx));
+      const selected = stored && typeof stored.selectedOption === "number"
+        ? stored.selectedOption
+        : (studentAnswers[idx] ?? -1);
+
+      let resolvedCorrectOption = q.correctIndex;
+      if (stored && typeof stored.correctOption === "number") {
+        resolvedCorrectOption = stored.correctOption;
+      } else if (q.correctAnswer && q.options) {
+        const matchIdx = q.options.findIndex((opt) => opt?.trim() === q.correctAnswer?.trim());
+        if (matchIdx >= 0) resolvedCorrectOption = matchIdx;
+      }
+
+      const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+      const textAnswer = stored && typeof stored.textAnswer === "string" ? stored.textAnswer : "";
+
+      let isCorrect = false;
+      if (stored && typeof stored.isCorrect === "boolean") {
+        isCorrect = stored.isCorrect;
+      } else if (isEssay) {
+        isCorrect = Boolean(textAnswer.trim());
+      } else if (q.options && selected >= 0 && selected < q.options.length) {
+        const selectedText = q.options[selected]?.trim();
+        const correctText = q.correctAnswer?.trim() || q.options[resolvedCorrectOption]?.trim();
+        isCorrect = correctText && selectedText ? selectedText === correctText : selected === resolvedCorrectOption;
+      }
+
       return {
         questionIndex: idx,
         selectedOption: selected,
-        correctOption: q.correctIndex,
+        correctOption: resolvedCorrectOption,
         isCorrect,
+        isEssay,
+        textAnswer,
+        modelAnswer: stored?.modelAnswer || q.correctAnswer || q.explanation || "",
       };
     });
 
+    const correctCount =
+      storedDetails.length > 0
+        ? storedDetails.reduce((cnt, d) => cnt + (d?.isCorrect ? 1 : 0), 0)
+        : details.reduce((cnt, d) => cnt + (d.isCorrect ? 1 : 0), 0);
+
     res.json({
       quiz,
-      attempt: lastAttempt,
-      score: lastAttempt.score,
-      passed: lastAttempt.passed,
-      correct: details.filter((d) => d.isCorrect).length,
-      total: quiz.questions.length,
-      attemptsUsed: 1,
+      attempt: chosenAttempt,
+      score: chosenAttempt.score,
+      passed: chosenAttempt.passed,
+      correct: Math.min(effectiveTotal, correctCount),
+      total: effectiveTotal,
+      attemptsUsed: attemptsList.length,
       details,
     });
   } catch (error) {

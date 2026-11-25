@@ -1,13 +1,21 @@
 export function buildKholasaMediaUrl(url: string): string {
   if (!url) return url;
   if (typeof window === "undefined") return url;
+  if (!url.includes("/api/learning/kholasa/media/")) return url;
+
   const deviceId =
     localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id") || "";
-  if (!deviceId || url.includes("deviceId=") || !url.includes("/api/learning/kholasa/media/")) {
-    return url;
-  }
+  const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+  const accessCode = localStorage.getItem("dr_mahmoud_student_code") || "";
+
+  const params = new URLSearchParams();
+  if (deviceId && !url.includes("deviceId=")) params.set("deviceId", deviceId);
+  if (token && !url.includes("token=")) params.set("token", token);
+  if (accessCode && !url.includes("accessCode=")) params.set("accessCode", accessCode);
+  const qs = params.toString();
+  if (!qs) return url;
   const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}deviceId=${encodeURIComponent(deviceId)}`;
+  return `${url}${sep}${qs}`;
 }
 
 export async function studentApi<T>(url: string, options?: RequestInit): Promise<T> {

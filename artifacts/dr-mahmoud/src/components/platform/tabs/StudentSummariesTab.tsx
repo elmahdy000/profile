@@ -136,7 +136,20 @@ export function StudentSummariesTab({
   const loadMySummaries = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/learning/summaries/my", { credentials: "include" });
+      const authHeaders: Record<string, string> = {};
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id") || "";
+      const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+      const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
+      if (deviceId) authHeaders["X-Device-Id"] = deviceId;
+      if (token) {
+        authHeaders["Authorization"] = `Bearer ${token}`;
+        authHeaders["X-Student-Token"] = token;
+      }
+      if (studentCode) authHeaders["X-Student-Code"] = studentCode;
+      const res = await fetch("/api/learning/summaries/my", {
+        credentials: "include",
+        headers: authHeaders,
+      });
       if (!res.ok) throw new Error("تعذر جلب التلخيصات");
       setSummaries(await res.json());
     } catch (err: any) {
@@ -242,8 +255,17 @@ export function StudentSummariesTab({
         xhr.withCredentials = true;
 
         const deviceId = localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id");
+        const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+        const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
         if (deviceId) {
           xhr.setRequestHeader("X-Device-Id", deviceId);
+        }
+        if (token) {
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          xhr.setRequestHeader("X-Student-Token", token);
+        }
+        if (studentCode) {
+          xhr.setRequestHeader("X-Student-Code", studentCode);
         }
 
         xhr.upload.onprogress = (ev) => {

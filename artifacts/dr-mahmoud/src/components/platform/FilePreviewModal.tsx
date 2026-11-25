@@ -36,7 +36,14 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
   if (!file) return null;
 
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-  const rawPreviewUrl = `/api/learning/files/${file.id}/preview${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}`;
+  const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+  const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
+  const previewParams = new URLSearchParams();
+  if (deviceId) previewParams.set("deviceId", deviceId);
+  if (token) previewParams.set("token", token);
+  if (studentCode) previewParams.set("accessCode", studentCode);
+  const previewQs = previewParams.toString();
+  const rawPreviewUrl = `/api/learning/files/${file.id}/preview${previewQs ? `?${previewQs}` : ""}`;
   const iframePreviewUrl = `${rawPreviewUrl}#toolbar=0&navpanes=0&scrollbar=1`;
 
   const isImage = file.mimeType?.startsWith("image/");

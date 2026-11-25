@@ -549,31 +549,34 @@ router.get("/student/me", async (req, res, next) => {
     student = await ensureAutomaticCourseAssignments(student);
     const streak = await calculateStreak(student.id);
 
-    // Calculate progress & motivation message
-    const allowed = getStudentAllowedCategories(student);
+    // Calculate progress & motivation message (unified with GET /api/learning/progress)
     let overallProgress = 0;
-    if (allowed.length > 0) {
-      const [rows, accessibleVideos] = await Promise.all([
-        db
-          .select({ progress: videoProgressTable.progress, videoId: videoProgressTable.videoId })
-          .from(videoProgressTable)
-          .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
-          .where(and(eq(videoProgressTable.studentId, student.id), inArray(videosTable.category, allowed))),
-        db
-          .select({ id: videosTable.id, category: videosTable.category, stage: videosTable.stage, stages: videosTable.stages, courseId: videosTable.courseId })
-          .from(videosTable)
-          .where(inArray(videosTable.category, allowed)),
-      ]);
+    const [rows, accessibleVideos] = await Promise.all([
+      db
+        .select({ progress: videoProgressTable.progress, videoId: videoProgressTable.videoId })
+        .from(videoProgressTable)
+        .where(eq(videoProgressTable.studentId, student.id)),
+      db
+        .select({
+          id: videosTable.id,
+          category: videosTable.category,
+          stage: videosTable.stage,
+          stages: videosTable.stages,
+          courseId: videosTable.courseId,
+          isPublished: videosTable.isPublished,
+        })
+        .from(videosTable)
+        .where(eq(videosTable.isPublished, true)),
+    ]);
 
-      const studentAccessibleVideos = accessibleVideos.filter((v) =>
-        canStudentAccessContent(student, v.category, v.stage, v.stages, v.courseId),
-      );
-      if (studentAccessibleVideos.length > 0) {
-        const accessibleIds = new Set(studentAccessibleVideos.map((v) => v.id));
-        const filteredRows = rows.filter((r) => accessibleIds.has(r.videoId));
-        const totalProgressSum = filteredRows.reduce((acc, curr) => acc + (curr.progress || 0), 0);
-        overallProgress = Math.round(totalProgressSum / studentAccessibleVideos.length);
-      }
+    const studentAccessibleVideos = accessibleVideos.filter((v) =>
+      canStudentAccessContent(student, v.category, v.stage, v.stages, v.courseId),
+    );
+    if (studentAccessibleVideos.length > 0) {
+      const accessibleIds = new Set(studentAccessibleVideos.map((v) => v.id));
+      const filteredRows = rows.filter((r) => accessibleIds.has(r.videoId));
+      const totalProgressSum = filteredRows.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+      overallProgress = Math.round(totalProgressSum / studentAccessibleVideos.length);
     }
     const motivation = generateStudentMotivationMessage(student.name, overallProgress);
 

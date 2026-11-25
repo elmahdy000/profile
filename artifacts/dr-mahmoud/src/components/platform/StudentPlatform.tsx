@@ -174,7 +174,12 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
     },
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || "تعذر إتمام الطلب");
+  if (!response.ok) {
+    const err = new Error(data.error || "تعذر إتمام الطلب") as Error & { status?: number; code?: string };
+    err.status = response.status;
+    err.code = data.code;
+    throw err;
+  }
   return data as T;
 }
 
@@ -637,7 +642,6 @@ export function StudentPlatform() {
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   useEffect(() => {
-    setFlaggedQuestions({});
     setShowSubmitConfirmModal(false);
   }, [activeQuiz?.id]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -655,11 +659,13 @@ export function StudentPlatform() {
     details?: Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }>;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizSubmitFailedError, setQuizSubmitFailedError] = useState("");
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
-  const submitQuizRef = useRef<(isAuto?: boolean) => Promise<void>>(() => Promise.resolve());
+  const submitQuizRef = useRef<(isAuto?: boolean, skipConfirm?: boolean) => Promise<void>>(() => Promise.resolve());
   // Synchronous re-entrancy guard: setState is async, so a second trigger in the
   // same tick could slip past the state-based checks. This ref blocks that.
   const quizSubmitInFlightRef = useRef(false);
+  const quizSubmissionIdRef = useRef<string>("");
   const quizScrollContainerRef = useRef<HTMLDivElement>(null);
   const playNotificationSound = useNotificationSound();
 
@@ -779,6 +785,66 @@ export function StudentPlatform() {
     }
   }, [activeQuiz, quizResult, quizAnswers, essayTextAnswers]);
 
+  const getQuizDraftKeyV2 = (quizId: number) =>
+    `dr_mahmoud_quiz_draft_v2_${student?.id || "anon"}_${quizId}`;
+
+  const persistQuizDraft = (
+    quizObj: Quiz | null,
+    nextAnswers: number[],
+    nextEssay: Record<number, string>,
+    nextFlags: Record<number, boolean>,
+  ) => {
+    if (!quizObj?.id || isQuizHomework(quizObj)) return;
+    try {
+      const answersByOriginalIndex: Record<number, number> = {};
+      const flaggedByOriginalIndex: Record<number, boolean> = {};
+      const questionOrder: number[] = [];
+
+      quizObj.questions.forEach((q: any, displayIdx: number) => {
+        const origIdx = typeof q._originalIndex === "number" ? q._originalIndex : displayIdx;
+        questionOrder.push(origIdx);
+        const sel = nextAnswers[displayIdx];
+        if (typeof sel === "number" && sel >= 0) {
+          answersByOriginalIndex[origIdx] = sel;
+        }
+        if (nextFlags[displayIdx]) {
+          flaggedByOriginalIndex[origIdx] = true;
+        }
+      });
+
+      localStorage.setItem(
+        getQuizDraftKeyV2(quizObj.id),
+        JSON.stringify({
+          version: 2,
+          studentId: student?.id ?? null,
+          quizId: quizObj.id,
+          questionOrder,
+          answersByOriginalIndex,
+          essayByOriginalIndex: nextEssay,
+          flaggedByOriginalIndex,
+          clientSubmissionId: quizSubmissionIdRef.current,
+          elapsedSeconds: quizElapsedSecondsRef.current,
+          savedAt: Date.now(),
+        }),
+      );
+      localStorage.removeItem(`dr_mahmoud_quiz_draft_${quizObj.id}`);
+    } catch {}
+  };
+
+  // Auto-retry pending failed quiz submission immediately when internet connection returns
+  useEffect(() => {
+    if (!activeQuiz || quizResult || !quizSubmitFailedError) return;
+    const handleOnline = () => {
+      toast({
+        title: "عاد الاتصال بالإنترنت 🌐",
+        description: "جاري إعادة إرسال وحفظ نتيجة اختبارك تلقائياً...",
+      });
+      void submitQuizRef.current(true, true);
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, [activeQuiz, quizResult, quizSubmitFailedError]);
+
   const startQuiz = (quiz: Quiz) => {
     if (isUnpaid) {
       toast({
@@ -798,53 +864,109 @@ export function StudentPlatform() {
       });
       return;
     }
+
+    // Remove legacy v1 index-based draft key so shuffled questions can NEVER be scrambled
+    try {
+      localStorage.removeItem(`dr_mahmoud_quiz_draft_${quiz.id}`);
+    } catch {}
+
     // Tag each question with its original DB index BEFORE shuffling
     const originalTotal = quiz.questions.length;
-    let mappedQuestions = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
-    if (quiz.shuffleQuestions) {
-      for (let i = mappedQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
-      }
-    }
-    if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < mappedQuestions.length) {
-      mappedQuestions = mappedQuestions.slice(0, quiz.questionsToShow);
-    }
+    const allMapped = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
+    const targetCount =
+      quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < allMapped.length
+        ? quiz.questionsToShow
+        : allMapped.length;
 
-    // Restore draft answers if available from recent session
-    let initialAnswers = Array(mappedQuestions.length).fill(-1);
+    let mappedQuestions = [...allMapped];
+    let initialAnswers: number[] | null = null;
+    let initialEssayAnswers: Record<number, string> = {};
+    let initialFlagged: Record<number, boolean> = {};
+    let initialElapsed = 0;
+    let restoredSubmissionId = "";
+
+    // Restore student-scoped v2 draft (preserving the EXACT shuffled question order & originalIndex mapping!)
     try {
-      const draftKey = `dr_mahmoud_quiz_draft_${quiz.id}`;
-      const savedRaw = localStorage.getItem(draftKey);
+      const savedRaw = localStorage.getItem(getQuizDraftKeyV2(quiz.id));
       if (savedRaw) {
         const saved = JSON.parse(savedRaw);
-        if (
-          saved &&
-          Array.isArray(saved.answers) &&
-          saved.answers.length === mappedQuestions.length &&
-          Date.now() - (saved.savedAt || 0) < 4 * 60 * 60 * 1000
-        ) {
-          initialAnswers = saved.answers;
+        const validAge = Date.now() - (saved?.savedAt || 0) < 6 * 60 * 60 * 1000;
+        const validOrder =
+          saved?.version === 2 &&
+          Array.isArray(saved.questionOrder) &&
+          saved.questionOrder.length === targetCount &&
+          saved.questionOrder.every(
+            (origIdx: unknown) => typeof origIdx === "number" && origIdx >= 0 && origIdx < originalTotal,
+          );
+
+        if (validAge && validOrder) {
+          mappedQuestions = saved.questionOrder.map((origIdx: number) => allMapped[origIdx]);
+          const ansMap = saved.answersByOriginalIndex || {};
+          initialAnswers = mappedQuestions.map((q: any) => {
+            const val = ansMap[q._originalIndex];
+            if (typeof val !== "number" || val < 0) return -1;
+            if (Array.isArray(q.options) && q.options.length > 0 && val >= q.options.length) return -1;
+            return val;
+          });
+          if (saved.essayByOriginalIndex && typeof saved.essayByOriginalIndex === "object") {
+            initialEssayAnswers = saved.essayByOriginalIndex;
+          }
+          if (saved.flaggedByOriginalIndex && typeof saved.flaggedByOriginalIndex === "object") {
+            mappedQuestions.forEach((q: any, dIdx: number) => {
+              if (saved.flaggedByOriginalIndex[q._originalIndex]) {
+                initialFlagged[dIdx] = true;
+              }
+            });
+          }
+          initialElapsed = Math.max(0, Math.floor(Number(saved.elapsedSeconds) || 0));
+          if (typeof saved.clientSubmissionId === "string" && saved.clientSubmissionId) {
+            restoredSubmissionId = saved.clientSubmissionId;
+          }
         }
       }
     } catch {}
 
+    if (!initialAnswers) {
+      if (quiz.shuffleQuestions) {
+        for (let i = mappedQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
+        }
+      }
+      if (targetCount < mappedQuestions.length) {
+        mappedQuestions = mappedQuestions.slice(0, targetCount);
+      }
+      initialAnswers = Array(mappedQuestions.length).fill(-1);
+    }
+
+    quizSubmissionIdRef.current =
+      restoredSubmissionId ||
+      `sub_${student?.id || 0}_${quiz.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    const preparedQuiz = { ...quiz, questions: mappedQuestions };
+    // Persist question order right away so any accidental refresh keeps the exact same question sequence
+    persistQuizDraft(preparedQuiz, initialAnswers, initialEssayAnswers, initialFlagged);
+
     // _originalTotal is carried on every question so submitQuiz can build the right-sized array
-    setActiveQuiz({ ...quiz, questions: mappedQuestions });
+    setActiveQuiz(preparedQuiz);
     // Track that the student opened this quiz or homework
     if (quiz.id) {
       void api(`/api/learning/quizzes/${quiz.id}/view`, { method: "POST" }).catch(() => {});
     }
     setQuizAnswers(initialAnswers);
-    setEssayTextAnswers({});
+    setEssayTextAnswers(initialEssayAnswers);
+    setFlaggedQuestions(initialFlagged);
     setQuizResult(null);
+    setQuizSubmitFailedError("");
     setShowQuizReauthModal(false);
     setReauthError("");
     quizSubmitInFlightRef.current = false;
-    setQuizStartTime(Date.now());
-    setQuizElapsedSeconds(0);
-    const effectiveDuration = getEffectiveQuizDurationMinutes({ ...quiz, questions: mappedQuestions });
-    setQuizTimeRemaining(effectiveDuration ? effectiveDuration * 60 : null);
+    setQuizStartTime(Date.now() - initialElapsed * 1000);
+    setQuizElapsedSeconds(initialElapsed);
+    const effectiveDuration = getEffectiveQuizDurationMinutes(preparedQuiz);
+    setQuizTimeRemaining(
+      effectiveDuration ? Math.max(20, effectiveDuration * 60 - initialElapsed) : null,
+    );
     lastMilestoneRef.current = 0;
     setResultMotivation("");
     setLiveMotivation(getNextMotivationMessage("start"));
@@ -868,6 +990,8 @@ export function StudentPlatform() {
       const mappedQuestions = reviewQuiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
 
       setActiveQuiz({ ...reviewQuiz, questions: mappedQuestions });
+      setFlaggedQuestions({});
+      setQuizSubmitFailedError("");
 
       const studentAnswers = mappedQuestions.map((_, idx) => {
         const found = res.details?.find((d) => d.questionIndex === idx);
@@ -929,7 +1053,11 @@ export function StudentPlatform() {
 
     quizSubmitInFlightRef.current = true;
     setQuizSubmitting(true);
-    const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
+    setQuizSubmitFailedError("");
+    const timeSpentSeconds = Math.max(
+      quizElapsedSecondsRef.current,
+      Math.round((Date.now() - quizStartTime) / 1000),
+    );
 
     const firstQ: any = activeQuiz.questions[0];
     const originalTotal: number = firstQ?._originalTotal ?? activeQuiz.questions.length;
@@ -939,7 +1067,12 @@ export function StudentPlatform() {
       const originalIdx: number = q._originalIndex !== undefined ? q._originalIndex : i;
       const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
       const textAns = essayTextAnswers[originalIdx] ?? essayTextAnswers[i] ?? "";
-      const optVal = isEssay ? (textAns.trim() ? 0 : -1) : (quizAnswers[i] ?? -1);
+      const rawChoice = quizAnswers[i] ?? -1;
+      const boundedChoice =
+        Array.isArray(q.options) && q.options.length > 0 && rawChoice >= q.options.length
+          ? -1
+          : rawChoice;
+      const optVal = isEssay ? (textAns.trim() ? 0 : -1) : boundedChoice;
 
       if (originalIdx >= 0 && originalIdx < originalTotal) {
         answersToSend[originalIdx] = optVal;
@@ -954,9 +1087,21 @@ export function StudentPlatform() {
       };
     });
 
+    if (!quizSubmissionIdRef.current) {
+      quizSubmissionIdRef.current = `sub_${student?.id || 0}_${activeQuiz.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
     try {
       const studentCode = student?.accessCode || localStorage.getItem("dr_mahmoud_student_code") || "";
-      const res = await api<{
+      const payloadBody = JSON.stringify({
+        answers: answersToSend,
+        detailedAnswers,
+        timeSpentSeconds,
+        accessCode: studentCode,
+        clientSubmissionId: quizSubmissionIdRef.current,
+      });
+
+      type SubmitQuizResponse = {
         score: number;
         passed: boolean;
         correct: number;
@@ -964,19 +1109,34 @@ export function StudentPlatform() {
         attemptsUsed: number;
         attemptsRemaining: number | null;
         details?: Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }>;
-      }>(
-        `/api/learning/quizzes/${activeQuiz.id}/submit`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            answers: answersToSend,
-            detailedAnswers,
-            timeSpentSeconds,
-            accessCode: studentCode,
-          }),
-        },
-      );
+      };
+
+      let res: SubmitQuizResponse | null = null;
+      let lastErr: unknown = null;
+      for (let attemptIdx = 0; attemptIdx < 3; attemptIdx++) {
+        try {
+          res = await api<SubmitQuizResponse>(
+            `/api/learning/quizzes/${activeQuiz.id}/submit`,
+            {
+              method: "POST",
+              body: payloadBody,
+            },
+          );
+          break;
+        } catch (reqErr: any) {
+          lastErr = reqErr;
+          const status = Number(reqErr?.status || 0);
+          const isTransient = !status || status >= 500 || status === 408 || status === 429;
+          if (!isTransient || attemptIdx === 2) {
+            throw reqErr;
+          }
+          await new Promise((r) => setTimeout(r, 1200 * (attemptIdx + 1)));
+        }
+      }
+      if (!res) throw lastErr || new Error("تعذر تسليم الاختبار");
+
       setQuizResult(res);
+      setQuizSubmitFailedError("");
       setQuizTimeRemaining(null);
       setShowQuizReauthModal(false);
       const freshMotivation = getNextMotivationMessage(getMotivationTierForScore(res.score, res.passed));
@@ -987,6 +1147,7 @@ export function StudentPlatform() {
           .catch(() => undefined);
       }
       try {
+        localStorage.removeItem(getQuizDraftKeyV2(activeQuiz.id));
         localStorage.removeItem(`dr_mahmoud_quiz_draft_${activeQuiz.id}`);
       } catch {}
 
@@ -1006,6 +1167,10 @@ export function StudentPlatform() {
           quiz.id === activeQuiz.id
             ? {
                 ...quiz,
+                bestScore:
+                  typeof quiz.bestScore === "number"
+                    ? Math.max(quiz.bestScore, res.score)
+                    : res.score,
                 attemptsUsed: res.attemptsUsed,
                 locked: res.attemptsRemaining === 0,
                 lockedReason: res.attemptsRemaining === 0 ? "استخدمت كل المحاولات المتاحة" : quiz.lockedReason,
@@ -1013,13 +1178,18 @@ export function StudentPlatform() {
             : quiz,
         ),
       );
-    } catch (err) {
+    } catch (err: any) {
       quizSubmitInFlightRef.current = false;
+      const errStatus = Number(err?.status || 0);
       const errMsg = (err as Error).message || "";
       const isAuthErr =
+        errStatus === 401 ||
         errMsg.includes("approval and login") ||
         errMsg.includes("Student approval") ||
         errMsg.includes("401");
+
+      // Keep answers safely persisted on disk so zero work is lost
+      persistQuizDraft(activeQuiz, quizAnswers, essayTextAnswers, flaggedQuestions);
 
       if (isAuthErr) {
         const savedCode = student?.accessCode || localStorage.getItem("dr_mahmoud_student_code") || "";
@@ -1027,7 +1197,12 @@ export function StudentPlatform() {
         setShowQuizReauthModal(true);
         setReauthError("انتهت جلسة تسجيل الدخول مؤقتاً أثناء أداء الاختبار. إجاباتك محفوظة بالكامل! أكّد كود الدخول لتسليم الاختبار فوراً.");
       } else {
-        toast({ variant: "destructive", title: "خطأ في الاختبار", description: errMsg });
+        const friendlyErr =
+          !errStatus || errMsg === "Failed to fetch" || errMsg.toLowerCase().includes("network")
+            ? "انقطع الاتصال بالإنترنت مؤقتاً — إجاباتك محفوظة بالكامل على جهازك. اضغط «إعادة إرسال النتيجة» فور استقرار الشبكة."
+            : errMsg;
+        setQuizSubmitFailedError(friendlyErr);
+        toast({ variant: "destructive", title: "لم يتم إرسال النتيجة بعد (إجاباتك محفوظة)", description: friendlyErr });
       }
     } finally {
       setQuizSubmitting(false);
@@ -1094,10 +1269,57 @@ export function StudentPlatform() {
     return () => window.removeEventListener("kholasa:mistakes-updated", syncMistakesCount);
   }, [student]);
 
+  // Keep Dashboard progress state live-synced whenever a lesson player updates progress
+  useEffect(() => {
+    const handleProgressSynced = (e: Event) => {
+      const detail = (e as CustomEvent)?.detail;
+      if (!detail || !Number.isInteger(detail.videoId)) return;
+      setProgress((prev) => {
+        const idx = prev.findIndex((r) => r.videoId === detail.videoId);
+        const nowIso = new Date().toISOString();
+        if (idx >= 0) {
+          const cur = prev[idx];
+          const nextPct = Math.max(cur.progress || 0, detail.progress || 0);
+          const updated: ProgressRow = {
+            ...cur,
+            progress: nextPct,
+            currentTimeSeconds: detail.currentTimeSeconds || cur.currentTimeSeconds,
+            durationSeconds: detail.durationSeconds || cur.durationSeconds,
+            completed: Boolean(cur.completed || nextPct >= 90),
+            updatedAt: nowIso,
+          };
+          const copy = [...prev];
+          copy[idx] = updated;
+          return copy;
+        }
+        return [
+          ...prev,
+          {
+            videoId: detail.videoId,
+            progress: detail.progress || 0,
+            currentTimeSeconds: detail.currentTimeSeconds || 0,
+            durationSeconds: detail.durationSeconds || 0,
+            completed: Boolean((detail.progress || 0) >= 90),
+            updatedAt: nowIso,
+          },
+        ];
+      });
+    };
+    window.addEventListener("learning_progress_synced", handleProgressSynced);
+    return () => window.removeEventListener("learning_progress_synced", handleProgressSynced);
+  }, []);
+
   useEffect(() => {
     if (!student) return;
     const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-    const stream = new EventSource(`/api/learning/notifications/stream${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}`, { withCredentials: true });
+    const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+    const studentCode = student.accessCode || localStorage.getItem("dr_mahmoud_student_code") || "";
+    const streamParams = new URLSearchParams();
+    if (deviceId) streamParams.set("deviceId", deviceId);
+    if (token) streamParams.set("token", token);
+    if (studentCode) streamParams.set("accessCode", studentCode);
+    const streamQs = streamParams.toString();
+    const stream = new EventSource(`/api/learning/notifications/stream${streamQs ? `?${streamQs}` : ""}`, { withCredentials: true });
     const refresh = (event: Event) => {
       try {
         const payload = JSON.parse((event as MessageEvent).data || "{}");
@@ -2281,6 +2503,23 @@ export function StudentPlatform() {
                       </Button>
                     )}
 
+                    {!isHomework && !quizResult && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={quizSubmitting}
+                        onClick={() => void submitQuiz(false)}
+                        className="h-9 px-3 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        {quizSubmitting ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        )}
+                        <span>تسليم الاختبار</span>
+                      </Button>
+                    )}
+
                     {/* Exit button */}
                     <Button
                       type="button"
@@ -2290,7 +2529,7 @@ export function StudentPlatform() {
                         if (!quizResult && !isHomework) {
                           if (
                             !window.confirm(
-                              "هل أنت متأكد من رغبتك في الخروج من الاختبار؟ لن يتم حفظ إجاباتك إلا عند الضغط على زر 'تسليم وتصحيح الاختبار'."
+                              "هل أنت متأكد من رغبتك في الخروج المؤقت؟ إجاباتك محفوظة كمسودة على جهازك، لكن لن يتم اعتماد درجتك إلا عند الضغط على «تسليم الاختبار»."
                             )
                           ) {
                             return;
@@ -2306,6 +2545,27 @@ export function StudentPlatform() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Persistent Recovery Banner if Submission Encountered a Network Error */}
+                {!quizResult && quizSubmitFailedError && (
+                  <div className="border-t border-rose-500/30 bg-rose-500/10 px-4 py-2.5" dir="rtl">
+                    <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-xs font-extrabold text-rose-700 dark:text-rose-300">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{quizSubmitFailedError}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={quizSubmitting}
+                        onClick={() => void submitQuiz(true, true)}
+                        className="h-8 px-3.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shrink-0 cursor-pointer"
+                      >
+                        {quizSubmitting ? "جاري الإرسال..." : "إعادة إرسال النتيجة المحفوظة الآن"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Distinctive Progress Indicator + Live Unique Motivation (Flat Solid Colors) */}
                 {!quizResult && totalQ > 0 && (
@@ -2608,7 +2868,13 @@ export function StudentPlatform() {
                         <div className="flex justify-end" dir="rtl">
                           <button
                             type="button"
-                            onClick={() => setFlaggedQuestions((prev) => ({ ...prev, [qi]: !prev[qi] }))}
+                            onClick={() => {
+                              setFlaggedQuestions((prev) => {
+                                const nextFlags = { ...prev, [qi]: !prev[qi] };
+                                persistQuizDraft(activeQuiz, quizAnswers, essayTextAnswers, nextFlags);
+                                return nextFlags;
+                              });
+                            }}
                             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition cursor-pointer ${
                               flaggedQuestions[qi]
                                 ? "border-amber-400 bg-amber-500/15 text-amber-700 dark:text-amber-300"
@@ -2758,10 +3024,14 @@ export function StudentPlatform() {
                               <textarea
                                 disabled={Boolean(quizResult)}
                                 rows={4}
-                                value={essayTextAnswers[origIdx] ?? essayTextAnswers[qi] ?? ""}
+                                value={essayTextAnswers[origIdx] ?? ""}
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  setEssayTextAnswers((prev) => ({ ...prev, [origIdx]: val, [qi]: val }));
+                                  setEssayTextAnswers((prev) => {
+                                    const nextEssay = { ...prev, [origIdx]: val };
+                                    persistQuizDraft(activeQuiz, quizAnswers, nextEssay, flaggedQuestions);
+                                    return nextEssay;
+                                  });
                                 }}
                                 placeholder="اكتب إجابتك المقالية وخطوات الحل هنا بالتفصيل..."
                                 className="w-full p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#1F314A] bg-background text-sm font-medium focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
@@ -2816,12 +3086,7 @@ export function StudentPlatform() {
                                   onChange={() => {
                                     const nextAnswers = quizAnswers.map((a, i) => (i === qi ? oi : a));
                                     setQuizAnswers(nextAnswers);
-                                    try {
-                                      localStorage.setItem(
-                                        `dr_mahmoud_quiz_draft_${activeQuiz.id}`,
-                                        JSON.stringify({ answers: nextAnswers, savedAt: Date.now() }),
-                                      );
-                                    } catch {}
+                                    persistQuizDraft(activeQuiz, nextAnswers, essayTextAnswers, flaggedQuestions);
                                   }}
                                   className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                                 />
@@ -3131,7 +3396,7 @@ export function StudentPlatform() {
                       setShowQuizReauthModal(false);
                       toast({ title: "تم تجديد الجلسة بنجاح ✅", description: "جاري تسليم وتصحيح الاختبار الآن..." });
                       setTimeout(() => {
-                        void submitQuizRef.current(false);
+                        void submitQuizRef.current(false, true);
                       }, 300);
                     } catch (loginErr) {
                       setReauthError((loginErr as Error).message || "كود الدخول غير صحيح");

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
 import { compressMultipleFiles } from "@/lib/image-compression";
+import { getStudentAuthHeaders } from "@/lib/studentUploadHelpers";
 import { studentApi } from "@/components/kholasa/kholasa-api";
 import { KholasaSummaryView, hasZatonaContent } from "@/components/kholasa/KholasaSummaryView";
 import { KholasaMindMapView } from "@/components/kholasa/KholasaMindMapView";
@@ -93,8 +94,17 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
         xhr.withCredentials = true;
 
         const deviceId = localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id");
+        const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+        const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
         if (deviceId) {
           xhr.setRequestHeader("X-Device-Id", deviceId);
+        }
+        if (token) {
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          xhr.setRequestHeader("X-Student-Token", token);
+        }
+        if (studentCode) {
+          xhr.setRequestHeader("X-Student-Code", studentCode);
         }
 
         xhr.upload.onprogress = (ev) => {
@@ -298,8 +308,9 @@ function attachedFiles(item: VideoItem, files: any[]): LessonFile[] {
 
 async function saveProgress(item: VideoItem, progress: number, currentTime: number, duration: number) {
   if (!item.id) return;
+  const clamped = Math.max(0, Math.min(100, Math.round(progress)));
   const progressMap = readJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
-  progressMap[item.id] = Math.max(progressMap[item.id] || 0, progress);
+  progressMap[item.id] = Math.max(progressMap[item.id] || 0, clamped);
   localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressMap));
   if (currentTime > 0) {
     const positionMap = readJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
@@ -307,10 +318,22 @@ async function saveProgress(item: VideoItem, progress: number, currentTime: numb
     localStorage.setItem("dr_mahmoud_watch_positions", JSON.stringify(positionMap));
   }
   window.dispatchEvent(new Event("watch_progress_updated"));
-  const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+  window.dispatchEvent(
+    new CustomEvent("learning_progress_synced", {
+      detail: {
+        videoId: item.id,
+        progress: progressMap[item.id],
+        currentTimeSeconds: Math.max(0, Math.round(currentTime)),
+        durationSeconds: Math.max(0, Math.round(duration)),
+        completed: progressMap[item.id] >= 90,
+      },
+    }),
+  );
   await fetch(`/api/learning/progress/${item.id}`, {
-    method: "PUT", credentials: "include", headers: { "Content-Type": "application/json", ...(deviceId ? { "X-Device-Id": deviceId } : {}) },
-    body: JSON.stringify({ progress, currentTimeSeconds: currentTime, durationSeconds: duration }),
+    method: "PUT",
+    credentials: "include",
+    headers: getStudentAuthHeaders(true),
+    body: JSON.stringify({ progress: clamped, currentTimeSeconds: currentTime, durationSeconds: duration }),
   }).catch(() => undefined);
 }
 
@@ -507,8 +530,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   // Fetch current student info for dynamic anti-piracy watermark
   useEffect(() => {
-    const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-    fetch("/api/student/me", { credentials: "include", headers: deviceId ? { "X-Device-Id": deviceId } : {} })
+    fetch("/api/student/me", { credentials: "include", headers: getStudentAuthHeaders(false) })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.student) {
@@ -666,12 +688,11 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       if (currentPos > 0) {
         pendingResumeTimeRef.current = currentPos;
       }
-      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const unlockKeys = localStorage.getItem("dr_mahmoud_unlock_keys") || "";
       const response = await fetch(`/api/videos/${item.id}/stream-url`, {
         credentials: "include",
         headers: {
-          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+          ...getStudentAuthHeaders(false),
           ...(unlockKeys ? { "X-Unlock-Keys": unlockKeys } : {}),
         },
       });

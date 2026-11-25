@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { getStudentAuthHeaders } from "@/lib/studentUploadHelpers";
 import {
   type VideoItem,
   getYouTubeVideoId,
@@ -57,11 +58,23 @@ function syncVideoProgress(
   currentTimeSeconds = 0,
   durationSeconds = 0,
 ) {
+  const clamped = Math.max(0, Math.min(100, Math.round(progress)));
+  window.dispatchEvent(
+    new CustomEvent("learning_progress_synced", {
+      detail: {
+        videoId,
+        progress: clamped,
+        currentTimeSeconds: Math.max(0, Math.round(currentTimeSeconds)),
+        durationSeconds: Math.max(0, Math.round(durationSeconds)),
+        completed: clamped >= 90,
+      },
+    }),
+  );
   void fetch(`/api/learning/progress/${videoId}`, {
     method: "PUT",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ progress, currentTimeSeconds, durationSeconds }),
+    headers: getStudentAuthHeaders(true),
+    body: JSON.stringify({ progress: clamped, currentTimeSeconds, durationSeconds }),
   }).catch(() => undefined);
 }
 
@@ -112,9 +125,13 @@ function VideoPlayerModal({
     );
     setResumeTime(item.id ? cached[item.id] || 0 : 0);
     if (!item.id) return;
-    void fetch("/api/learning/progress", { credentials: "include" })
+    void fetch("/api/learning/progress", {
+      credentials: "include",
+      headers: getStudentAuthHeaders(false),
+    })
       .then((response) => (response.ok ? response.json() : []))
-      .then((rows: Array<{ videoId: number; currentTimeSeconds?: number }>) => {
+      .then((data: any) => {
+        const rows: Array<{ videoId: number; currentTimeSeconds?: number }> = Array.isArray(data) ? data : (data?.rows || []);
         const row = rows.find((entry) => entry.videoId === item.id);
         if (row?.currentTimeSeconds) {
           setResumeTime((current) => Math.max(current, row.currentTimeSeconds || 0));
@@ -758,17 +775,33 @@ export function VideoLessonsSection({
       setWatchProgress(readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {}));
     };
     loadProgress();
-    void fetch("/api/learning/progress", { credentials: "include" })
+    void fetch("/api/learning/progress", {
+      credentials: "include",
+      headers: getStudentAuthHeaders(false),
+    })
       .then((response) => (response.ok ? response.json() : null))
       .then((data: any) => {
         if (!data) return;
         const rows: Array<{ videoId: number; progress: number }> = Array.isArray(data) ? data : (data.rows || []);
+        const localMap = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
+        const mergedMap: Record<number, number> = { ...localMap };
         const serverMap: Record<number, number> = {};
         rows.forEach((row) => {
-          serverMap[row.videoId] = row.progress;
+          const srvPct = Math.max(0, Math.min(100, Math.round(Number(row.progress) || 0)));
+          serverMap[row.videoId] = srvPct;
+          mergedMap[row.videoId] = Math.max(mergedMap[row.videoId] || 0, srvPct);
         });
-        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(serverMap));
-        setWatchProgress(serverMap);
+        // Backfill any higher local watch progress that previously failed to reach server
+        const localPos = readStoredJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
+        Object.entries(localMap).forEach(([vidStr, localPct]) => {
+          const vid = Number(vidStr);
+          const pct = Math.max(0, Math.min(100, Math.round(Number(localPct) || 0)));
+          if (Number.isInteger(vid) && vid > 0 && pct > (serverMap[vid] || 0)) {
+            syncVideoProgress(vid, pct, localPos[vid] || 0, 0);
+          }
+        });
+        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(mergedMap));
+        setWatchProgress(mergedMap);
       })
       .catch(() => undefined);
     window.addEventListener("watch_progress_updated", loadProgress);
@@ -936,7 +969,7 @@ export function VideoLessonsSection({
   const categories = Array.from(new Set(visibleItems.map((item) => item.category))).filter(Boolean);
 
   const totalCoursesCount = categories.length;
-  const completedLessonsCount = visibleItems.filter((i) => i.progress >= 95).length;
+  const completedLessonsCount = visibleItems.filter((i) => i.progress >= 90).length;
   const totalHoursCount = Math.round(visibleItems.reduce((acc, curr) => acc + (parseInt(curr.durationText || "0") || 25), 0) / 60);
   const overallProgressPercentage = visibleItems.length
     ? Math.round(visibleItems.reduce((acc, curr) => acc + curr.progress, 0) / visibleItems.length)
@@ -946,13 +979,13 @@ export function VideoLessonsSection({
     ? visibleItems
     : visibleItems.filter((i) => i.category === activeCategory);
   
-  const activeCourseCompletedCount = activeCourseItems.filter((i) => i.progress >= 95).length;
+  const activeCourseCompletedCount = activeCourseItems.filter((i) => i.progress >= 90).length;
   const activeCourseProgressPct = activeCourseItems.length
     ? Math.round(activeCourseItems.reduce((acc, curr) => acc + curr.progress, 0) / activeCourseItems.length)
     : 0;
 
   const continueLearningItems = activeCourseItems
-    .filter((item) => item.progress > 0 && item.progress < 100)
+    .filter((item) => item.progress > 0 && item.progress < 90)
     .slice(0, 2);
 
   const scrollCourses = (direction: "left" | "right") => {
@@ -973,8 +1006,8 @@ export function VideoLessonsSection({
 
         let matchesStatus = true;
         if (statusFilter === "not_started") matchesStatus = item.progress === 0;
-        if (statusFilter === "in_progress") matchesStatus = item.progress > 0 && item.progress < 95;
-        if (statusFilter === "completed") matchesStatus = item.progress >= 95;
+        if (statusFilter === "in_progress") matchesStatus = item.progress > 0 && item.progress < 90;
+        if (statusFilter === "completed") matchesStatus = item.progress >= 90;
 
         return matchesSearch && matchesStatus;
       })

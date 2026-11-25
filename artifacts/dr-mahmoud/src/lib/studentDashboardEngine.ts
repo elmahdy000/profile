@@ -258,9 +258,16 @@ export function buildStudentDashboardModel({
         )
       : null;
 
-  // True curriculum completion (based on actual completed lessons + attempted exams, never inflated)
+  // True curriculum completion (smoothly reflects both completed + in-progress lessons + attempted exams)
   const totalTrackableItems = totalLessons + totalExams;
-  const completedTrackableItems = completedLessons + attemptedExams;
+  const lessonsWeightedCompletion = safeVideos.reduce((acc, v) => {
+    const row = progressByVideo.get(v.id);
+    if (!row) return acc;
+    if (isVideoCompleted(row)) return acc + 1;
+    const pct = Math.max(0, Math.min(100, Number(row.progress) || 0));
+    return acc + pct / 100;
+  }, 0);
+  const completedTrackableItems = lessonsWeightedCompletion + attemptedExams;
   const overallCompletionPct =
     totalTrackableItems > 0
       ? Math.max(0, Math.min(100, Math.round((completedTrackableItems / totalTrackableItems) * 100)))
