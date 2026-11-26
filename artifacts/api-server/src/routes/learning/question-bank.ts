@@ -1807,6 +1807,7 @@ interface GenerateQuizParams {
   unit?: string;
   lesson?: string;
   lessons?: (string | { lesson: string; lessonId?: number })[];
+  lessonScopes?: Array<{ unit?: string; lesson: string }>;
   courseId?: number | string | null;
   videoId?: number | string | null;
   scope?: string;
@@ -1820,6 +1821,7 @@ interface GenerateQuizParams {
   requiredProgress?: number | string;
   isPublished?: boolean;
   questionType?: string;
+  questionTypes?: string[];
   isHomework?: boolean;
   previewOnly?: boolean;
   customQuestions?: QuizQuestion[];
@@ -1889,6 +1891,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     unit,
     lesson,
     lessons,
+    lessonScopes,
     courseId,
     videoId,
     scope,
@@ -1902,6 +1905,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     requiredProgress,
     isPublished,
     questionType,
+    questionTypes,
     isHomework,
     previewOnly,
     customQuestions,
@@ -1915,6 +1919,15 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     throw new Error("عنوان الاختبار مطلوب");
   }
 
+  const cleanedScopes: Array<{ unit?: string; lesson: string }> = Array.isArray(lessonScopes)
+    ? lessonScopes
+        .filter((s) => s && typeof s.lesson === "string" && s.lesson.trim().length > 0)
+        .map((s) => ({
+          unit: s.unit && typeof s.unit === "string" && s.unit.trim() ? s.unit.trim() : undefined,
+          lesson: s.lesson.trim(),
+        }))
+    : [];
+
   const cleanedLessons: string[] = Array.isArray(lessons)
     ? lessons
         .map((l: any) => (typeof l === "string" ? l.trim() : String(l?.lesson || "").trim()))
@@ -1924,12 +1937,15 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   const singleLesson = (lesson && typeof lesson === "string" && lesson.trim() !== "all") ? lesson.trim() : null;
 
   // Unified list of targeted lessons
-  const targetLessons: string[] = cleanedLessons.length > 0
-    ? cleanedLessons
-    : (singleLesson ? [singleLesson] : []);
+  const targetLessons: string[] =
+    cleanedLessons.length > 0
+      ? cleanedLessons
+      : cleanedScopes.length > 0
+        ? Array.from(new Set(cleanedScopes.map((s) => s.lesson)))
+        : (singleLesson ? [singleLesson] : []);
 
-  const hasSpecificLessons = targetLessons.length > 0;
-  const isMultiLesson = cleanedLessons.length > 0;
+  const hasSpecificLessons = targetLessons.length > 0 || cleanedScopes.length > 0;
+  const isMultiLesson = cleanedLessons.length > 0 || cleanedScopes.length > 1;
 
   let resolvedVideoId = isMultiLesson ? null : (Number(videoId) || null);
   let resolvedCourseId = Number(courseId) || null;
@@ -1951,32 +1967,61 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     conditions.push(eq(questionBankTable.unit, unit));
   }
 
-  if (questionType === "true_false") {
+  const normalizedTypes = Array.isArray(questionTypes)
+    ? questionTypes
+        .map((t) => String(t || "").trim().toLowerCase())
+        .filter((t): t is "mcq" | "true_false" | "essay" => t === "mcq" || t === "true_false" || t === "essay")
+    : [];
+
+  const activeTypeSet: Set<"mcq" | "true_false" | "essay"> | null =
+    normalizedTypes.length > 0
+      ? new Set(normalizedTypes)
+      : questionType === "mcq" || questionType === "true_false" || questionType === "essay"
+        ? new Set([questionType])
+        : null;
+
+  const wantMcq = !activeTypeSet || activeTypeSet.has("mcq");
+  const wantTf = !activeTypeSet || activeTypeSet.has("true_false");
+  const wantEssay = !activeTypeSet || activeTypeSet.has("essay");
+
+  if (!wantMcq && wantTf) {
     conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
-  } else if (questionType === "mcq") {
+  } else if (wantMcq && !wantTf) {
     conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
-  } else if (questionType === "essay") {
+  } else if (!wantMcq && !wantTf) {
     conditions.push(sql`1=0`);
   }
 
   const candidateQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
 
+  const matchesTargetedScope = (
+    dbUnit: string | null | undefined,
+    dbLesson: string | null | undefined,
+    dbLessonId?: number | null,
+  ) => {
+    if (cleanedScopes.length > 0) {
+      const normalizedDbUnit = (dbUnit || "").trim();
+      return cleanedScopes.some(
+        (sc) =>
+          (!sc.unit || !normalizedDbUnit || normalizedDbUnit === sc.unit) &&
+          isLessonMatch(dbLesson, [sc.lesson], dbLessonId, resolvedVideoId ? [resolvedVideoId] : []),
+      );
+    }
+    return isLessonMatch(dbLesson, targetLessons, dbLessonId, resolvedVideoId ? [resolvedVideoId] : []);
+  };
+
   // STRICT ZERO-LEAKAGE LESSON FILTER:
   // When specific lessons are targeted, every single question MUST match one of the target lessons!
   const strictlyFilteredMcqTf = hasSpecificLessons
-    ? candidateQuestions.filter((q) =>
-        isLessonMatch(q.lesson, targetLessons, q.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
-      )
+    ? candidateQuestions.filter((q) => matchesTargetedScope(q.unit, q.lesson, q.lessonId))
     : candidateQuestions;
 
   // Fetch Essay questions when requested or needed
   const shouldFetchEssays =
-    questionType === "essay" ||
-    questionType === "all" ||
-    !questionType ||
+    wantEssay ||
     (distributionMode === "by_type" && (Number(typeDistribution?.essay) || 0) > 0) ||
     distributionMode === "advanced" ||
-    distributionMode === "by_lesson";
+    (distributionMode === "by_lesson" && (!activeTypeSet || activeTypeSet.has("essay")));
 
   let candidateEssays: Array<{
     id: number;
@@ -2034,7 +2079,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   }
 
   const strictlyFilteredEssays = hasSpecificLessons
-    ? candidateEssays.filter((eq) => isLessonMatch(eq.lesson, targetLessons))
+    ? candidateEssays.filter((eq) => matchesTargetedScope(eq.unit, eq.lesson))
     : candidateEssays;
 
   type CandidateItem = {

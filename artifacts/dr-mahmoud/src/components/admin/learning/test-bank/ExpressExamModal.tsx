@@ -37,7 +37,7 @@ import {
 const LAST_STAGE_STORAGE_KEY = "dr_mahmoud_express_exam_last_stage";
 
 type PresetId = "quiz" | "homework" | "unit_exam" | "comprehensive";
-type QuestionTypeFilter = "all" | "mcq" | "true_false" | "essay";
+type SingleQuestionType = "mcq" | "true_false" | "essay";
 
 interface PresetConfig {
   id: PresetId;
@@ -184,11 +184,14 @@ export function ExpressExamModal({
   const [activePreset, setActivePreset] = useState<PresetId>("quiz");
   const [selectedStage, setSelectedStage] = useState<string>("");
   const [selectedUnit, setSelectedUnit] = useState<string>("all");
-  const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
-  const [questionType, setQuestionType] = useState<QuestionTypeFilter>("all");
+  const [selectedLessons, setSelectedLessons] = useState<Array<{ unit: string; lesson: string }>>([]);
+  const [selectedTypes, setSelectedTypes] = useState<SingleQuestionType[]>([]);
   const [questionsCount, setQuestionsCount] = useState<number>(10);
   const [title, setTitle] = useState<string>("");
   const [isTitleCustomized, setIsTitleCustomized] = useState<boolean>(false);
+
+  const isLessonSelected = (unitName: string, lessonName: string) =>
+    selectedLessons.some((s) => s.unit === unitName && s.lesson === lessonName);
 
   // Advanced settings (collapsed by default)
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
@@ -239,7 +242,7 @@ export function ExpressExamModal({
     if (initialUnit && st.units.some((u) => u.unit === initialUnit)) {
       setSelectedUnit(initialUnit);
       if (initialLesson && initialLesson !== "all") {
-        setSelectedLessons([initialLesson]);
+        setSelectedLessons([{ unit: initialUnit, lesson: initialLesson }]);
       } else {
         setSelectedLessons([]);
       }
@@ -269,18 +272,34 @@ export function ExpressExamModal({
     return [...currentUnitNode.lessons].sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson));
   }, [currentUnitNode]);
 
-  // Helper to get counts by type for a list of lessons
+  const selectedCountByUnit = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of selectedLessons) {
+      counts.set(s.unit, (counts.get(s.unit) || 0) + 1);
+    }
+    return counts;
+  }, [selectedLessons]);
+
+  // Active lessons pool: if specific lessons are selected across ANY units, use them; otherwise whole current unit or whole stage
   const activeLessonsPool = useMemo<LessonNode[]>(() => {
     if (!currentStageNode) return [];
+    if (selectedLessons.length > 0) {
+      const keySet = new Set(selectedLessons.map((s) => `${s.unit}:::${s.lesson}`));
+      const matched: LessonNode[] = [];
+      for (const u of sortedUnits) {
+        for (const l of u.lessons) {
+          if (keySet.has(`${u.unit}:::${l.lesson}`)) {
+            matched.push(l);
+          }
+        }
+      }
+      return matched;
+    }
     if (selectedUnit === "all") {
       return sortedUnits.flatMap((u) => u.lessons);
     }
     if (!currentUnitNode) return [];
-    if (selectedLessons.length === 0) {
-      return sortedLessons;
-    }
-    const set = new Set(selectedLessons);
-    return sortedLessons.filter((l) => set.has(l.lesson));
+    return sortedLessons;
   }, [currentStageNode, selectedUnit, sortedUnits, currentUnitNode, selectedLessons, sortedLessons]);
 
   const typeCounts = useMemo(() => {
@@ -305,23 +324,39 @@ export function ExpressExamModal({
     };
   }, [activeLessonsPool]);
 
-  const availableForSelectedType = typeCounts[questionType];
+  const availableForSelectedType = useMemo(() => {
+    if (selectedTypes.length === 0) return typeCounts.all;
+    return selectedTypes.reduce((sum, t) => sum + (typeCounts[t] || 0), 0);
+  }, [selectedTypes, typeCounts]);
 
-  // Auto-generate smart title whenever selection changes (unless user customized it)
+  const handleToggleQuestionType = (t: SingleQuestionType) => {
+    setSelectedTypes((prev) => {
+      const exists = prev.includes(t);
+      const next = exists ? prev.filter((x) => x !== t) : [...prev, t];
+      return next;
+    });
+  };
+
+  // Auto-generate smart title whenever selection changes (supports cross-unit lessons!)
   useEffect(() => {
     if (isTitleCustomized) return;
     const prefix = isHomework ? "واجب منزلي" : activePreset === "quiz" ? "كويز سريع" : "امتحان";
+    if (selectedLessons.length > 0) {
+      const distinctUnits = Array.from(new Set(selectedLessons.map((s) => s.unit)));
+      if (selectedLessons.length === 1) {
+        setTitle(`${prefix}: ${selectedLessons[0].lesson}`);
+      } else if (distinctUnits.length === 1) {
+        setTitle(`${prefix} على ${selectedLessons.length} دروس (${distinctUnits[0]})`);
+      } else {
+        setTitle(`${prefix} مجمّع على ${selectedLessons.length} دروس (${distinctUnits.length} وحدات)`);
+      }
+      return;
+    }
     if (selectedUnit === "all") {
       setTitle(`${prefix} شامل على المرحلة`);
       return;
     }
-    if (selectedLessons.length === 0) {
-      setTitle(`${prefix} شامل: ${selectedUnit}`);
-    } else if (selectedLessons.length === 1) {
-      setTitle(`${prefix}: ${selectedLessons[0]}`);
-    } else {
-      setTitle(`${prefix} على ${selectedLessons.length} دروس (${selectedUnit})`);
-    }
+    setTitle(`${prefix} شامل: ${selectedUnit}`);
   }, [isHomework, activePreset, selectedUnit, selectedLessons, isTitleCustomized]);
 
   const handleApplyPreset = (preset: PresetConfig) => {
@@ -350,21 +385,44 @@ export function ExpressExamModal({
     }
   };
 
-  const handleToggleLesson = (lessonName: string) => {
+  const handleToggleLesson = (unitName: string, lessonName: string) => {
     setSelectedLessons((prev) =>
-      prev.includes(lessonName) ? prev.filter((l) => l !== lessonName) : [...prev, lessonName]
+      prev.some((s) => s.unit === unitName && s.lesson === lessonName)
+        ? prev.filter((s) => !(s.unit === unitName && s.lesson === lessonName))
+        : [...prev, { unit: unitName, lesson: lessonName }]
     );
   };
 
+  const handleSelectAllInUnit = (unitName: string, unitLessons: LessonNode[]) => {
+    setSelectedLessons((prev) => {
+      const next = [...prev];
+      for (const l of unitLessons) {
+        if (!next.some((s) => s.unit === unitName && s.lesson === l.lesson)) {
+          next.push({ unit: unitName, lesson: l.lesson });
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleClearUnitLessons = (unitName: string) => {
+    setSelectedLessons((prev) => prev.filter((s) => s.unit !== unitName));
+  };
+
   const buildRequestPayload = (customQuestions?: any[]) => {
-    const isWholeStage = selectedUnit === "all";
-    const isWholeUnit = !isWholeStage && selectedLessons.length === 0;
-    const isSingleLesson = !isWholeStage && selectedLessons.length === 1;
-    const isMultiLesson = !isWholeStage && selectedLessons.length > 1;
+    const hasCustomLessons = selectedLessons.length > 0;
+    const distinctUnits = Array.from(new Set(selectedLessons.map((s) => s.unit)));
+    const isWholeStage = !hasCustomLessons && selectedUnit === "all";
+    const isWholeUnit = !hasCustomLessons && selectedUnit !== "all";
+    const isSingleLesson = selectedLessons.length === 1;
+    const isMultiLesson = selectedLessons.length > 1;
+    const resolvedUnit = hasCustomLessons
+      ? (distinctUnits.length === 1 ? distinctUnits[0] : undefined)
+      : (selectedUnit !== "all" ? selectedUnit : undefined);
 
     const scope = isHomework
       ? "homework"
-      : isWholeStage
+      : isWholeStage || distinctUnits.length > 1
       ? "stage"
       : isWholeUnit
       ? "unit"
@@ -373,12 +431,14 @@ export function ExpressExamModal({
     return {
       title: title.trim() || "امتحان سريع",
       stage: selectedStage,
-      unit: !isWholeStage ? selectedUnit : undefined,
+      unit: resolvedUnit,
       scope,
-      lesson: isSingleLesson ? selectedLessons[0] : undefined,
-      lessons: isMultiLesson ? selectedLessons : undefined,
+      lesson: isSingleLesson ? selectedLessons[0].lesson : undefined,
+      lessons: isMultiLesson ? selectedLessons.map((s) => s.lesson) : undefined,
+      lessonScopes: hasCustomLessons ? selectedLessons : undefined,
       count: customQuestions ? customQuestions.length : Math.max(1, Number(questionsCount) || 10),
-      questionType: questionType === "all" ? undefined : questionType,
+      questionType: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
+      questionTypes: selectedTypes.length > 0 && selectedTypes.length < 3 ? selectedTypes : undefined,
       durationMinutes: Math.max(5, Number(durationMinutes) || (isHomework ? 30 : 15)),
       passingScore: Math.max(10, Math.min(100, Number(passingScore) || 60)),
       maxAttempts: Math.max(1, Number(maxAttempts) || 1),
@@ -628,22 +688,25 @@ export function ExpressExamModal({
 
                 {/* Units Pills */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <label className="text-xs font-black text-foreground flex items-center gap-1.5">
                       <Layers className="h-3.5 w-3.5 text-amber-600" />
-                      <span>الوحدة:</span>
+                      <span>الوحدة (تقدر تتنقل بين الوحدات وتجمع دروس من أي وحدة):</span>
                     </label>
-                    <span className="text-[10px] font-bold text-muted-foreground">
-                      اختر وحدة محددة أو شامل المرحلة
-                    </span>
+                    {selectedLessons.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLessons([])}
+                        className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                      >
+                        مسح الدروس المختارة ({selectedLessons.length})
+                      </button>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedUnit("all");
-                        setSelectedLessons([]);
-                      }}
+                      onClick={() => setSelectedUnit("all")}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
                         selectedUnit === "all"
                           ? "bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500"
@@ -655,66 +718,104 @@ export function ExpressExamModal({
                     {sortedUnits.map((u) => {
                       const active = selectedUnit === u.unit;
                       const uCount = (u.totalQuestions || 0) + (u.totalEssays || 0);
+                      const pickedInUnit = selectedCountByUnit.get(u.unit) || 0;
                       return (
                         <button
                           key={u.unit}
                           type="button"
-                          onClick={() => {
-                            setSelectedUnit(u.unit);
-                            setSelectedLessons([]);
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                          onClick={() => setSelectedUnit(u.unit)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
                             active
                               ? "bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-slate-950 dark:border-amber-500"
+                              : pickedInUnit > 0
+                              ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15"
                               : "bg-background border-border text-foreground hover:bg-muted"
                           }`}
                         >
-                          {u.unit} <span className="opacity-75 font-mono">({uCount})</span>
+                          <span>{u.unit}</span>
+                          <span className="opacity-75 font-mono">({uCount})</span>
+                          {pickedInUnit > 0 && (
+                            <span className="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white text-[10px] font-black font-mono">
+                              ✓ {pickedInUnit}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Lessons Multi-Select Chips (when a specific unit is selected) */}
-                {currentUnitNode && sortedLessons.length > 0 && (
+                {/* Selected Cross-Unit Lessons Summary Strip */}
+                {selectedLessons.length > 0 && (
                   <div className="space-y-1.5 pt-2 border-t border-border/60">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-black text-foreground flex items-center gap-1.5">
-                        <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>الدروس (تقدر تختار درس واحد أو أكتر أو كل الوحدة):</span>
-                      </label>
-                      {selectedLessons.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedLessons([])}
-                          className="text-[11px] font-bold text-amber-600 hover:underline cursor-pointer"
-                        >
-                          تحديد كل الوحدة
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto py-0.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">
+                        الدروس المختارة للامتحان ({selectedLessons.length} درس من {selectedCountByUnit.size} {selectedCountByUnit.size === 1 ? "وحدة" : "وحدات"}):
+                      </span>
                       <button
                         type="button"
                         onClick={() => setSelectedLessons([])}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
-                          selectedLessons.length === 0
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                            : "bg-background border-border text-muted-foreground hover:text-foreground"
-                        }`}
+                        className="text-[10px] font-bold text-rose-600 hover:underline cursor-pointer"
                       >
-                        {selectedLessons.length === 0 && <Check className="h-3 w-3" />}
-                        <span>كل دروس الوحدة ({sortedLessons.length})</span>
+                        مسح الكل
                       </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto py-0.5">
+                      {selectedLessons.map((s) => (
+                        <button
+                          key={`${s.unit}:::${s.lesson}`}
+                          type="button"
+                          onClick={() => handleToggleLesson(s.unit, s.lesson)}
+                          title={`${s.unit} — اضغط لإزالة هذا الدرس`}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-[10.5px] font-bold hover:bg-rose-500/15 hover:border-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition cursor-pointer"
+                        >
+                          <span>{s.lesson}</span>
+                          {selectedCountByUnit.size > 1 && (
+                            <span className="opacity-70 text-[9.5px]">({s.unit.split(":")[0]})</span>
+                          )}
+                          <X className="h-3 w-3 shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lessons Multi-Select Chips (Single Unit OR All Units Grouped) */}
+                {currentUnitNode && sortedLessons.length > 0 ? (
+                  <div className="space-y-1.5 pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <label className="text-xs font-black text-foreground flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>دروس {currentUnitNode.unit} (اضغط لإضافة أو إزالة):</span>
+                      </label>
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAllInUnit(currentUnitNode.unit, sortedLessons)}
+                          className="text-[11px] font-bold text-emerald-600 hover:underline cursor-pointer"
+                        >
+                          تحديد كل دروس هذه الوحدة
+                        </button>
+                        {(selectedCountByUnit.get(currentUnitNode.unit) || 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleClearUnitLessons(currentUnitNode.unit)}
+                            className="text-[11px] font-bold text-amber-600 hover:underline cursor-pointer"
+                          >
+                            إلغاء دروس هذه الوحدة
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto py-0.5">
                       {sortedLessons.map((l) => {
-                        const checked = selectedLessons.includes(l.lesson);
+                        const checked = isLessonSelected(currentUnitNode.unit, l.lesson);
                         const lCount = (l.totalQuestions || 0) + (l.totalEssays || 0);
                         return (
                           <button
                             key={l.lesson}
                             type="button"
-                            onClick={() => handleToggleLesson(l.lesson)}
+                            onClick={() => handleToggleLesson(currentUnitNode.unit, l.lesson)}
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
                               checked
                                 ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
@@ -731,31 +832,116 @@ export function ExpressExamModal({
                       })}
                     </div>
                   </div>
+                ) : selectedUnit === "all" && sortedUnits.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <label className="text-xs font-black text-foreground flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>أو اختر دروسًا محددة مباشرة من جميع الوحدات:</span>
+                      </label>
+                      {selectedLessons.length === 0 && (
+                        <span className="text-[10px] font-bold text-emerald-600">
+                          الوضع الحالي: شامل كل دروس المرحلة ({sortedUnits.reduce((acc, u) => acc + u.lessons.length, 0)} درس)
+                        </span>
+                      )}
+                    </div>
+                    <div className="max-h-44 overflow-y-auto space-y-2 pr-0.5">
+                      {sortedUnits.map((u) => {
+                        const uLessons = [...u.lessons].sort(
+                          (a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson),
+                        );
+                        return (
+                          <div key={u.unit} className="space-y-1">
+                            <div className="flex items-center justify-between text-[10.5px] font-black text-muted-foreground">
+                              <span>{u.unit}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleSelectAllInUnit(u.unit, uLessons)}
+                                className="text-emerald-600 hover:underline cursor-pointer"
+                              >
+                                + تحديد الوحدة
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {uLessons.map((l) => {
+                                const checked = isLessonSelected(u.unit, l.lesson);
+                                const lCount = (l.totalQuestions || 0) + (l.totalEssays || 0);
+                                return (
+                                  <button
+                                    key={`${u.unit}:::${l.lesson}`}
+                                    type="button"
+                                    onClick={() => handleToggleLesson(u.unit, l.lesson)}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                                      checked
+                                        ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                                        : "bg-background border-border text-foreground hover:border-emerald-400"
+                                    }`}
+                                  >
+                                    {checked && <Check className="h-3 w-3 shrink-0" />}
+                                    <span>{l.lesson}</span>
+                                    <span className={`font-mono text-[10px] ${checked ? "text-emerald-100" : "text-muted-foreground"}`}>
+                                      ({lCount})
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
 
               {/* 3. Question Type & Count (Full Freedom Side-by-Side) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Question Type */}
+                {/* Question Type (Multi-Select) */}
                 <div className="rounded-2xl border border-border bg-background p-3.5 space-y-2">
-                  <label className="text-xs font-black text-foreground">نوع الأسئلة:</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-xs font-black text-foreground">نوع الأسئلة (تقدر تختار أكتر من نوع):</label>
+                    {selectedTypes.length > 0 && (
+                      <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300">
+                        محدد {selectedTypes.length}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      disabled={typeCounts.all === 0}
+                      onClick={() => setSelectedTypes([])}
+                      className={`flex items-center justify-between px-2.5 py-2 rounded-xl border text-xs font-bold transition ${
+                        typeCounts.all === 0
+                          ? "opacity-40 cursor-not-allowed bg-muted/40 border-border"
+                          : selectedTypes.length === 0
+                          ? "border-violet-600 bg-violet-600/10 text-violet-700 dark:text-violet-300 ring-1 ring-violet-500/30 cursor-pointer"
+                          : "border-border bg-card hover:bg-muted/40 text-foreground cursor-pointer"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1">
+                        {selectedTypes.length === 0 && <Check className="h-3 w-3 shrink-0" />}
+                        <span>الكل (مختلط)</span>
+                      </span>
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
+                        {typeCounts.all}
+                      </span>
+                    </button>
                     {(
                       [
-                        { id: "all", label: "الكل (مختلط)", count: typeCounts.all },
                         { id: "mcq", label: "اختيار من متعدد", count: typeCounts.mcq },
                         { id: "true_false", label: "صح / خطأ", count: typeCounts.true_false },
                         { id: "essay", label: "مقالي", count: typeCounts.essay },
                       ] as const
                     ).map((opt) => {
-                      const active = questionType === opt.id;
+                      const active = selectedTypes.includes(opt.id);
                       const disabled = opt.count === 0;
                       return (
                         <button
                           key={opt.id}
                           type="button"
                           disabled={disabled}
-                          onClick={() => setQuestionType(opt.id)}
+                          onClick={() => handleToggleQuestionType(opt.id)}
                           className={`flex items-center justify-between px-2.5 py-2 rounded-xl border text-xs font-bold transition ${
                             disabled
                               ? "opacity-40 cursor-not-allowed bg-muted/40 border-border"
@@ -764,7 +950,10 @@ export function ExpressExamModal({
                               : "border-border bg-card hover:bg-muted/40 text-foreground cursor-pointer"
                           }`}
                         >
-                          <span>{opt.label}</span>
+                          <span className="flex items-center gap-1">
+                            {active && <Check className="h-3 w-3 shrink-0" />}
+                            <span>{opt.label}</span>
+                          </span>
                           <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground">
                             {opt.count}
                           </span>
