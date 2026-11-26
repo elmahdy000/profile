@@ -49,6 +49,7 @@ interface RankedStudent {
   avatar_url?: string | null;
   track_group: "general" | "languages";
   quizzes_taken: number;
+  total_points?: number;
   avg_score: number;
   first_try_avg?: number;
   best_avg_score?: number;
@@ -251,7 +252,7 @@ export default function HonorBoardPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:text-blue-300 text-[11px] sm:text-xs font-bold">
             <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>الترتيب العادل: درجة أول محاولة · الأول والأول مكرر · سرعة الإنجاز</span>
+            <span>الترتيب العادل: مجموع درجات أول محاولة · الأول والأول مكرر · سرعة الإنجاز</span>
           </div>
 
           <div className="space-y-1.5">
@@ -259,7 +260,7 @@ export default function HonorBoardPage() {
               لوحة شرف أوائل الاختبارات
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
-              يتشارك أصحاب النسبة الواحدة نفس المركز (الأول، الأول مكرر...) مع ترتيب المتساوين بعدد الامتحانات وأسرع زمن حل في المحاولة الأولى.
+              يُحتسب الترتيب العام بمجموع درجات أول محاولة عبر جميع اختبارات القسم حتى يتقدم من أتمّ كل الامتحانات، ويتشارك أصحاب المجموع الواحد نفس المركز (الأول، الأول مكرر...).
             </p>
           </div>
 
@@ -411,6 +412,8 @@ export default function HonorBoardPage() {
           </div>
         ) : (() => {
           const isSearching = Boolean(searchQuery.trim());
+          const isOverallMultiExam = selectedQuizId === "all" && availableExams.length > 1;
+          const maxPossiblePoints = Math.max(100, availableExams.length * 100);
           const podiumStudents = isSearching
             ? []
             : students.filter((s) => Number(s.track_rank) <= 3);
@@ -424,6 +427,8 @@ export default function HonorBoardPage() {
             const avgScore = Number(student.first_try_avg ?? student.avg_score ?? 0);
             const firstTryAvg = Number(student.first_try_avg ?? avgScore);
             const bestAvgScore = Number(student.best_avg_score ?? avgScore);
+            const totalPoints = Number(student.total_points ?? firstTryAvg * student.quizzes_taken);
+            const completedAll = isOverallMultiExam && student.quizzes_taken >= availableExams.length;
             const isFirstTryAce =
               firstTryAvg >= bestAvgScore &&
               (student.first_try_mastered_count || 0) >= student.quizzes_taken;
@@ -442,7 +447,7 @@ export default function HonorBoardPage() {
                 className={`rounded-2xl border bg-card p-5 flex flex-col justify-between gap-4 transition-colors shadow-2xs ${accentTopClass}`}
               >
                 <div className="space-y-4">
-                  {/* Top Row: Rank Badge + Primary First-Try Score */}
+                  {/* Top Row: Rank Badge + Cumulative Points (General) or % (Single Exam) */}
                   <div className="flex items-center justify-between gap-2">
                     {renderRankBadge(rank, isRepeated)}
                     <div
@@ -454,7 +459,14 @@ export default function HonorBoardPage() {
                             : "bg-muted text-foreground border-border"
                       }`}
                     >
-                      <span className="text-base">{avgScore}%</span>
+                      {isOverallMultiExam ? (
+                        <>
+                          <span className="text-base">{Number(totalPoints.toFixed(1))}</span>
+                          <span className="text-[11px] opacity-75">/ {maxPossiblePoints}</span>
+                        </>
+                      ) : (
+                        <span className="text-base">{avgScore}%</span>
+                      )}
                     </div>
                   </div>
 
@@ -497,14 +509,21 @@ export default function HonorBoardPage() {
                     <div className="space-y-0.5">
                       <span className="block text-[10px] font-bold text-muted-foreground">الامتحانات</span>
                       <strong className="block text-xs font-mono font-black text-foreground">
-                        {student.quizzes_taken}
+                        {isOverallMultiExam
+                          ? `${student.quizzes_taken}/${availableExams.length}`
+                          : student.quizzes_taken}
                       </strong>
                     </div>
                   </div>
 
                   {/* Non-redundant Distinction Tags */}
-                  {(firstTryAvg === 100 || isFirstTryAce || bestAvgScore > firstTryAvg) && (
+                  {(completedAll || firstTryAvg === 100 || isFirstTryAce || bestAvgScore > firstTryAvg) && (
                     <div className="flex flex-wrap items-center gap-1.5">
+                      {completedAll && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-blue-700 dark:text-blue-300">
+                          <span>أتمّ جميع الاختبارات</span>
+                        </span>
+                      )}
                       {firstTryAvg === 100 && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
                           <Award className="w-3 h-3" />
@@ -573,6 +592,7 @@ export default function HonorBoardPage() {
                       const isRepeated = Number(student.track_tie_order ?? 1) > 1;
                       const avgScore = Number(student.first_try_avg ?? student.avg_score ?? 0);
                       const bestAvgScore = Number(student.best_avg_score ?? avgScore);
+                      const totalPoints = Number(student.total_points ?? avgScore * student.quizzes_taken);
                       const timeLabel = formatDurationArabic(student.avg_time_seconds);
 
                       return (
@@ -609,7 +629,11 @@ export default function HonorBoardPage() {
                           {/* Metrics + Action */}
                           <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
                             <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold">
-                              <span>{student.quizzes_taken} امتحان</span>
+                              <span>
+                                {isOverallMultiExam
+                                  ? `${student.quizzes_taken}/${availableExams.length} امتحان (${avgScore}%)`
+                                  : `${student.quizzes_taken} امتحان`}
+                              </span>
                               {timeLabel && (
                                 <span className="inline-flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
@@ -619,7 +643,7 @@ export default function HonorBoardPage() {
                             </div>
 
                             <span
-                              className={`inline-flex items-center rounded-xl px-2.5 py-1 font-mono text-xs sm:text-sm font-black border ${
+                              className={`inline-flex items-baseline gap-0.5 rounded-xl px-2.5 py-1 font-mono text-xs sm:text-sm font-black border ${
                                 avgScore >= 95
                                   ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                                   : avgScore >= 85
@@ -627,7 +651,14 @@ export default function HonorBoardPage() {
                                     : "bg-muted text-foreground border-border"
                               }`}
                             >
-                              {avgScore}%
+                              {isOverallMultiExam ? (
+                                <>
+                                  <span>{Number(totalPoints.toFixed(1))}</span>
+                                  <span className="text-[10px] opacity-75">/{maxPossiblePoints}</span>
+                                </>
+                              ) : (
+                                `${avgScore}%`
+                              )}
                             </span>
 
                             <button

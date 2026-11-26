@@ -380,6 +380,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
           SELECT
               ba.student_id,
               COUNT(ba.quiz_id)::int as quizzes_taken,
+              ROUND(SUM(ba.first_attempt_score)::numeric, 1) as total_points,
               ROUND(AVG(ba.first_attempt_score)::numeric, 1) as avg_score,
               ROUND(AVG(ba.first_attempt_score)::numeric, 1) as first_try_avg,
               ROUND(AVG(ba.best_score)::numeric, 1) as best_avg_score,
@@ -426,6 +427,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                   ELSE 'general'
               END as track_group,
               ss.quizzes_taken,
+              ss.total_points,
               ss.avg_score,
               ss.first_try_avg,
               ss.best_avg_score,
@@ -443,12 +445,12 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               END as overall_grade,
               DENSE_RANK() OVER(
                 PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END
-                ORDER BY ss.avg_score DESC
+                ORDER BY ss.total_points DESC
               )::int as track_rank,
               ROW_NUMBER() OVER(
                 PARTITION BY
                   CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END,
-                  ss.avg_score
+                  ss.total_points
                 ORDER BY
                   ss.quizzes_taken DESC,
                   ss.first_try_avg DESC,
@@ -459,13 +461,13 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               COUNT(*) OVER(
                 PARTITION BY
                   CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END,
-                  ss.avg_score
+                  ss.total_points
               )::int as track_tie_count,
               DENSE_RANK() OVER(
-                ORDER BY ss.avg_score DESC
+                ORDER BY ss.total_points DESC
               )::int as overall_rank,
               ROW_NUMBER() OVER(
-                PARTITION BY ss.avg_score
+                PARTITION BY ss.total_points
                 ORDER BY
                   ss.quizzes_taken DESC,
                   ss.first_try_avg DESC,
