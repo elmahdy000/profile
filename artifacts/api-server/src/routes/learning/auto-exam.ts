@@ -356,6 +356,10 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               (ARRAY_AGG(qa.score ORDER BY qa.created_at ASC, qa.id ASC))[1] as first_attempt_score,
               (ARRAY_AGG(
                   CASE WHEN qa.time_spent_seconds >= 5 THEN qa.time_spent_seconds ELSE NULL END
+                  ORDER BY qa.created_at ASC, qa.id ASC
+              ))[1] as first_attempt_time_seconds,
+              (ARRAY_AGG(
+                  CASE WHEN qa.time_spent_seconds >= 5 THEN qa.time_spent_seconds ELSE NULL END
                   ORDER BY qa.score DESC, CASE WHEN qa.time_spent_seconds >= 5 THEN qa.time_spent_seconds ELSE 999999 END ASC, qa.created_at ASC
               ))[1] as best_time_seconds,
               BOOL_OR(qa.passed) as ever_passed,
@@ -376,11 +380,12 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
           SELECT
               ba.student_id,
               COUNT(ba.quiz_id)::int as quizzes_taken,
-              ROUND(AVG(ba.best_score)::numeric, 1) as avg_score,
+              ROUND(AVG(ba.first_attempt_score)::numeric, 1) as avg_score,
               ROUND(AVG(ba.first_attempt_score)::numeric, 1) as first_try_avg,
-              ROUND(AVG(ba.best_time_seconds)::numeric, 0)::int as avg_time_seconds,
+              ROUND(AVG(ba.best_score)::numeric, 1) as best_avg_score,
+              ROUND(AVG(COALESCE(ba.first_attempt_time_seconds, ba.best_time_seconds))::numeric, 0)::int as avg_time_seconds,
               SUM(ba.attempts_count)::int as total_attempts_used,
-              COUNT(*) FILTER (WHERE ba.attempts_count = 1 OR ba.first_attempt_score = ba.best_score)::int as first_try_mastered_count,
+              COUNT(*) FILTER (WHERE ba.attempts_count = 1 OR ba.first_attempt_score >= ba.best_score)::int as first_try_mastered_count,
               MIN(ba.first_attempt_at) as earliest_submit_at,
               MAX(ba.latest_attempt_at) as last_quiz_date,
               json_agg(
@@ -388,17 +393,18 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                       'quiz_id', ba.quiz_id,
                       'quiz_title', ba.quiz_title,
                       'quiz_stage', ba.quiz_stage,
-                      'score', ba.best_score,
+                      'score', ba.first_attempt_score,
+                      'best_score', ba.best_score,
                       'first_attempt_score', ba.first_attempt_score,
-                      'time_seconds', ba.best_time_seconds,
+                      'time_seconds', COALESCE(ba.first_attempt_time_seconds, ba.best_time_seconds),
                       'attempts_count', ba.attempts_count,
                       'passed', ba.ever_passed,
                       'date', ba.latest_attempt_at,
                       'grade_label', CASE 
-                          WHEN ba.best_score >= 95 THEN 'امتياز مرتفع'
-                          WHEN ba.best_score >= 85 THEN 'ممتاز'
-                          WHEN ba.best_score >= 75 THEN 'جيد جداً'
-                          WHEN ba.best_score >= 65 THEN 'جيد'
+                          WHEN ba.first_attempt_score >= 95 THEN 'امتياز مرتفع'
+                          WHEN ba.first_attempt_score >= 85 THEN 'ممتاز'
+                          WHEN ba.first_attempt_score >= 75 THEN 'جيد جداً'
+                          WHEN ba.first_attempt_score >= 65 THEN 'جيد'
                           ELSE 'مقبول'
                       END
                   ) ORDER BY ba.latest_attempt_at DESC
@@ -422,6 +428,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               ss.quizzes_taken,
               ss.avg_score,
               ss.first_try_avg,
+              ss.best_avg_score,
               ss.avg_time_seconds,
               ss.total_attempts_used,
               ss.first_try_mastered_count,
@@ -434,23 +441,38 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                   WHEN ss.avg_score >= 65 THEN 'جيد'
                   ELSE 'مقبول'
               END as overall_grade,
-              ROW_NUMBER() OVER(
+              DENSE_RANK() OVER(
                 PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END
-                ORDER BY
-                  ss.avg_score DESC,
-                  ss.quizzes_taken DESC,
-                  ss.first_try_avg DESC,
-                  COALESCE(ss.avg_time_seconds, 999999) ASC,
-                  ss.earliest_submit_at ASC
+                ORDER BY ss.avg_score DESC
               )::int as track_rank,
               ROW_NUMBER() OVER(
+                PARTITION BY
+                  CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END,
+                  ss.avg_score
                 ORDER BY
-                  ss.avg_score DESC,
                   ss.quizzes_taken DESC,
                   ss.first_try_avg DESC,
                   COALESCE(ss.avg_time_seconds, 999999) ASC,
-                  ss.earliest_submit_at ASC
+                  ss.earliest_submit_at ASC,
+                  s.id ASC
+              )::int as track_tie_order,
+              COUNT(*) OVER(
+                PARTITION BY
+                  CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END,
+                  ss.avg_score
+              )::int as track_tie_count,
+              DENSE_RANK() OVER(
+                ORDER BY ss.avg_score DESC
               )::int as overall_rank,
+              ROW_NUMBER() OVER(
+                PARTITION BY ss.avg_score
+                ORDER BY
+                  ss.quizzes_taken DESC,
+                  ss.first_try_avg DESC,
+                  COALESCE(ss.avg_time_seconds, 999999) ASC,
+                  ss.earliest_submit_at ASC,
+                  s.id ASC
+              )::int as overall_tie_order,
               ss.quizzes_details
           FROM student_stats ss
           JOIN students s ON ss.student_id = s.id
@@ -460,7 +482,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       FROM classified_students
       ${trackFilter}
       ${searchFilter}
-      ORDER BY track_rank ASC, overall_rank ASC
+      ORDER BY track_rank ASC, track_tie_order ASC, overall_rank ASC
       LIMIT ${limit};
     `;
 

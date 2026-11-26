@@ -93,7 +93,8 @@ interface MemoSettings {
   showExplain: boolean;
   showTranslations: boolean;
   optionLayout: "auto" | "four" | "two" | "one";
-  cardStyle: "lines" | "cards" | "dashed";
+  cardStyle: "none" | "lines" | "cards" | "dashed";
+  layoutColumns?: 1 | 2;
   density: "compact" | "balanced" | "comfortable";
   showQuestionType: boolean;
   fontSelect: string;
@@ -114,6 +115,7 @@ interface MemoSettings {
   essayLines?: number;
   showAnswerSummary?: boolean;
   _v2Margins?: boolean;
+  _v3Editorial?: boolean;
 }
 
 const FONT_OPTIONS = [
@@ -156,12 +158,13 @@ const DEFAULT_SETTINGS: MemoSettings = {
   showExplain: false,
   showTranslations: true,
   optionLayout: "auto",
-  cardStyle: "lines",
+  cardStyle: "none",
+  layoutColumns: 1,
   density: "balanced",
   showQuestionType: false,
   fontSelect: "'Cairo', 'Tahoma', sans-serif",
   fontSize: 10.5,
-  lineHeight: 1.5,
+  lineHeight: 1.52,
   contentDir: "rtl",
   questionStart: 1,
   pageStart: 1,
@@ -177,6 +180,7 @@ const DEFAULT_SETTINGS: MemoSettings = {
   essayLines: 3,
   showAnswerSummary: false,
   _v2Margins: true,
+  _v3Editorial: true,
 };
 
 const escapeMemoHtml = (val: string) =>
@@ -668,16 +672,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         if (parsed.headerText) parsed.headerText = sanitizeMemoText(parsed.headerText);
         if (parsed.watermarkText) parsed.watermarkText = sanitizeMemoText(parsed.watermarkText);
         if (parsed.footerText) parsed.footerText = sanitizeMemoText(parsed.footerText);
-        // Migrate legacy v1 hardcoded margins & heavy font defaults cleanly once
-        if (!parsed._v2Margins) {
-          if (parsed.topMm === 34) parsed.topMm = 12;
-          if (parsed.continuationTopMm === 12) parsed.continuationTopMm = 10;
-          if (parsed.bottomMm === 10) parsed.bottomMm = 12;
-          if (parsed.rightMm === 12) parsed.rightMm = 13;
-          if (parsed.leftMm === 12) parsed.leftMm = 13;
-          if (parsed.fontSize === 11.5) parsed.fontSize = 10.5;
-          if (parsed.lineHeight === 1.55) parsed.lineHeight = 1.5;
+        // Migrate legacy saved defaults cleanly so the crisp publication layout applies right away
+        if (!parsed._v3Editorial) {
+          if (parsed.topMm === 34 || parsed.topMm === undefined) parsed.topMm = 12;
+          if (parsed.continuationTopMm === 12 || parsed.continuationTopMm === undefined) parsed.continuationTopMm = 10;
+          if (parsed.bottomMm === 10 || parsed.bottomMm === undefined) parsed.bottomMm = 12;
+          if (parsed.rightMm === 12 || parsed.rightMm === undefined) parsed.rightMm = 13;
+          if (parsed.leftMm === 12 || parsed.leftMm === undefined) parsed.leftMm = 13;
+          if (parsed.fontSize === 11.5 || parsed.fontSize === undefined) parsed.fontSize = 10.5;
+          if (parsed.lineHeight === 1.55 || parsed.lineHeight === 1.5 || parsed.lineHeight === undefined) parsed.lineHeight = 1.52;
+          if (parsed.templateStyle === "royal" || !parsed.templateStyle) parsed.templateStyle = "minimal";
+          if (parsed.cardStyle === "lines" || !parsed.cardStyle) parsed.cardStyle = "none";
+          if (!parsed.layoutColumns) parsed.layoutColumns = 1;
           parsed._v2Margins = true;
+          parsed._v3Editorial = true;
         }
         return { ...DEFAULT_SETTINGS, ...parsed };
       }
@@ -869,19 +877,19 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     return px / (96 / 25.4);
   };
 
-  // Student header strip HTML (clean, editorial, no arbitrary hard-coded score)
+  // Student header strip HTML (clean, editorial, zero heavy boxes)
   const studentStripHtml = useMemo(() => {
     const theme = getThemeConfig(settings.templateStyle);
     const isRtl = settings.contentDir === "rtl";
     if (settings.templateStyle === "exam") {
-      return `<div style="background:${theme.softTint};border:1px solid ${theme.cardBorderColor};border-radius:1.5mm;padding:2mm 3mm;display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:2.5mm;font-size:8.5pt;color:#0f172a;margin-bottom:3mm;font-weight:600;">
+      return `<div style="border-bottom:1px solid ${theme.cardBorderColor};padding:1.2mm 0 2mm;display:grid;grid-template-columns:1.5fr 1fr 1fr 0.9fr;gap:2.5mm;font-size:8.5pt;color:#0f172a;margin-bottom:3.2mm;font-weight:600;">
         <div>${isRtl ? "الاسم:" : "Name:"} <span style="display:inline-block;width:28mm;border-bottom:1px dotted #64748b;"></span></div>
         <div>${isRtl ? "المجموعة:" : "Group:"} <span style="display:inline-block;width:18mm;border-bottom:1px dotted #64748b;"></span></div>
         <div>${isRtl ? "التاريخ:" : "Date:"} <span style="display:inline-block;width:18mm;border-bottom:1px dotted #64748b;"></span></div>
         <div style="text-align:${isRtl ? "left" : "right"};">${isRtl ? "الدرجة: [ &nbsp; / &nbsp; ]" : "Score: [ &nbsp; / &nbsp; ]"}</div>
       </div>`;
     }
-    return `<div style="background:${theme.softTint};border:1px solid ${theme.cardBorderColor};border-${isRtl ? "right" : "left"}:${theme.cardBorderRight};border-radius:1.5mm;padding:1.8mm 3mm;display:flex;gap:4mm;justify-content:space-between;flex-wrap:wrap;font-size:8.5pt;color:#334155;margin-bottom:3mm;">
+    return `<div style="border-bottom:1px solid ${theme.cardBorderColor};padding:1mm 0 1.8mm;display:flex;gap:4mm;justify-content:space-between;flex-wrap:wrap;font-size:8.4pt;color:#334155;margin-bottom:3mm;">
       <span style="white-space:nowrap;flex:1.4;min-width:30mm;"><strong>${isRtl ? "اسم الطالب:" : "Student:"}</strong> <span style="display:inline-block;width:28mm;border-bottom:1px dotted #94a3b8;"></span></span>
       <span style="white-space:nowrap;flex:1;min-width:24mm;"><strong>${isRtl ? "المجموعة:" : "Group:"}</strong> <span style="display:inline-block;width:20mm;border-bottom:1px dotted #94a3b8;"></span></span>
       <span style="white-space:nowrap;flex:1;min-width:24mm;"><strong>${isRtl ? "التاريخ:" : "Date:"}</strong> <span style="display:inline-block;width:18mm;border-bottom:1px dotted #94a3b8;"></span></span>
@@ -890,19 +898,23 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
   const getDensityMetrics = (density: MemoSettings["density"]) =>
     ({
-      compact: { pad: "1.3mm 1.5mm", gap: "1.0mm 2.5mm", qGap: 1.8 },
-      balanced: { pad: "2.0mm 2.0mm", gap: "1.4mm 3.5mm", qGap: 3.0 },
-      comfortable: { pad: "2.8mm 2.5mm", gap: "2.0mm 4.5mm", qGap: 4.5 },
+      compact: { pad: "1.1mm 0", gap: "0.9mm 2.5mm", qGap: 1.8 },
+      balanced: { pad: "1.6mm 0", gap: "1.2mm 3.5mm", qGap: 3.0 },
+      comfortable: { pad: "2.2mm 0", gap: "1.8mm 4.5mm", qGap: 4.5 },
     }[density || "balanced"]);
 
   const computeOptionColCount = (
     opts: Array<{ text: string }>,
     optionLayout: MemoSettings["optionLayout"],
+    columnsMode: 1 | 2 = 1,
   ): 1 | 2 | 4 => {
-    if (optionLayout === "four") return opts.length <= 2 ? 2 : 4;
+    if (optionLayout === "four") return columnsMode === 2 ? 2 : opts.length <= 2 ? 2 : 4;
     if (optionLayout === "two") return 2;
     if (optionLayout === "one") return 1;
     const maxLen = Math.max(...opts.map((o) => (o.text || "").trim().length), 0);
+    if (columnsMode === 2) {
+      return maxLen <= 18 ? 2 : 1;
+    }
     if (maxLen <= 14 && opts.length <= 4) return opts.length <= 2 ? 2 : 4;
     if (maxLen <= 44) return 2;
     return 1;
@@ -926,12 +938,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     return isRtlDoc ? `${ord}: ${l.ar}` : `${ord}: ${l.en}`;
   };
 
-  // Card HTML generator with clean typography, auto RTL/LTR per question, and HTML tag escaping
+  // Publication-grade card HTML generator: clean editorial hanging-indent numbering, no circles or box clutter
   const getCardHtml = (q: NormalizedQuestion, qNumber: number, sectionHeader?: string) => {
     const theme = getThemeConfig(settings.templateStyle);
     const stmtIsArabic = isArabicText(q.statement);
     const stmtDir = stmtIsArabic ? "rtl" : "ltr";
     const stmtAlign = stmtIsArabic ? "right" : "left";
+    const isTwoCol = settings.layoutColumns === 2;
 
     const typeLabel = {
       MCQ: stmtIsArabic ? "اختيار من متعدد" : "Multiple Choice",
@@ -944,18 +957,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const densityConfig = getDensityMetrics(settings.density);
 
     const sectionBannerHtml = sectionHeader
-      ? `<div style="margin-bottom:${densityConfig.qGap}mm;padding:1.4mm 2.8mm;background:${theme.softTint};border-${settings.contentDir === "rtl" ? "right" : "left"}:${theme.cardBorderRight};border-bottom:1px solid ${theme.cardBorderColor};font-size:0.95em;font-weight:800;color:${theme.accentColor};direction:${settings.contentDir};text-align:${settings.contentDir === "rtl" ? "right" : "left"};">${escapeMemoHtml(sectionHeader)}</div>`
+      ? `<div style="margin-top:1.5mm;margin-bottom:${densityConfig.qGap}mm;padding-bottom:1.2mm;border-bottom:1.5px solid ${theme.accentColor};font-size:1em;font-weight:800;color:${theme.accentColor};direction:${settings.contentDir};text-align:${settings.contentDir === "rtl" ? "right" : "left"};">${escapeMemoHtml(sectionHeader)}</div>`
       : "";
 
     if (q.type === "TEXT") {
-      return `<div style="break-inside:avoid;margin-bottom:${densityConfig.qGap}mm;">${sectionBannerHtml}<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:1.5mm;padding:2mm;white-space:pre-wrap;line-height:inherit;direction:${stmtDir};text-align:${stmtAlign};">${escapeMemoHtml(q.statement)}</div></div>`;
+      return `<div style="break-inside:avoid;margin-bottom:${densityConfig.qGap}mm;">${sectionBannerHtml}<div style="border-${stmtIsArabic ? "right" : "left"}:2.5px solid ${theme.accentColor};padding:1.2mm 2.5mm;white-space:pre-wrap;line-height:inherit;direction:${stmtDir};text-align:${stmtAlign};">${escapeMemoHtml(q.statement)}</div></div>`;
     }
 
     if (q.type === "DEFINITION") {
       const defAnsIsArabic = isArabicText(q.answer);
-      return `<div style="break-inside:avoid;margin-bottom:${densityConfig.qGap}mm;">${sectionBannerHtml}<div style="background:${theme.softTint};border:1px solid ${theme.cardBorderColor};border-radius:1.5mm;padding:2mm 2.5mm;direction:${stmtDir};text-align:${stmtAlign};">
+      return `<div style="break-inside:avoid;margin-bottom:${densityConfig.qGap}mm;">${sectionBannerHtml}<div style="border-${stmtIsArabic ? "right" : "left"}:2px solid ${theme.accentColor};padding:1mm 2.5mm;direction:${stmtDir};text-align:${stmtAlign};">
         <div style="font-weight:700;color:#0f172a;">${escapeMemoHtml(q.statement)}</div>
-        ${settings.showAnswers && q.answer ? `<div style="margin-top:1.2mm;white-space:pre-wrap;color:#334155;direction:${defAnsIsArabic ? "rtl" : "ltr"};text-align:${defAnsIsArabic ? "right" : "left"};">${escapeMemoHtml(q.answer)}</div>` : ""}
+        ${settings.showAnswers && q.answer ? `<div style="margin-top:1mm;white-space:pre-wrap;color:#334155;direction:${defAnsIsArabic ? "rtl" : "ltr"};text-align:${defAnsIsArabic ? "right" : "left"};">${escapeMemoHtml(q.answer)}</div>` : ""}
       </div></div>`;
     }
 
@@ -966,7 +979,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           ? [{ text: stmtIsArabic ? "صواب" : "True" }, { text: stmtIsArabic ? "خطأ" : "False" }]
           : [];
 
-    const colCount = computeOptionColCount(opts, settings.optionLayout);
+    const colCount = computeOptionColCount(opts, settings.optionLayout, isTwoCol ? 2 : 1);
     const colStyle =
       colCount === 4
         ? "grid-template-columns: repeat(4, minmax(0, 1fr));"
@@ -975,7 +988,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           : "grid-template-columns: 1fr;";
 
     const optionsHtml = opts.length
-      ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.5mm;padding-inline-start:7.2mm;">
+      ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.4mm;padding-inline-start:6.2mm;">
           ${opts
         .map((o, i) => {
           const optIsArabic = isArabicText(o.text);
@@ -985,9 +998,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             ? (ARABIC_LETTERS[i] ?? i + 1)
             : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
           return `
-            <div style="display:flex;gap:1.5mm;align-items:flex-start;break-inside:avoid;direction:${optDir};text-align:${optAlign};">
-              <span style="display:inline-grid;place-items:center;background:#ffffff;border:1px solid #cbd5e1;border-radius:50%;height:4.2mm;min-width:4.2mm;font:600 7.2pt Tahoma,Arial,sans-serif;color:${theme.accentColor};flex-shrink:0;margin-top:0.35mm;">${letter}</span>
-              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:400;line-height:1.42;direction:${optDir};">${escapeMemoHtml(o.text)}</span>
+            <div style="display:flex;gap:1.4mm;align-items:baseline;break-inside:avoid;direction:${optDir};text-align:${optAlign};">
+              <span style="font:700 0.92em Tahoma,Arial,sans-serif;color:${theme.accentColor};flex-shrink:0;">${letter})</span>
+              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:400;line-height:1.45;direction:${optDir};">${escapeMemoHtml(o.text)}</span>
             </div>`;
         })
         .join("")}
@@ -996,11 +1009,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
     const essayRuledLinesHtml =
       q.type === "ESSAY" && !settings.showAnswers && (settings.essayLines ?? 3) > 0
-        ? `<div style="margin-top:2.2mm;margin-bottom:0.8mm;padding-inline-start:7.2mm;display:flex;flex-direction:column;gap:3.2mm;">
+        ? `<div style="margin-top:2mm;margin-bottom:0.8mm;padding-inline-start:6.2mm;display:flex;flex-direction:column;gap:3.2mm;">
             ${Array.from({ length: settings.essayLines ?? 3 })
               .map(
                 () =>
-                  `<div style="border-bottom:1px dashed #cbd5e1;width:100%;height:4.2mm;"></div>`,
+                  `<div style="border-bottom:1px dotted #94a3b8;width:100%;height:4.2mm;"></div>`,
               )
               .join("")}
           </div>`
@@ -1011,8 +1024,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       containerStyle = `border-bottom: 1px solid ${theme.cardBorderColor}; padding: ${densityConfig.pad}; background: transparent;`;
     } else if (settings.cardStyle === "dashed") {
       containerStyle = `border-bottom: 1px dashed #cbd5e1; padding: ${densityConfig.pad}; background: transparent;`;
+    } else if (settings.cardStyle === "cards") {
+      containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${stmtIsArabic ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 1.2mm; padding: ${isTwoCol ? "1.6mm 2mm" : "2mm 2.4mm"}; background: #ffffff;`;
     } else {
-      containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${stmtIsArabic ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 1.5mm; padding: ${densityConfig.pad}; background: #ffffff;`;
+      containerStyle = `padding: ${densityConfig.pad}; background: transparent;`;
     }
 
     const transIsArabic = isArabicText(q.translation);
@@ -1028,18 +1043,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const expAlign = expIsArabic ? "right" : "left";
 
     return `<div style="break-inside:avoid;page-break-inside:avoid;margin-bottom:${densityConfig.qGap}mm;">${sectionBannerHtml}<article style="box-sizing:border-box;width:100%;max-width:100%;${containerStyle}position:relative;word-break:normal;overflow-wrap:anywhere;direction:${stmtDir};">
-      <div style="display:flex;align-items:flex-start;gap:2mm;min-width:0;width:100%;box-sizing:border-box;direction:${stmtDir};">
-        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.2mm;min-width:5.6mm;height:5.4mm;display:grid;place-items:center;font:700 8.5pt Tahoma,Arial,sans-serif;line-height:1;margin-top:0.35mm;">${qNumber}</span>
+      <div style="display:flex;align-items:baseline;gap:1.8mm;min-width:0;width:100%;box-sizing:border-box;direction:${stmtDir};">
+        <span style="flex:0 0 auto;color:${theme.accentColor};font:700 0.98em Tahoma,Arial,sans-serif;min-width:5.2mm;">${qNumber}.</span>
         <div style="min-width:0;flex:1;box-sizing:border-box;text-align:${stmtAlign};">
-          ${settings.showQuestionType ? `<span style="display:inline-block;color:${theme.secondaryAccent};font-size:7pt;font-weight:700;margin-bottom:0.4mm;">${typeLabel}</span>` : ""}
-          <div style="white-space:pre-wrap;font-weight:600;line-height:inherit;overflow-wrap:anywhere;direction:${stmtDir};text-align:${stmtAlign};">${escapeMemoHtml(q.statement || "—")}</div>
+          ${settings.showQuestionType ? `<span style="display:inline-block;color:${theme.secondaryAccent};font-size:0.75em;font-weight:700;margin-inline-end:1.5mm;">[${typeLabel}]</span>` : ""}
+          <span style="white-space:pre-wrap;font-weight:600;line-height:inherit;overflow-wrap:anywhere;direction:${stmtDir};text-align:${stmtAlign};">${escapeMemoHtml(q.statement || "—")}</span>
           ${settings.showTranslations && q.translation ? `<div style="white-space:pre-wrap;color:#475569;border-${stmtIsArabic ? "right" : "left"}:1.5px solid #cbd5e1;padding-${stmtIsArabic ? "right" : "left"}:2mm;margin-top:1mm;font-size:0.9em;font-weight:400;overflow-wrap:anywhere;direction:${transDir};text-align:${transAlign};">${escapeMemoHtml(q.translation)}</div>` : ""}
         </div>
       </div>
       ${optionsHtml}
       ${essayRuledLinesHtml}
-      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f8fafc;border-${stmtIsArabic ? "right" : "left"}:2px solid #16a34a;border-radius:1.2mm;margin-top:1.4mm;margin-inline-start:7.2mm;padding:1.2mm 2mm;font-size:0.88em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;direction:${ansDir};text-align:${ansAlign};"><span style="font-weight:700;">${ansIsArabic ? "الإجابة النموذجية:" : "Model Answer:"}</span> ${escapeMemoHtml(q.answer)}</div>` : ""}
-      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fffbeb;border-${stmtIsArabic ? "right" : "left"}:2px solid #d97706;border-radius:1.2mm;margin-top:1.0mm;margin-inline-start:7.2mm;padding:1.1mm 2mm;font-size:0.84em;color:#78350f;white-space:pre-wrap;overflow-wrap:anywhere;direction:${expDir};text-align:${expAlign};"><span style="font-weight:700;">${expIsArabic ? "التوضيح:" : "Explanation:"}</span> ${escapeMemoHtml(q.explanation)}</div>` : ""}
+      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;border-${stmtIsArabic ? "right" : "left"}:2px solid #16a34a;margin-top:1.3mm;margin-inline-start:6.2mm;padding:0.6mm 2mm;font-size:0.88em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;direction:${ansDir};text-align:${ansAlign};"><span style="font-weight:700;">${ansIsArabic ? "الإجابة:" : "Answer:"}</span> ${escapeMemoHtml(q.answer)}</div>` : ""}
+      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;border-${stmtIsArabic ? "right" : "left"}:2px solid #d97706;margin-top:0.8mm;margin-inline-start:6.2mm;padding:0.5mm 2mm;font-size:0.84em;color:#78350f;white-space:pre-wrap;overflow-wrap:anywhere;direction:${expDir};text-align:${expAlign};"><span style="font-weight:700;">${expIsArabic ? "التوضيح:" : "Explanation:"}</span> ${escapeMemoHtml(q.explanation)}</div>` : ""}
     </article></div>`;
   };
 
@@ -1111,7 +1126,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     </div>`;
   }, [settings.showAnswerSummary, arrangedQuestions, settings.templateStyle, settings.contentDir]);
 
-  // Dynamic height measurements for headers
+  // Dynamic height measurements matching exact Clean Editorial Masthead
   const p1HeaderMeasuredH = useMemo(() => {
     if (!settings.headerEnabled) return 0;
     const badgeText =
@@ -1126,20 +1141,14 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const cleanSub = escapeMemoHtml(sanitizeMemoText(settings.subHeaderText));
 
     const testHtml = `
-      <div style="width:100%;margin-bottom:2.8mm;padding-bottom:2mm;border-bottom:1.5px solid #000;box-sizing:border-box;">
-        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:1.6mm;">
-          <div style="display:flex;align-items:center;gap:2mm;">
-            <div style="width:6.2mm;height:6.2mm;border-radius:50%;border:1px solid #000;"></div>
-            <div style="display:flex;flex-direction:column;">
-              <span style="font-size:8.8pt;font-weight:800;">د. محمود المهدي • Dr / Elmahdy</span>
-              <span style="font-size:6.6pt;font-weight:600;">الحاسب الآلي والذكاء الاصطناعي</span>
-            </div>
-          </div>
-          <div><span style="padding:0.8mm 2.8mm;border:1px solid #000;font-size:7.6pt;font-weight:700;">${badgeText}</span></div>
+      <div style="width:100%;margin-bottom:3mm;padding-bottom:2mm;border-bottom:1.5px solid #000;box-sizing:border-box;">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:1.4mm;font-size:7.8pt;font-weight:700;">
+          <span>د. محمود المهدي • الحاسب الآلي والذكاء الاصطناعي</span>
+          <span>${badgeText}</span>
         </div>
-        <div style="width:100%;padding:0 0.5mm;">
-          <div style="font-size:11pt;font-weight:800;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
-          ${cleanSub ? `<div style="font-size:7.8pt;font-weight:600;margin-top:0.8mm;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
+        <div style="width:100%;padding:0 1mm;text-align:center;">
+          <div style="font-size:12.5pt;font-weight:800;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
+          ${cleanSub ? `<div style="font-size:8.4pt;font-weight:500;margin-top:0.8mm;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
         </div>
       </div>
     `;
@@ -1150,18 +1159,23 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     if (settings.continuationHeader !== "minimal") return 0;
     const cleanTitle = escapeMemoHtml(sanitizeMemoText(settings.headerText));
     const testHtml = `
-      <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.2mm;margin-bottom:2.5mm;border-bottom:1px solid #000;box-sizing:border-box;">
-        <span style="font-size:8pt;font-weight:700;">${cleanTitle}</span>
-        <span style="font-size:7.6pt;font-weight:700;">د. محمود المهدي • Dr / Elmahdy</span>
+      <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.2mm;margin-bottom:2.8mm;border-bottom:1px solid #000;box-sizing:border-box;">
+        <span style="font-size:7.8pt;font-weight:700;">${cleanTitle}</span>
+        <span style="font-size:7.5pt;font-weight:600;">د. محمود المهدي</span>
       </div>
     `;
     return measureHeight(testHtml, region.width);
   }, [settings.continuationHeader, settings.headerText, region.width, settings.fontSelect, settings.fontSize]);
 
-  // Content-Aware A4 Pagination Engine: Zero Cutoffs & Exact Spacing Match
-  const pages = useMemo(() => {
+  // Content-Aware A4 Pagination Engine supporting both 1-Column Formal Exam & 2-Column Compact Workbook
+  type PageCardItem = { html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number };
+  type StudioPage = { col1: PageCardItem[]; col2: PageCardItem[]; trailerHtml?: string };
+
+  const pages = useMemo<StudioPage[]>(() => {
     const warns: string[] = [];
     const max = settings.maxQuestions || 99999;
+    const isTwoCol = settings.layoutColumns === 2;
+    const colWidthMm = isTwoCol ? (region.width - 6) / 2 : region.width;
 
     const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
     const safetyBuffer = 5.0;
@@ -1170,8 +1184,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const p1AvailableH =
       297 -
       p1Top -
-      (settings.headerEnabled ? p1HeaderMeasuredH + 2.8 : 0) -
-      (settings.studentFields ? studentH + 3.0 : 0) -
+      (settings.headerEnabled ? p1HeaderMeasuredH + 3.0 : 0) -
+      (settings.studentFields ? studentH + 3.2 : 0) -
       region.bottom -
       safetyBuffer;
 
@@ -1179,28 +1193,44 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const contAvailableH =
       297 -
       contTop -
-      (settings.continuationHeader === "minimal" ? contHeaderMeasuredH + 2.5 : 0) -
+      (settings.continuationHeader === "minimal" ? contHeaderMeasuredH + 2.8 : 0) -
       region.bottom -
       safetyBuffer;
 
-    const all: Array<Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }>> = [];
-    let current: Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }> = [];
-    let currentUsedH = 0;
+    const all: StudioPage[] = [];
+    let currentCol1: PageCardItem[] = [];
+    let currentCol2: PageCardItem[] = [];
+    let col1UsedH = 0;
+    let col2UsedH = 0;
+    let activeCol: 1 | 2 = 1;
     let count = 0;
 
     for (let idx = 0; idx < arrangedQuestions.length; idx++) {
       const { q, qNumber, rawIndex, sectionHeader } = arrangedQuestions[idx];
       const html = getCardHtml(q, qNumber, sectionHeader);
-      const h = measureHeight(html, region.width);
+      const h = measureHeight(html, colWidthMm);
 
-      const isFirstPage = all.length === 0;
-      const targetAvailableH = isFirstPage ? p1AvailableH : contAvailableH;
+      if (count >= max) break;
 
-      if (count >= max || (current.length > 0 && currentUsedH + h > targetAvailableH)) {
-        if (current.length) {
-          all.push(current);
-          current = [];
-          currentUsedH = 0;
+      const targetAvailableH = all.length === 0 ? p1AvailableH : contAvailableH;
+
+      if (isTwoCol) {
+        if (activeCol === 1 && currentCol1.length > 0 && col1UsedH + h > targetAvailableH) {
+          activeCol = 2;
+        }
+        if (activeCol === 2 && currentCol2.length > 0 && col2UsedH + h > targetAvailableH) {
+          all.push({ col1: currentCol1, col2: currentCol2 });
+          currentCol1 = [];
+          currentCol2 = [];
+          col1UsedH = 0;
+          col2UsedH = 0;
+          activeCol = 1;
+        }
+      } else {
+        if (currentCol1.length > 0 && col1UsedH + h > targetAvailableH) {
+          all.push({ col1: currentCol1, col2: [] });
+          currentCol1 = [];
+          col1UsedH = 0;
         }
       }
 
@@ -1211,25 +1241,41 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         );
       }
 
-      current.push({ html, h, qNumber, rawQuestion: q, qIndex: rawIndex });
-      currentUsedH += h;
+      const cardItem: PageCardItem = { html, h, qNumber, rawQuestion: q, qIndex: rawIndex };
+      if (isTwoCol && activeCol === 2) {
+        currentCol2.push(cardItem);
+        col2UsedH += h;
+      } else {
+        currentCol1.push(cardItem);
+        col1UsedH += h;
+      }
       count++;
-
-      if (count >= max) break;
     }
 
+    let trailerPage: StudioPage | null = null;
     if (answerSummaryHtml) {
       const summaryH = measureHeight(answerSummaryHtml, region.width);
       const targetAvailableH = all.length === 0 ? p1AvailableH : contAvailableH;
-      if (current.length > 0 && currentUsedH + summaryH > targetAvailableH) {
-        all.push(current);
-        current = [];
+      const maxColUsed = Math.max(col1UsedH, col2UsedH);
+      if ((currentCol1.length > 0 || currentCol2.length > 0) && maxColUsed + summaryH + 3 <= targetAvailableH) {
+        all.push({ col1: currentCol1, col2: currentCol2, trailerHtml: answerSummaryHtml });
+        currentCol1 = [];
+        currentCol2 = [];
+      } else {
+        if (currentCol1.length > 0 || currentCol2.length > 0) {
+          all.push({ col1: currentCol1, col2: currentCol2 });
+          currentCol1 = [];
+          currentCol2 = [];
+        }
+        trailerPage = { col1: [], col2: [], trailerHtml: answerSummaryHtml };
       }
-      current.push({ html: answerSummaryHtml, h: summaryH, qNumber: 0 });
     }
 
-    if (current.length) {
-      all.push(current);
+    if (currentCol1.length > 0 || currentCol2.length > 0) {
+      all.push({ col1: currentCol1, col2: currentCol2 });
+    }
+    if (trailerPage) {
+      all.push(trailerPage);
     }
 
     setWarnings(warns);
@@ -1281,7 +1327,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
   };
 
-  // Print via iframe
+  // Print via iframe (matches Clean Editorial Masthead + 1-col / 2-col layout verbatim)
   const executeIframePrint = () => {
     if (!pages || pages.length === 0) {
       toast({ variant: "destructive", description: "لا توجد صفحات جاهزة للطباعة." });
@@ -1312,6 +1358,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const cleanTitle = escapeMemoHtml(sanitizeMemoText(settings.headerText) || "مذكرة تدريبات وبنك أسئلة A4");
     const cleanSub = escapeMemoHtml(sanitizeMemoText(settings.subHeaderText) || "");
     const theme = getThemeConfig(settings.templateStyle);
+    const isTwoCol = settings.layoutColumns === 2;
+    const isRtlDoc = settings.contentDir === "rtl";
     const badgeText =
       settings.templateStyle === "exam"
         ? "ورقة اختبار رسمي"
@@ -1322,41 +1370,43 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             : "مذكرة تدريبات وبنك أسئلة";
 
     let htmlPages = "";
-    pages.forEach((pageItems, pageIdx) => {
+    pages.forEach((pageData, pageIdx) => {
       const isP1 = pageIdx === 0;
       const topPaddingMm = isP1 ? region.top : region.contTop;
 
       let pHeader = "";
       if (isP1 && settings.headerEnabled) {
         pHeader = `
-          <div style="width:100%;margin-bottom:2.8mm;padding-bottom:2mm;border-bottom:${theme.headerBorder};color:#0f172a;box-sizing:border-box;">
-            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:1.6mm;">
-              <div style="display:flex;align-items:center;gap:2mm;">
-                <div style="width:6.2mm;height:6.2mm;border-radius:50%;background:${theme.crestBg};border:${theme.crestBorder};color:${theme.crestColor};display:grid;place-items:center;font-weight:800;font-size:6.8pt;">M</div>
-                <div style="display:flex;flex-direction:column;">
-                  <span style="font-size:8.8pt;font-weight:800;color:${theme.drTextColor};">د. محمود المهدي • Dr / Elmahdy</span>
-                  <span style="font-size:6.6pt;font-weight:600;color:${theme.drSubTextColor};">الحاسب الآلي والذكاء الاصطناعي</span>
-                </div>
-              </div>
-              <div><span style="background:${settings.showAnswers ? "#fffbeb" : theme.badgeBg};color:${settings.showAnswers ? "#92400e" : theme.badgeColor};border:${settings.showAnswers ? "1px solid #fcd34d" : theme.badgeBorder};padding:0.8mm 2.8mm;border-radius:1.2mm;font-size:7.6pt;font-weight:700;">${settings.showAnswers ? "نموذج إجابة المعلم" : badgeText}</span></div>
+          <div style="width:100%;margin-bottom:3mm;padding-bottom:2mm;border-bottom:${theme.headerBorder};color:#0f172a;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:1.4mm;font-size:7.8pt;font-weight:700;color:${theme.drSubTextColor};">
+              <span>د. محمود المهدي • الحاسب الآلي والذكاء الاصطناعي</span>
+              <span style="color:${settings.showAnswers ? "#92400e" : theme.accentColor};">${settings.showAnswers ? "نموذج إجابة المعلم" : badgeText}</span>
             </div>
-            <div style="width:100%;padding:0 0.5mm;">
-              <div style="font-size:11pt;font-weight:800;line-height:1.35;color:#0f172a;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
-              ${cleanSub ? `<div style="font-size:7.8pt;font-weight:600;margin-top:0.8mm;color:#475569;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
+            <div style="width:100%;padding:0 1mm;text-align:center;">
+              <div style="font-size:12.5pt;font-weight:800;line-height:1.35;color:#0f172a;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
+              ${cleanSub ? `<div style="font-size:8.4pt;font-weight:500;margin-top:0.8mm;color:#475569;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
             </div>
           </div>
         `;
       } else if (!isP1 && settings.continuationHeader === "minimal") {
         pHeader = `
-          <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.2mm;margin-bottom:2.5mm;border-bottom:1px solid ${theme.cardBorderColor};color:#475569;box-sizing:border-box;">
-            <span style="font-size:8pt;font-weight:700;">${cleanTitle}</span>
-            <span style="font-size:7.6pt;font-weight:700;">د. محمود المهدي • Dr / Elmahdy</span>
+          <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.2mm;margin-bottom:2.8mm;border-bottom:1px solid ${theme.cardBorderColor};color:#475569;box-sizing:border-box;">
+            <span style="font-size:7.8pt;font-weight:700;">${cleanTitle}</span>
+            <span style="font-size:7.5pt;font-weight:600;">د. محمود المهدي</span>
           </div>
         `;
       }
 
       const pStudent = isP1 && settings.studentFields ? studentStripHtml : "";
-      const questionsBody = pageItems.map((item) => item.html).join("");
+      const col1Html = pageData.col1.map((item) => item.html).join("");
+      const col2Html = pageData.col2.map((item) => item.html).join("");
+      const questionsBody = isTwoCol
+        ? `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6mm;align-items:start;width:100%;position:relative;">
+             <div style="min-width:0;">${col1Html}</div>
+             <div style="min-width:0;${pageData.col2.length > 0 ? `border-${isRtlDoc ? "right" : "left"}:1px solid #e2e8f0;padding-${isRtlDoc ? "right" : "left"}:3mm;` : ""}">${col2Html}</div>
+           </div>`
+        : col1Html;
+
       const displayPageNo = (settings.pageStart || 1) + pageIdx;
       const displayTotalPages = (settings.pageStart || 1) + pages.length - 1;
       const pageNumStr = settings.showTotalPages
@@ -1366,10 +1416,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const footerJustify = settings.numPosition === "center" ? "center" : "space-between";
       const footerInner =
         settings.numPosition === "right"
-          ? `<span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};border:${theme.pageNumberBorder};padding:0.6mm 2mm;border-radius:1mm;">${pageNumStr}</span><span>${cleanFooter}</span>`
+          ? `<span style="font-weight:700;color:${theme.accentColor};">${pageNumStr}</span><span>${cleanFooter}</span>`
           : settings.numPosition === "center"
-            ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0.6mm;"><span>${cleanFooter}</span><span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};border:${theme.pageNumberBorder};padding:0.5mm 2mm;border-radius:1mm;">${pageNumStr}</span></div>`
-            : `<span>${cleanFooter}</span><span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};border:${theme.pageNumberBorder};padding:0.6mm 2mm;border-radius:1mm;">${pageNumStr}</span>`;
+            ? `<div style="display:flex;flex-direction:column;align-items:center;gap:0.5mm;"><span>${cleanFooter}</span><span style="font-weight:700;color:${theme.accentColor};">${pageNumStr}</span></div>`
+            : `<span>${cleanFooter}</span><span style="font-weight:700;color:${theme.accentColor};">${pageNumStr}</span>`;
 
       htmlPages += `
         <div class="print-page" style="box-sizing:border-box;width:210mm;height:297mm;position:relative;page-break-after:always;padding:${topPaddingMm}mm ${region.right}mm ${region.bottom}mm ${region.left}mm;overflow:hidden;background:#ffffff;font-size:${settings.fontSize}pt;line-height:${settings.lineHeight};">
@@ -1377,8 +1427,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           ${pStudent}
           <div style="width:100%;box-sizing:border-box;">
             ${questionsBody}
+            ${pageData.trailerHtml || ""}
           </div>
-          <div style="position:absolute;bottom:3.5mm;left:${region.left}mm;right:${region.right}mm;display:flex;justify-content:${footerJustify};align-items:center;font-size:7.5pt;font-weight:600;color:#64748b;border-top:1px solid #e2e8f0;padding-top:1.2mm;">
+          <div style="position:absolute;bottom:3.8mm;left:${region.left}mm;right:${region.right}mm;display:flex;justify-content:${footerJustify};align-items:center;font-size:7.6pt;font-weight:600;color:#64748b;border-top:1px solid #cbd5e1;padding-top:1.2mm;">
             ${footerInner}
           </div>
         </div>
@@ -1449,10 +1500,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         ? `border: 1px solid ${theme.cardBorderColor}; padding: 7pt 9pt; background-color: #ffffff;`
         : settings.cardStyle === "dashed"
           ? `border-bottom: 1px dashed #cbd5e1; padding-bottom: ${wordPaddingBottom};`
-          : `border-bottom: 1px solid ${theme.cardBorderColor}; padding-bottom: ${wordPaddingBottom};`;
+          : settings.cardStyle === "lines"
+            ? `border-bottom: 1px solid #e2e8f0; padding-bottom: ${wordPaddingBottom};`
+            : `padding-bottom: 3pt;`;
 
     const maxToExport = settings.maxQuestions > 0 ? settings.maxQuestions : arrangedQuestions.length;
     const exportList = arrangedQuestions.slice(0, maxToExport);
+    const isTwoCol = settings.layoutColumns === 2;
 
     let wordContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1479,6 +1533,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             mso-page-orientation: portrait;
           }
           div.Section1 { page: Section1; }
+          @page SectionCols {
+            size: 21.0cm 29.7cm;
+            margin: ${region.top}mm ${region.right}mm ${region.bottom + 4}mm ${region.left}mm;
+            mso-columns: ${isTwoCol ? "2 not-even 6mm" : "1"};
+          }
           table#hrdftrtbl { margin: 0in 0in 0in 900in; width: 1px; height: 1px; overflow: hidden; }
           body {
             font-family: ${wordFont};
@@ -1492,42 +1551,49 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           .doc-header-table {
             width: 100%;
             border-collapse: collapse;
-            border-bottom: 1.5pt solid ${theme.accentColor};
-            margin-bottom: 8pt;
+            margin-bottom: 4pt;
           }
           .doc-header-table td {
+            padding-bottom: 3pt;
+            font-size: 8.5pt;
+            color: ${theme.drSubTextColor};
+          }
+          .doc-title-block {
+            border-bottom: 1.5pt solid ${theme.accentColor};
             padding-bottom: 6pt;
-            vertical-align: middle;
+            margin-bottom: 8pt;
+            text-align: center;
           }
           .doc-title {
             font-size: ${Math.min(16, fontSizePt + 3.5)}pt;
             font-weight: bold;
             color: #0f172a;
-            margin: 6pt 0 2pt 0;
+            margin: 2pt 0;
+            text-align: center;
           }
           .doc-subtitle {
             font-size: ${Math.max(8.5, fontSizePt - 1.5)}pt;
             color: #475569;
-            margin: 0 0 8pt 0;
+            margin: 0;
+            text-align: center;
           }
           .student-box {
             width: 100%;
-            border: 1px solid ${theme.cardBorderColor};
-            background-color: ${theme.softTint};
+            border: 1px solid #cbd5e1;
+            background-color: #ffffff;
             margin-bottom: 10pt;
             border-collapse: collapse;
           }
           .student-box td {
             padding: 5pt 8pt;
-            font-size: 9.5pt;
-            border: 1px solid ${theme.cardBorderColor};
+            font-size: 9pt;
+            border: 1px solid #cbd5e1;
             color: #1e293b;
           }
           .section-banner {
             margin: 10pt 0 6pt 0;
-            padding: 4pt 8pt;
-            background-color: ${theme.softTint};
-            border-bottom: 1px solid ${theme.cardBorderColor};
+            padding: 3pt 0;
+            border-bottom: 1.5pt solid ${theme.accentColor};
             font-size: ${fontSizePt}pt;
             font-weight: bold;
             color: ${theme.accentColor};
@@ -1541,30 +1607,25 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             font-size: ${fontSizePt}pt;
             font-weight: bold;
             color: #0f172a;
-            margin-bottom: 4pt;
+            margin-bottom: 3pt;
           }
-          .question-badge {
-            display: inline-block;
-            background-color: ${theme.numBadgeBg === "#ffffff" ? "#f8fafc" : theme.numBadgeBg};
-            color: ${theme.numBadgeColor};
-            border: 1px solid ${theme.accentColor};
-            padding: 1pt 5pt;
-            font-size: ${Math.max(8.5, fontSizePt - 1)}pt;
+          .question-num {
+            color: ${theme.accentColor};
             font-weight: bold;
           }
           .translation-line {
             margin-top: 2pt;
             margin-bottom: 3pt;
             font-size: ${Math.max(8.5, fontSizePt - 1)}pt;
-            color: #475569;
+            color: #64748b;
           }
           .options-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 3pt;
+            margin-top: 2pt;
           }
           .options-table td {
-            padding: 2.5pt 6pt;
+            padding: 2pt 6pt;
             font-size: ${Math.max(9, fontSizePt - 0.5)}pt;
             vertical-align: top;
             color: #1e293b;
@@ -1574,7 +1635,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             color: ${theme.accentColor};
           }
           .answer-box {
-            margin-top: 5pt;
+            margin-top: 4pt;
             padding: 4pt 8pt;
             background-color: #f8fafc;
             border: 1px solid #86efac;
@@ -1599,21 +1660,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       <body>
         <div class="Section1">
           ${settings.headerEnabled ? `
-            <table class="doc-header-table" dir="${isRtl ? "rtl" : "ltr"}">
-              <tr>
-                <td style="text-align: ${isRtl ? "right" : "left"};">
-                  <strong style="font-size: 11pt; color: ${theme.drTextColor};">د. محمود المهدي • Dr / Elmahdy</strong><br>
-                  <span style="font-size: 8.5pt; color: ${theme.drSubTextColor};">الحاسب الآلي والذكاء الاصطناعي</span>
-                </td>
-                <td style="text-align: ${isRtl ? "left" : "right"};">
-                  <span style="background-color: ${theme.badgeBg}; color: ${theme.badgeColor}; border: 1px solid ${theme.accentColor}; padding: 3pt 8pt; font-size: 8.5pt; font-weight: bold;">
+            <div class="doc-title-block" dir="${isRtl ? "rtl" : "ltr"}">
+              <table class="doc-header-table" dir="${isRtl ? "rtl" : "ltr"}">
+                <tr>
+                  <td style="text-align: ${isRtl ? "right" : "left"};">
+                    <strong>د. محمود المهدي • الحاسب الآلي والذكاء الاصطناعي</strong>
+                  </td>
+                  <td style="text-align: ${isRtl ? "left" : "right"}; font-weight: bold; color: ${theme.accentColor};">
                     ${badgeLabel}
-                  </span>
-                </td>
-              </tr>
-            </table>
-            <div class="doc-title" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${isRtl ? "right" : "left"};">${title}</div>
-            ${subTitle ? `<div class="doc-subtitle" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${isRtl ? "right" : "left"};">${subTitle}</div>` : ""}
+                  </td>
+                </tr>
+              </table>
+              <div class="doc-title">${title}</div>
+              ${subTitle ? `<div class="doc-subtitle">${subTitle}</div>` : ""}
+            </div>
           ` : ""}
 
           ${settings.studentFields ? `
@@ -1634,7 +1694,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const qDir = qIsArabic ? "rtl" : "ltr";
       const qAlign = qIsArabic ? "right" : "left";
       const typeTag = settings.showQuestionType
-        ? `<div style="font-size:8pt;color:${theme.secondaryAccent};margin-bottom:2pt;">${escapeMemoHtml(
+        ? `<span style="font-size:8pt;color:${theme.secondaryAccent};">[${escapeMemoHtml(
             q.type === "MCQ"
               ? qIsArabic ? "اختيار من متعدد" : "Multiple Choice"
               : q.type === "TRUE_FALSE"
@@ -1642,7 +1702,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 : q.type === "ESSAY"
                   ? qIsArabic ? "سؤال مقالي" : "Essay"
                   : qIsArabic ? "تعريف ومصطلح" : "Definition"
-          )}</div>`
+          )}]</span> `
         : "";
 
       if (sectionHeader) {
@@ -1651,10 +1711,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
       wordContent += `
         <div class="question-item" dir="${qDir}" style="text-align:${qAlign};">
-          ${typeTag}
           <div class="question-statement">
-            <span class="question-badge">${qNumber}</span>&nbsp;
-            ${escapeMemoHtml(q.statement || q.prompt || "")}
+            <span class="question-num">${qNumber}.</span>&nbsp;${typeTag}${escapeMemoHtml(q.statement || q.prompt || "")}
           </div>
       `;
 
@@ -1671,7 +1729,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             : [];
 
       if (opts.length > 0) {
-        const colCount = computeOptionColCount(opts, settings.optionLayout);
+        const colCount = computeOptionColCount(opts, settings.optionLayout, isTwoCol ? 2 : 1);
         const colPct = colCount === 4 ? "25%" : colCount === 2 ? "50%" : "100%";
         wordContent += `<table class="options-table" dir="${qDir}">`;
         for (let i = 0; i < opts.length; i += colCount) {
@@ -1681,7 +1739,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             if (opt) {
               const optIsAr = isArabicText(opt.text);
               const letter = optIsAr ? (ARABIC_LETTERS[i + c] ?? i + c + 1) : (ENGLISH_LETTERS[i + c] ?? String.fromCharCode(65 + i + c));
-              wordContent += `<td style="width:${colPct};text-align:${optIsAr ? "right" : "left"};" dir="${optIsAr ? "rtl" : "ltr"}"><span class="opt-badge">(${letter})</span> ${escapeMemoHtml(opt.text || "")}</td>`;
+              wordContent += `<td style="width:${colPct};text-align:${optIsAr ? "right" : "left"};" dir="${optIsAr ? "rtl" : "ltr"}"><span class="opt-badge">${letter})</span> ${escapeMemoHtml(opt.text || "")}</td>`;
             } else {
               wordContent += `<td style="width:${colPct};"></td>`;
             }
@@ -2991,17 +3049,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
               {/* Quick Clean Preset Reset */}
               <div className="flex items-center justify-between gap-2 pb-1">
-                <span className="text-[11px] font-bold text-muted-foreground">تصميم هادئ ومتزن للطباعة وWord</span>
+                <span className="text-[11px] font-bold text-muted-foreground">تصميم مطبوع هادئ (A4 + Word)</span>
                 <button
                   type="button"
                   onClick={() =>
                     setSettings((s) => ({
                       ...s,
                       templateStyle: "minimal",
-                      cardStyle: "lines",
+                      cardStyle: "none",
+                      layoutColumns: 1,
                       fontSelect: DEFAULT_SETTINGS.fontSelect,
                       fontSize: 10.5,
-                      lineHeight: 1.5,
+                      lineHeight: 1.52,
                       density: "balanced",
                       topMm: 12,
                       continuationTopMm: 10,
@@ -3009,12 +3068,42 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       rightMm: 13,
                       leftMm: 13,
                       _v2Margins: true,
+                      _v3Editorial: true,
                     }))
                   }
                   className="text-[10px] px-2.5 py-1 rounded-lg border border-border bg-muted/60 hover:bg-primary hover:text-white font-bold cursor-pointer transition"
                 >
-                  استعادة التنسيق الهادئ ↺
+                  استعادة التصميم النظيف ↺
                 </button>
+              </div>
+
+              {/* Layout Columns Quick Switcher */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-foreground">تخطيط الأعمدة في صفحة A4:</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSettings((s) => ({ ...s, layoutColumns: 1 }))}
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                      (settings.layoutColumns ?? 1) === 1
+                        ? "bg-primary text-white border-primary font-black"
+                        : "bg-muted/40 border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    عمود واحد (رسمي للامتحان)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSettings((s) => ({ ...s, layoutColumns: 2 }))}
+                    className={`py-1.5 px-2.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                      settings.layoutColumns === 2
+                        ? "bg-primary text-white border-primary font-black"
+                        : "bg-muted/40 border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    عمودان (مذكرة مراجعة مكثفة)
+                  </button>
+                </div>
               </div>
 
               {/* Template Style */}
@@ -3106,9 +3195,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     onChange={(e) => setSettings((s) => ({ ...s, cardStyle: e.target.value as any }))}
                     className="h-7 px-2 rounded border border-border bg-background text-xs font-bold cursor-pointer"
                   >
-                    <option value="lines">خط فاصل هادئ (موصى به)</option>
+                    <option value="none">بدون خطوط — أسلوب الكتب (موصى به)</option>
+                    <option value="lines">خط فاصل خفيف</option>
                     <option value="dashed">خط متقطع خفيف</option>
-                    <option value="cards">بطاقة بإطار خفيف</option>
+                    <option value="cards">بطاقة بإطار وصندوق رقم</option>
                   </select>
                 </div>
 
@@ -3676,10 +3766,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <p className="text-sm font-bold">لا توجد أسئلة معروضة في المستند حالياً.</p>
               </div>
             ) : (
-              (showAllPages ? pages : [pages[pageIndex] || []]).map((pageItems, pageOffset) => {
+              (showAllPages ? pages : [pages[pageIndex] || { col1: [], col2: [] }]).map((pageData, pageOffset) => {
                 const actualPageIdx = showAllPages ? pageOffset : pageIndex;
                 const pageNumber = actualPageIdx + 1;
                 const isP1 = actualPageIdx === 0;
+                const isTwoCol = settings.layoutColumns === 2;
                 const theme = getThemeConfig(settings.templateStyle);
                 const badgeText =
                   settings.templateStyle === "exam"
@@ -3732,12 +3823,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           position: "relative",
                         }}
                       >
-                        {/* Page 1 Header */}
+                        {/* Clean Editorial Page 1 Masthead (Zero M-circles or heavy pill stickers) */}
                         {isP1 && settings.headerEnabled && (
                           <div
                             style={{
                               width: "100%",
-                              marginBottom: "2.8mm",
+                              marginBottom: "3mm",
                               paddingBottom: "2mm",
                               borderBottom: theme.headerBorder,
                               boxSizing: "border-box",
@@ -3750,70 +3841,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 width: "100%",
-                                marginBottom: "1.6mm",
+                                marginBottom: "1.4mm",
+                                fontSize: "7.8pt",
+                                fontWeight: 700,
+                                color: theme.drSubTextColor,
                               }}
                             >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "2mm",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "6.2mm",
-                                    height: "6.2mm",
-                                    borderRadius: "50%",
-                                    background: theme.crestBg,
-                                    border: theme.crestBorder,
-                                    color: theme.crestColor,
-                                    display: "grid",
-                                    placeItems: "center",
-                                    fontWeight: 800,
-                                    fontSize: "6.8pt",
-                                  }}
-                                >
-                                  M
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column" }}>
-                                  <span
-                                    style={{
-                                      fontSize: "8.8pt",
-                                      fontWeight: 800,
-                                      color: theme.drTextColor,
-                                    }}
-                                  >
-                                    د. محمود المهدي • Dr / Elmahdy
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontSize: "6.6pt",
-                                      fontWeight: 600,
-                                      color: theme.drSubTextColor,
-                                    }}
-                                  >
-                                    الحاسب الآلي والذكاء الاصطناعي
-                                  </span>
-                                </div>
-                              </div>
-                              <div>
-                                <span
-                                  style={{
-                                    background: settings.showAnswers ? "#fffbeb" : theme.badgeBg,
-                                    color: settings.showAnswers ? "#92400e" : theme.badgeColor,
-                                    border: settings.showAnswers ? "1px solid #fcd34d" : theme.badgeBorder,
-                                    padding: "0.8mm 2.8mm",
-                                    borderRadius: "1.2mm",
-                                    fontSize: "7.6pt",
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  {settings.showAnswers ? "نموذج إجابة المعلم" : badgeText}
-                                </span>
-                              </div>
+                              <span>د. محمود المهدي • الحاسب الآلي والذكاء الاصطناعي</span>
+                              <span style={{ color: settings.showAnswers ? "#92400e" : theme.accentColor }}>
+                                {settings.showAnswers ? "نموذج إجابة المعلم" : badgeText}
+                              </span>
                             </div>
-                            <div style={{ width: "100%", padding: "0 0.5mm" }}>
+                            <div style={{ width: "100%", padding: "0 1mm", textAlign: "center" }}>
                               <div
                                 contentEditable
                                 suppressContentEditableWarning
@@ -3832,7 +3871,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 }}
                                 title="انقر هنا للكتابة وتعديل العنوان بحرية تامة مباشرة على الورقة"
                                 style={{
-                                  fontSize: "11pt",
+                                  fontSize: "12.5pt",
                                   fontWeight: 800,
                                   lineHeight: 1.35,
                                   wordBreak: "normal",
@@ -3840,6 +3879,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   cursor: "text",
                                   outline: "none",
                                   minHeight: "18px",
+                                  textAlign: "center",
                                   color: sanitizeMemoText(settings.headerText) ? "#0f172a" : "#94a3b8",
                                   fontStyle: sanitizeMemoText(settings.headerText) ? "normal" : "italic",
                                 }}
@@ -3856,7 +3896,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 }}
                                 title="انقر هنا لتعديل العنوان الفرعي / المرحلة مباشرة على الورقة"
                                 style={{
-                                  fontSize: "7.8pt",
+                                  fontSize: "8pt",
                                   fontWeight: 600,
                                   marginTop: "0.8mm",
                                   color: "#475569",
@@ -3865,6 +3905,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   overflowWrap: "anywhere",
                                   cursor: "text",
                                   outline: "none",
+                                  textAlign: "center",
                                 }}
                                 className="hover:bg-amber-500/10 focus:bg-amber-500/10 rounded px-1 -mx-1 transition-colors"
                               >
@@ -3903,16 +3944,50 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           <div dangerouslySetInnerHTML={{ __html: studentStripHtml }} />
                         )}
 
-                        {/* Questions List on this page */}
-                        <div style={{ width: "100%", boxSizing: "border-box" }}>
-                          {pageItems.map((item, itemIdx) => (
+                        {/* Questions List on this page (1 or 2 columns) */}
+                        {isTwoCol ? (
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: "6mm",
+                              alignItems: "start",
+                              width: "100%",
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <div style={{ minWidth: 0 }}>
+                              {pageData.col1.map((item, itemIdx) => (
+                                <div key={itemIdx} dangerouslySetInnerHTML={{ __html: item.html }} />
+                              ))}
+                            </div>
                             <div
-                              key={itemIdx}
-                              dangerouslySetInnerHTML={{ __html: item.html }}
-                              style={{ width: "100%", boxSizing: "border-box" }}
-                            />
-                          ))}
-                        </div>
+                              style={{
+                                minWidth: 0,
+                                borderInlineStart: pageData.col2.length > 0 ? "1px solid #e2e8f0" : undefined,
+                                paddingInlineStart: pageData.col2.length > 0 ? "3mm" : undefined,
+                              }}
+                            >
+                              {pageData.col2.map((item, itemIdx) => (
+                                <div key={itemIdx} dangerouslySetInnerHTML={{ __html: item.html }} />
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ width: "100%", boxSizing: "border-box" }}>
+                            {pageData.col1.map((item, itemIdx) => (
+                              <div
+                                key={itemIdx}
+                                dangerouslySetInnerHTML={{ __html: item.html }}
+                                style={{ width: "100%", boxSizing: "border-box" }}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {pageData.trailerHtml && (
+                          <div dangerouslySetInnerHTML={{ __html: pageData.trailerHtml }} />
+                        )}
 
                         {/* Page Footer */}
                         <div
@@ -3933,17 +4008,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                         >
                           {settings.numPosition === "right" ? (
                             <>
-                              <span
-                                style={{
-                                  background: theme.pageNumberBg,
-                                  color: theme.pageNumberColor,
-                                  border: theme.pageNumberBorder,
-                                  padding: "0.6mm 2mm",
-                                  borderRadius: "1mm",
-                                }}
-                              >
-                                {pageNumLabel}
-                              </span>
+                              <span style={{ color: theme.accentColor, fontWeight: 700 }}>{pageNumLabel}</span>
                               <span>
                                 {sanitizeMemoText(
                                   settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
@@ -3951,23 +4016,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               </span>
                             </>
                           ) : settings.numPosition === "center" ? (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6mm" }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4mm" }}>
                               <span>
                                 {sanitizeMemoText(
                                   settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
                                 )}
                               </span>
-                              <span
-                                style={{
-                                  background: theme.pageNumberBg,
-                                  color: theme.pageNumberColor,
-                                  border: theme.pageNumberBorder,
-                                  padding: "0.5mm 2mm",
-                                  borderRadius: "1mm",
-                                }}
-                              >
-                                {pageNumLabel}
-                              </span>
+                              <span style={{ color: theme.accentColor, fontWeight: 700 }}>{pageNumLabel}</span>
                             </div>
                           ) : (
                             <>
@@ -3976,17 +4031,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
                                 )}
                               </span>
-                              <span
-                                style={{
-                                  background: theme.pageNumberBg,
-                                  color: theme.pageNumberColor,
-                                  border: theme.pageNumberBorder,
-                                  padding: "0.6mm 2mm",
-                                  borderRadius: "1mm",
-                                }}
-                              >
-                                {pageNumLabel}
-                              </span>
+                              <span style={{ color: theme.accentColor, fontWeight: 700 }}>{pageNumLabel}</span>
                             </>
                           )}
                         </div>
