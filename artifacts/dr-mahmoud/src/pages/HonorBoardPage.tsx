@@ -547,7 +547,7 @@ export default function HonorBoardPage() {
                   </div>
 
                   {/* Non-redundant Distinction Tags */}
-                  {(completedAll || bestAvgScore === 100 || isFirstTryAce || bestAvgScore > firstTryAvg || timeLabel) && (
+                  {(completedAll || bestAvgScore === 100 || isFirstTryAce || timeLabel) && (
                     <div className="flex flex-wrap items-center gap-1.5">
                       {completedAll && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-blue-700 dark:text-blue-300">
@@ -564,11 +564,6 @@ export default function HonorBoardPage() {
                         <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-700 dark:text-amber-300">
                           <Zap className="w-3 h-3" />
                           <span>تفوق من أول محاولة</span>
-                        </span>
-                      )}
-                      {bestAvgScore > firstTryAvg && (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-muted border border-border px-2.5 py-0.5 text-[10.5px] font-bold text-muted-foreground">
-                          <span>محسّن بالإعادة (أول محاولة {firstTryAvg}%)</span>
                         </span>
                       )}
                       {timeLabel && (
@@ -652,11 +647,6 @@ export default function HonorBoardPage() {
                                     <span>•</span>
                                     <MapPin className="w-3 h-3 shrink-0" />
                                     <span>{formatCenterName(student.center_name)}</span>
-                                  </span>
-                                )}
-                                {bestAvgScore > firstTryAvg && (
-                                  <span className="text-amber-600 dark:text-amber-400">
-                                    • محسّن بالإعادة (أول محاولة: {firstTryAvg}%)
                                   </span>
                                 )}
                               </div>
