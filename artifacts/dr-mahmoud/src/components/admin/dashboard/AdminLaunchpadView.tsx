@@ -31,6 +31,7 @@ import {
   Lock,
   ExternalLink,
   Zap,
+  Bot,
 } from "lucide-react";
 import type { AdminTopTab } from "../../AdminDashboard";
 import type { AdminLearningTab } from "../../AdminLearning";
@@ -362,6 +363,23 @@ export function AdminLaunchpadView({
       },
 
       // ── 5. العمليات والمتابعة العامة ──
+      ...(adminRole === "superadmin"
+        ? [
+            {
+              id: "ai-agent",
+              title: "الوكيل الذكي ومراقب المنصة 🤖",
+              description: "مراقبة فورية لكل تفاصيل المنصة بالذكاء الاصطناعي وإرسال التقارير اليومية والتنبيهات لبوت التليجرام وصفحتك.",
+              category: "ops" as const,
+              icon: Bot,
+              gradient: "from-sky-600 to-indigo-700",
+              iconBg: "bg-sky-500/15 text-sky-700 border-sky-200",
+              badge: "Gemini AI + Telegram",
+              badgeColor: "bg-sky-50 text-sky-800 border-sky-200 font-black",
+              highlight: true,
+              target: { tab: "ai-agent" as AdminTopTab },
+            },
+          ]
+        : []),
       {
         id: "overview",
         title: "اللوحة التشغيلية العامة 📊",

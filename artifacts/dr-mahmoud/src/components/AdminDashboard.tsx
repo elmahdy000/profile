@@ -80,8 +80,10 @@ import {
   Zap,
   QrCode,
   Printer,
+  Bot,
 } from "lucide-react";
 import { AdminLaunchpadView } from "./admin/dashboard/AdminLaunchpadView";
+import { AdminMonitorAgentTab } from "./admin/dashboard/AdminMonitorAgentTab";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
@@ -146,6 +148,7 @@ export type AdminTopTab =
   | "student-analytics"
   | "subscriptions"
   | "parents"
+  | "ai-agent"
   | "settings";
 
 export function parseAdminUrl(pathname: string, search = ""): { activeTab: AdminTopTab; learningSubTab: AdminLearningTab } | null {
@@ -248,6 +251,10 @@ export function parseAdminUrl(pathname: string, search = ""): { activeTab: Admin
     case "analytics":
     case "student-analytics":
       return { activeTab: "student-analytics", learningSubTab: "students" };
+    case "ai-agent":
+    case "monitor":
+    case "agent":
+      return { activeTab: "ai-agent", learningSubTab: "students" };
     case "settings":
       return { activeTab: "settings", learningSubTab: "students" };
     default:
@@ -289,6 +296,7 @@ export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminL
     case "subscriptions": return "/admin/subscriptions";
     case "parents": return "/admin/parents";
     case "student-analytics": return "/admin/analytics";
+    case "ai-agent": return "/admin/ai-agent";
     case "settings": return "/admin/settings";
     default: return "/admin";
   }
@@ -2043,6 +2051,22 @@ export default function AdminDashboard() {
                   <span>الطلاب</span>
                 </button>
 
+                {adminRole === "superadmin" && (
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange("ai-agent")}
+                    className={`px-3 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border ${
+                      activeTab === "ai-agent"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                        : "bg-sky-50 hover:bg-sky-100 text-sky-900 border-sky-200/80 shadow-2xs"
+                    }`}
+                    title="الوكيل الذكي ومراقب المنصة + بوت تليجرام"
+                  >
+                    <Bot className={`w-3.5 h-3.5 ${activeTab === "ai-agent" ? "text-blue-300" : "text-sky-600"}`} />
+                    <span>الوكيل الذكي</span>
+                  </button>
+                )}
+
                 <div className="h-5 w-[1px] bg-slate-200 mx-1" />
 
                 <AdminNotificationsCenter
@@ -2189,6 +2213,7 @@ export default function AdminDashboard() {
               {activeTab === "student-analytics" && <StudentAnalyticsTab />}
               {activeTab === "subscriptions" && <SubscriptionsTab />}
               {activeTab === "parents" && <ParentsTab role={adminRole} />}
+              {activeTab === "ai-agent" && adminRole === "superadmin" && <AdminMonitorAgentTab />}
             </div>
           </div>
         </main>

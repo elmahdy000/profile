@@ -35,6 +35,7 @@ import {
   CreditCard,
   LayoutGrid,
   Search,
+  Bot,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -382,6 +383,13 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         ...(adminRole === "superadmin"
           ? [
+              {
+                id: "ai-agent",
+                label: "الوكيل الذكي وتقارير تليجرام",
+                icon: Bot,
+                onClick: () => setActiveTab("ai-agent"),
+                active: activeTab === "ai-agent",
+              },
               {
                 id: "settings",
                 label: "إعدادات المنصة والبوتات",

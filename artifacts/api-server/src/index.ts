@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { runAutoExamSchedulerTick } from "./services/auto-exam";
+import { runMonitorAgentSchedulerTick } from "./services/ai-monitor-agent";
 
 const rawPort = process.env["PORT"];
 
@@ -24,11 +25,13 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  // Run auto-exam check every 60 seconds (and initial check after 15 seconds)
+  // Run auto-exam & AI monitor ticks every 60 seconds (initial run after 15 seconds)
   setTimeout(() => {
     void runAutoExamSchedulerTick();
+    void runMonitorAgentSchedulerTick();
     setInterval(() => {
       void runAutoExamSchedulerTick();
+      void runMonitorAgentSchedulerTick();
     }, 60 * 1000);
   }, 15 * 1000);
 });

@@ -12,6 +12,7 @@ import adminAuthRouter from "./admin-auth";
 import parentPortalRouter from "./parent-portal";
 import subscriptionsRouter from "./subscriptions";
 import attendanceRouter from "./attendance";
+import monitorAgentRouter from "./monitor-agent";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(adminAuthRouter);
 router.use(parentPortalRouter);
 router.use(subscriptionsRouter);
 router.use(attendanceRouter);
+router.use(monitorAgentRouter);
 
 export default router;
