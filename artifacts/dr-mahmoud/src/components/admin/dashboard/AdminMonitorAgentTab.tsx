@@ -184,6 +184,42 @@ const QUICK_PROMPTS = [
   "اعرض سجل نشاط المساعدين والإدارة خلال آخر 24 ساعة",
 ];
 
+type AlertToggleKey =
+  | "alertOnNewReceipt"
+  | "alertOnNewBooking"
+  | "alertOnNewStudent"
+  | "alertOnRepeatAbsence"
+  | "alertOnExpiringSubscriptions";
+
+const ALERT_TOGGLE_OPTIONS: ReadonlyArray<{ key: AlertToggleKey; label: string }> = [
+  { key: "alertOnNewReceipt", label: "تنبيه فور رفع إيصال دفع جديد" },
+  { key: "alertOnNewBooking", label: "تنبيه عند وجود طلب حجز جديد" },
+  { key: "alertOnNewStudent", label: "تنبيه عند تسجيل طالب جديد" },
+  { key: "alertOnRepeatAbsence", label: "تنبيه يومي للطلاب متكرري الغياب (9 مساءً)" },
+  { key: "alertOnExpiringSubscriptions", label: "تنبيه يومي للاشتراكات القريبة من الانتهاء (1 ظهراً)" },
+];
+
+const REPORT_KIND_META: Record<ReportEntry["kind"], { label: string; className: string }> = {
+  alert: { label: "تنبيه فوري", className: "bg-amber-100 text-amber-800" },
+  daily: { label: "تقرير يومي", className: "bg-emerald-100 text-emerald-800" },
+  telegram_query: { label: "طلب تليجرام", className: "bg-sky-100 text-sky-800" },
+  manual: { label: "تقرير متكامل", className: "bg-blue-100 text-blue-800" },
+};
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string" && err) return err;
+  return fallback;
+}
+
+async function readJsonSafe<T = Record<string, unknown>>(res: Response): Promise<Partial<T>> {
+  try {
+    return (await res.json()) as Partial<T>;
+  } catch {
+    return {};
+  }
+}
+
 export function AdminMonitorAgentTab() {
   const { toast } = useToast();
   const [subTab, setSubTab] = useState<"chat" | "reports" | "settings">("chat");
@@ -211,20 +247,25 @@ export function AdminMonitorAgentTab() {
     setIsLoading(true);
     try {
       const res = await fetch("/api/admin/monitor/state", { credentials: "include" });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{
+        config: MonitorConfigState;
+        pulse: PlatformPulse;
+        reports: ReportEntry[];
+        error: string;
+      }>(res);
       if (!res.ok) {
         throw new Error(data.error || "تعذر تحميل بيانات الوكيل الذكي");
       }
-      setConfig(data.config);
+      setConfig(data.config || null);
       setChatIdInput(data.config?.telegramChatId || "");
-      setPulse(data.pulse);
+      setPulse(data.pulse || null);
       setReports(data.reports || []);
       setHasUnsavedConfig(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         variant: "destructive",
         title: "خطأ في تحميل مراقب المنصة",
-        description: err.message,
+        description: getErrorMessage(err, "تعذر تحميل البيانات"),
       });
     } finally {
       setIsLoading(false);
@@ -247,11 +288,15 @@ export function AdminMonitorAgentTab() {
         method: "POST",
         credentials: "include",
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{ error: string }>(res);
       if (!res.ok) throw new Error(data.error || "تعذر إرسال الملف لتليجرام");
       toast({ title: "تم إرسال الملف إلى تليجرام 📁✅" });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: getErrorMessage(err, "تعذر إرسال الملف لتليجرام"),
+      });
     } finally {
       setSendingFileId(null);
     }
@@ -266,23 +311,30 @@ export function AdminMonitorAgentTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sendToTelegram, includeFile: true }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "فشل توليد التقرير");
+      const data = await readJsonSafe<{ report: ReportEntry; error: string }>(res);
+      if (!res.ok || !data.report) throw new Error(data.error || "فشل توليد التقرير");
 
-      const report: ReportEntry = data.report;
+      const report = data.report;
       setReports((prev) => [report, ...prev]);
       setSubTab("reports");
 
+      let reportToastTitle = "تم توليد التقرير المتكامل + ملف Excel بنجاح 📊";
+      if (sendToTelegram) {
+        reportToastTitle = report.sentToTelegram
+          ? "تم توليد التقرير المتكامل + الملف وإرسالهما لتليجرام ✅"
+          : "تم توليد التقرير المتكامل (تنبيه تليجرام)";
+      }
+
       toast({
-        title: sendToTelegram
-          ? report.sentToTelegram
-            ? "تم توليد التقرير المتكامل + الملف وإرسالهما لتليجرام ✅"
-            : "تم توليد التقرير المتكامل (تنبيه تليجرام)"
-          : "تم توليد التقرير المتكامل + ملف Excel بنجاح 📊",
+        title: reportToastTitle,
         description: report.telegramError || `باستخدام ${report.modelUsed || "Gemini AI"}`,
       });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: getErrorMessage(err, "فشل توليد التقرير"),
+      });
     } finally {
       setIsRunningReport(false);
     }
@@ -290,15 +342,22 @@ export function AdminMonitorAgentTab() {
 
   const handleDeleteReport = async (id?: string) => {
     try {
-      const res = await fetch(id ? `/api/admin/monitor/reports/${encodeURIComponent(id)}` : "/api/admin/monitor/reports", {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        id ? `/api/admin/monitor/reports/${encodeURIComponent(id)}` : "/api/admin/monitor/reports",
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (!res.ok) throw new Error("تعذر حذف السجل");
       setReports((prev) => (id ? prev.filter((r) => r.id !== id) : []));
       toast({ title: id ? "تم حذف التقرير" : "تم مسح أرشيف التقارير" });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: getErrorMessage(err, "تعذر حذف السجل"),
+      });
     }
   };
 
@@ -327,14 +386,21 @@ export function AdminMonitorAgentTab() {
           sendToTelegram,
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{
+        answer: string;
+        modelUsed: string;
+        files: ExportFileMeta[];
+        generatedAt: string;
+        telegramSent: boolean;
+        error: string;
+      }>(res);
       if (!res.ok) throw new Error(data.error || "تعذر الحصول على رد الوكيل");
 
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: data.answer,
+          text: data.answer || "",
           questionRef: q,
           modelUsed: data.modelUsed,
           files: data.files || [],
@@ -344,8 +410,12 @@ export function AdminMonitorAgentTab() {
       if (sendToTelegram && data.telegramSent) {
         toast({ title: "تم إرسال الإجابة والملفات إلى تليجرام ✅" });
       }
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "تعذر تنفيذ الطلب", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "تعذر تنفيذ الطلب",
+        description: getErrorMessage(err, "تعذر تنفيذ الطلب"),
+      });
     } finally {
       setIsAskingAgent(false);
     }
@@ -375,7 +445,7 @@ export function AdminMonitorAgentTab() {
           ...(geminiOverrideInput.trim() ? { geminiKeyOverride: geminiOverrideInput.trim() } : {}),
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{ hasResolvedTelegram: boolean; error: string }>(res);
       if (!res.ok) throw new Error(data.error || "تعذر حفظ الإعدادات");
 
       setBotTokenInput("");
@@ -387,8 +457,12 @@ export function AdminMonitorAgentTab() {
           ? "قناة تليجرام متصلة وجاهزة لإرسال التقارير."
           : "تم الحفظ — أضف Bot Token و Chat ID لتفعيل الإرسال إلى تليجرام.",
       });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ في الحفظ", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في الحفظ",
+        description: getErrorMessage(err, "تعذر حفظ الإعدادات"),
+      });
     } finally {
       setIsSavingConfig(false);
     }
@@ -406,11 +480,15 @@ export function AdminMonitorAgentTab() {
           ...(chatIdInput.trim() ? { chatId: chatIdInput.trim() } : {}),
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{ message: string; error: string }>(res);
       if (!res.ok) throw new Error(data.error || "فشل اختبار الاتصال بتليجرام");
       toast({ title: "تم الإرسال إلى تليجرام 🟢", description: data.message });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "فشل اتصال تليجرام", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "فشل اتصال تليجرام",
+        description: getErrorMessage(err, "فشل اختبار الاتصال بتليجرام"),
+      });
     } finally {
       setIsTestingTelegram(false);
     }
@@ -427,12 +505,16 @@ export function AdminMonitorAgentTab() {
           ...(botTokenInput.trim() ? { botToken: botTokenInput.trim() } : {}),
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await readJsonSafe<{ message: string; error: string }>(res);
       if (!res.ok) throw new Error(data.error || "فشل تفعيل الرد التفاعلي");
       await loadState();
       toast({ title: "تم تفعيل الرد التفاعلي للبوت 🔗✅", description: data.message });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ", description: err.message });
+    } catch (err: unknown) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: getErrorMessage(err, "فشل تفعيل الرد التفاعلي"),
+      });
     } finally {
       setIsSettingWebhook(false);
     }
@@ -885,28 +967,14 @@ export function AdminMonitorAgentTab() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredReports.map((rep) => (
+              {filteredReports.map((rep) => {
+                const badgeMeta = REPORT_KIND_META[rep.kind];
+                return (
                 <div key={rep.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                          rep.kind === "alert"
-                            ? "bg-amber-100 text-amber-800"
-                            : rep.kind === "daily"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : rep.kind === "telegram_query"
-                                ? "bg-sky-100 text-sky-800"
-                                : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {rep.kind === "alert"
-                          ? "تنبيه فوري"
-                          : rep.kind === "daily"
-                            ? "تقرير يومي"
-                            : rep.kind === "telegram_query"
-                              ? "طلب تليجرام"
-                              : "تقرير متكامل"}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${badgeMeta.className}`}>
+                        {badgeMeta.label}
                       </span>
                       <h4 className="text-xs sm:text-sm font-black text-slate-900">{rep.title}</h4>
                     </div>
@@ -937,7 +1005,8 @@ export function AdminMonitorAgentTab() {
                     {renderFilesRow(rep.files)}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1012,21 +1081,15 @@ export function AdminMonitorAgentTab() {
           <div className="space-y-2">
             <p className="text-xs font-black text-slate-900">التنبيهات الفورية والذكية:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-              {[
-                ["alertOnNewReceipt", "تنبيه فور رفع إيصال دفع جديد"],
-                ["alertOnNewBooking", "تنبيه عند وجود طلب حجز جديد"],
-                ["alertOnNewStudent", "تنبيه عند تسجيل طالب جديد"],
-                ["alertOnRepeatAbsence", "تنبيه يومي للطلاب متكرري الغياب (9 مساءً)"],
-                ["alertOnExpiringSubscriptions", "تنبيه يومي للاشتراكات القريبة من الانتهاء (1 ظهراً)"],
-              ].map(([key, label]) => (
+              {ALERT_TOGGLE_OPTIONS.map(({ key, label }) => (
                 <label
                   key={key}
                   className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer"
                 >
                   <input
                     type="checkbox"
-                    checked={Boolean((config as any)[key])}
-                    onChange={(e) => updateConfigField(key as keyof MonitorConfigState, e.target.checked as any)}
+                    checked={Boolean(config[key])}
+                    onChange={(e) => updateConfigField(key, e.target.checked)}
                     className="h-4 w-4 accent-emerald-600"
                   />
                   <span className="font-bold text-slate-700">{label}</span>
