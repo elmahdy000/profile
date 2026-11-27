@@ -7,6 +7,7 @@ import {
   deleteMonitorReportById,
   generatePlatformReport,
   getEffectiveGeminiApiKey,
+  getGeneratedExportFile,
   getLastDailyReportTimestamp,
   getMonitorBotStatus,
   getMonitorConfig,
@@ -14,6 +15,7 @@ import {
   handleTelegramWebhookUpdate,
   resolveTelegramCredentials,
   saveMonitorConfig,
+  sendTelegramDocument,
   sendTelegramMonitorMessage,
   verifyWebhookSecret,
 } from "../services/ai-monitor-agent";
@@ -69,7 +71,7 @@ router.get("/admin/monitor/state", requireAdmin, requireSuperAdmin, async (_req:
   }
 });
 
-// PUT /api/admin/monitor/config - Update monitor & Telegram configuration (Superadmin only)
+// PUT /api/admin/monitor/config - Update monitor & Telegram configuration
 router.put("/admin/monitor/config", requireAdmin, requireSuperAdmin, async (req: Request, res, next) => {
   try {
     const current = await getMonitorConfig();
@@ -123,17 +125,65 @@ router.put("/admin/monitor/config", requireAdmin, requireSuperAdmin, async (req:
   }
 });
 
-// POST /api/admin/monitor/run-report - Generate executive AI report now
+// POST /api/admin/monitor/run-report - Generate comprehensive AI report + optional file
 router.post("/admin/monitor/run-report", requireAdmin, requireSuperAdmin, async (req: Request, res, next) => {
   try {
     const sendToTelegram = Boolean(req.body?.sendToTelegram);
+    const includeFile = req.body?.includeFile !== false; // default true for comprehensive reporting
     const customFocus = typeof req.body?.focus === "string" ? req.body.focus.trim().slice(0, 300) : undefined;
     const report = await generatePlatformReport({
       kind: "manual",
       sendToTelegram,
       customFocus,
+      includeFile,
     });
     res.json({ success: true, report });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/monitor/exports/:id - Download generated CSV / HTML report file
+router.get("/admin/monitor/exports/:id", requireAdmin, requireSuperAdmin, async (req: Request, res) => {
+  const file = getGeneratedExportFile(String(req.params.id || ""));
+  if (!file) {
+    res.status(404).json({ error: "انتهت صلاحية رابط التحميل أو لم يعد موجوداً، اطلب التقرير مجدداً" });
+    return;
+  }
+  const buf = Buffer.from(file.contentBase64, "base64");
+  res.setHeader("Content-Type", file.mimeType);
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="report.${file.format}"; filename*=UTF-8''${encodeURIComponent(file.filename)}`,
+  );
+  res.send(buf);
+});
+
+// POST /api/admin/monitor/exports/:id/send-telegram - Push generated file directly to Telegram
+router.post("/admin/monitor/exports/:id/send-telegram", requireAdmin, requireSuperAdmin, async (req: Request, res, next) => {
+  try {
+    const file = getGeneratedExportFile(String(req.params.id || ""));
+    if (!file) {
+      res.status(404).json({ error: "الملف غير موجود، قم بتوليد التقرير مجدداً" });
+      return;
+    }
+    const cfg = await getMonitorConfig();
+    const tg = await resolveTelegramCredentials(cfg);
+    if (!tg.enabled) {
+      res.status(400).json({ error: "قناة تليجرام غير مفعلة" });
+      return;
+    }
+    const sent = await sendTelegramDocument(
+      tg.botToken,
+      tg.chatId,
+      file,
+      `📁 ${file.title} (${file.rowCount} سجل)`,
+    );
+    if (!sent.success) {
+      res.status(502).json({ error: sent.error || "فشل إرسال الملف إلى تليجرام" });
+      return;
+    }
+    res.json({ success: true, message: "تم إرسال الملف إلى تليجرام بنجاح ✅" });
   } catch (error) {
     next(error);
   }
@@ -158,12 +208,12 @@ router.delete("/admin/monitor/reports", requireAdmin, requireSuperAdmin, async (
   }
 });
 
-// POST /api/admin/monitor/chat - Interactive AI Q&A with live DB context
+// POST /api/admin/monitor/chat - Interactive AI agent with real DB tools & file export
 router.post("/admin/monitor/chat", requireAdmin, requireSuperAdmin, async (req: Request, res, next) => {
   try {
     const question = typeof req.body?.question === "string" ? req.body.question.trim() : "";
     if (!question) {
-      res.status(400).json({ error: "اكتب سؤالك أولاً" });
+      res.status(400).json({ error: "اكتب طلبك أو سؤالك أولاً" });
       return;
     }
     const history = Array.isArray(req.body?.history) ? req.body.history : undefined;
@@ -180,11 +230,14 @@ router.post("/admin/monitor/chat", requireAdmin, requireSuperAdmin, async (req: 
         const tgRes = await sendTelegramMonitorMessage(
           tg.botToken,
           tg.chatId,
-          `💬 سؤال: ${question}\n\n${result.answer}`,
+          `💬 طلب: ${question}\n\n${result.answer}`,
           DEFAULT_TELEGRAM_KEYBOARD,
         );
         telegramSent = tgRes.success;
         telegramError = tgRes.error || null;
+        for (const f of result.files) {
+          await sendTelegramDocument(tg.botToken, tg.chatId, f, `📁 ${f.title} (${f.rowCount} سجل)`);
+        }
       } else {
         telegramError = "بوت تليجرام غير مضبوط";
       }
@@ -195,6 +248,7 @@ router.post("/admin/monitor/chat", requireAdmin, requireSuperAdmin, async (req: 
       answer: result.answer,
       modelUsed: result.modelUsed,
       generatedAt: result.generatedAt,
+      files: result.files.map(({ contentBase64: _b, ...meta }) => meta),
       telegramSent,
       telegramError,
     });
@@ -203,7 +257,7 @@ router.post("/admin/monitor/chat", requireAdmin, requireSuperAdmin, async (req: 
   }
 });
 
-// POST /api/admin/monitor/telegram-test - Verify Telegram Bot connection (optionally with unsaved credentials)
+// POST /api/admin/monitor/telegram-test - Verify Telegram Bot connection
 router.post("/admin/monitor/telegram-test", requireAdmin, requireSuperAdmin, async (req: Request, res, next) => {
   try {
     const cfg = await getMonitorConfig();
@@ -222,12 +276,12 @@ router.post("/admin/monitor/telegram-test", requireAdmin, requireSuperAdmin, asy
 
     const pulse = await collectPlatformPulse();
     const testMsg = [
-      "✅ تم ربط وكيل المراقبة الذكي بتليجرام بنجاح!",
-      `🏫 إجمالي الطلاب: ${pulse.students.total} | حضور اليوم: ${pulse.attendanceToday.present}`,
-      `💳 إيصالات معلقة: ${pulse.financeAndActions.pendingReceiptsCount} | حجوزات معلقة: ${pulse.financeAndActions.pendingBookingsCount}`,
+      "✅ تم ربط وكيل المراقبة الذكي المتكامل بتليجرام بنجاح!",
+      `👥 الطلاب: ${pulse.students.total} (مدفوع ${pulse.students.paid}) | حضور اليوم: ${pulse.attendanceToday.present}`,
+      `💰 المحصّل: ${pulse.financeAndActions.paidRevenueEgpTotal} ج.م | إيصالات معلقة: ${pulse.financeAndActions.pendingReceiptsCount} | حجوزات: ${pulse.financeAndActions.pendingBookingsCount}`,
       `🖥️ قاعدة البيانات: ${pulse.systemHealth.dbOk ? "متصلة" : "عطل"} (${pulse.systemHealth.dbLatencyMs}ms)`,
       "",
-      "اختر أي أمر من الأزرار بالأسفل أو اكتب سؤالك مباشرة:",
+      "اختر أي زر بالأسفل أو اكتب أي طلب أو ملف تريده مباشرة:",
     ].join("\n");
 
     const result = await sendTelegramMonitorMessage(botToken, chatId, testMsg, DEFAULT_TELEGRAM_KEYBOARD);
@@ -268,10 +322,11 @@ router.post("/admin/monitor/telegram-webhook-setup", requireAdmin, requireSuperA
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           commands: [
-            { command: "today", description: "التقرير الفوري بالذكاء الاصطناعي" },
-            { command: "pending", description: "الإيصالات والحجوزات المعلقة" },
+            { command: "today", description: "التقرير المتكامل بالذكاء الاصطناعي" },
+            { command: "export_today", description: "ملف Excel شامل للمنصة" },
+            { command: "pending", description: "المالية والمعلق الآن" },
             { command: "absent", description: "غياب اليوم والغياب المتكرر" },
-            { command: "exams", description: "أداء الاختبارات خلال 7 أيام" },
+            { command: "exams", description: "أداء الاختبارات والمحتوى" },
             { command: "health", description: "صحة السيرفر وقاعدة البيانات" },
             { command: "audit", description: "سجل نشاط المساعدين (24 ساعة)" },
             { command: "menu", description: "عرض أزرار التحكم السريعة" },
@@ -292,7 +347,7 @@ router.post("/admin/monitor/telegram-webhook-setup", requireAdmin, requireSuperA
     res.json({
       success: true,
       webhookUrl,
-      message: "تم تفعيل الرد التفاعلي وقائمة أوامر تليجرام بنجاح ✅ جرب إرسال /menu في البوت الآن.",
+      message: "تم تفعيل الرد التفاعلي وقائمة أوامر تليجرام بنجاح ✅",
     });
   } catch (error) {
     next(error);
