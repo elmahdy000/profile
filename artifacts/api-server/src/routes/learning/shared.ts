@@ -1174,6 +1174,158 @@ setInterval(() => {
   void processSubscriptionExpirations();
 }, 30 * 60 * 1000);
 
+let ensureQuizAvailabilityPromise: Promise<void> | null = null;
+
+/**
+ * Idempotently adds open_hours and available_until columns to quizzes on startup/first use.
+ */
+export async function ensureQuizAvailabilityColumns(): Promise<void> {
+  if (!ensureQuizAvailabilityPromise) {
+    ensureQuizAvailabilityPromise = (async () => {
+      await db.execute(sql`ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS open_hours INTEGER;`);
+      await db.execute(sql`ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS available_until TIMESTAMP;`);
+    })().catch((err) => {
+      ensureQuizAvailabilityPromise = null;
+      throw err;
+    });
+  }
+  return ensureQuizAvailabilityPromise;
+}
+
+export function parseOptionalDurationMinutes(raw: unknown): number | null {
+  if (raw === undefined || raw === null || raw === "") return null;
+  const num = Number(raw);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return Math.max(1, Math.min(10080, Math.round(num)));
+}
+
+export function parseOpenHours(raw: unknown): number | null {
+  if (raw === null || raw === "" || raw === 0 || raw === "0") return null;
+  const num = Number(raw);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return Math.max(1, Math.min(720, Math.round(num)));
+}
+
+/**
+ * Resolves openHours and availableUntil consistently across exam creation, publish, and updates.
+ * Exams default to 24 hours when published; homeworks default to always open (null).
+ */
+export function resolveQuizAvailability(params: {
+  rawOpenHours?: unknown;
+  rawAvailableUntil?: unknown;
+  scope?: string | null;
+  isPublished: boolean;
+  wasPublished?: boolean;
+  currentOpenHours?: number | null;
+  currentAvailableUntil?: Date | null;
+  isCreate?: boolean;
+}): { openHours: number | null; availableUntil: Date | null } {
+  const isHomework = params.scope === "homework";
+  const nowMs = Date.now();
+
+  let openHours: number | null;
+  if (params.rawOpenHours !== undefined) {
+    openHours = parseOpenHours(params.rawOpenHours);
+  } else if (params.isCreate) {
+    openHours = isHomework ? null : 24;
+  } else {
+    openHours = params.currentOpenHours !== undefined ? params.currentOpenHours : (isHomework ? null : 24);
+  }
+
+  let availableUntil: Date | null = params.currentAvailableUntil ?? null;
+
+  if (params.rawAvailableUntil !== undefined) {
+    if (!params.rawAvailableUntil) {
+      availableUntil = null;
+    } else {
+      const parsed = new Date(String(params.rawAvailableUntil));
+      availableUntil = Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return { openHours, availableUntil };
+  }
+
+  if (params.rawOpenHours !== undefined) {
+    // Explicit update or creation with hours provided: open for `openHours` starting now when published
+    availableUntil = openHours && params.isPublished ? new Date(nowMs + openHours * 3600_000) : null;
+    return { openHours, availableUntil };
+  }
+
+  if (params.isCreate) {
+    availableUntil = openHours && params.isPublished ? new Date(nowMs + openHours * 3600_000) : null;
+    return { openHours, availableUntil };
+  }
+
+  // Draft -> Published transition starts the open window if none active
+  if (!params.wasPublished && params.isPublished && openHours) {
+    if (!availableUntil || availableUntil.getTime() <= nowMs) {
+      availableUntil = new Date(nowMs + openHours * 3600_000);
+    }
+  }
+
+  if (openHours === null) {
+    availableUntil = null;
+  }
+
+  return { openHours, availableUntil };
+}
+
+let ensureQuizDraftsPromise: Promise<void> | null = null;
+
+/**
+ * Idempotently creates the quiz_drafts table so students resume exams from where they left off across refreshes and devices.
+ */
+export async function ensureQuizDraftsTable(): Promise<void> {
+  if (!ensureQuizDraftsPromise) {
+    ensureQuizDraftsPromise = (async () => {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS quiz_drafts (
+          id SERIAL PRIMARY KEY,
+          quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+          student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          question_order JSONB NOT NULL DEFAULT '[]'::jsonb,
+          answers_by_original_index JSONB NOT NULL DEFAULT '{}'::jsonb,
+          essay_by_original_index JSONB NOT NULL DEFAULT '{}'::jsonb,
+          flagged_by_original_index JSONB NOT NULL DEFAULT '{}'::jsonb,
+          last_question_index INTEGER NOT NULL DEFAULT 0,
+          elapsed_seconds INTEGER NOT NULL DEFAULT 0,
+          client_submission_id TEXT,
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+      `);
+      await db.execute(sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS quiz_drafts_quiz_student_idx ON quiz_drafts (quiz_id, student_id);
+      `);
+      await db.execute(sql`
+        CREATE INDEX IF NOT EXISTS quiz_drafts_student_idx ON quiz_drafts (student_id);
+      `);
+    })().catch((err) => {
+      ensureQuizDraftsPromise = null;
+      throw err;
+    });
+  }
+  return ensureQuizDraftsPromise;
+}
+
+/**
+ * Ensures every question carries unit and lesson metadata when available so students see grouped sections.
+ */
+export function enrichQuizQuestionsWithMeta<T extends { unit?: string; lesson?: string }>(
+  questions: T[],
+  fallbackUnit?: string | null,
+  fallbackLesson?: string | null,
+): T[] {
+  if (!Array.isArray(questions)) return [];
+  const safeUnit = fallbackUnit?.trim() || undefined;
+  const safeLesson = fallbackLesson?.trim() || undefined;
+  return questions.map((q) => ({
+    ...q,
+    ...(q.unit ? {} : safeUnit ? { unit: safeUnit } : {}),
+    ...(q.lesson ? {} : safeLesson ? { lesson: safeLesson } : {}),
+  }));
+}
+
+
+
 
 
 

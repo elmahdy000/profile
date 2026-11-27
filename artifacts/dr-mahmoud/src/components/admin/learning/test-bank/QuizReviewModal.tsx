@@ -181,7 +181,9 @@ export function QuizReviewModal({
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {reviewingQuiz.questions?.length || 0} أسئلة · درجة النجاح: {reviewingQuiz.passingScore}% · المدة: {reviewingQuiz.durationMinutes ? `${reviewingQuiz.durationMinutes} دقيقة` : "مفتوح"}
+                    {reviewingQuiz.questions?.length || 0} أسئلة · درجة النجاح: {reviewingQuiz.passingScore}% ·{" "}
+                    {reviewingQuiz.openHours ? `الإتاحة: ${reviewingQuiz.openHours} ساعة` : "مفتوح دائماً"} ·{" "}
+                    {reviewingQuiz.durationMinutes ? `مؤقت ${reviewingQuiz.durationMinutes} دقيقة` : "بدون مؤقت"}
                   </p>
                 </div>
               </div>

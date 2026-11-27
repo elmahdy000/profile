@@ -238,10 +238,27 @@ export function CurriculumExamsView({
                     </span>
                     <InlineDurationEditor
                       quizId={quiz.id}
+                      mode={isHomework ? "timer" : "hours"}
                       durationMinutes={quiz.durationMinutes}
+                      openHours={quiz.openHours}
+                      availableUntil={quiz.availableUntil}
                       onUpdated={(newDuration) => {
                         setQuizzes((prev) =>
                           prev.map((q) => (q.id === quiz.id ? { ...q, durationMinutes: newDuration } : q))
+                        );
+                      }}
+                      onHoursUpdated={(newHours, newUntil, newDur) => {
+                        setQuizzes((prev) =>
+                          prev.map((q) =>
+                            q.id === quiz.id
+                              ? {
+                                  ...q,
+                                  openHours: newHours,
+                                  availableUntil: newUntil,
+                                  ...(newDur !== undefined ? { durationMinutes: newDur } : {}),
+                                }
+                              : q
+                          )
                         );
                       }}
                     />

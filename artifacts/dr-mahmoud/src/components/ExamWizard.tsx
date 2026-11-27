@@ -63,6 +63,7 @@ export type QuizFormState = {
   stages: string[];
   description: string;
   durationMinutes: string | number;
+  openHours?: string | number | null;
   passingScore: number;
   maxAttempts: number;
   requiredProgress: number;
@@ -85,6 +86,8 @@ export type QuizItem = {
   description?: string | null;
   passingScore: number;
   durationMinutes?: number | null;
+  openHours?: number | null;
+  availableUntil?: string | null;
   questionsToShow?: number | null;
   shuffleQuestions?: boolean;
   showExplanations?: boolean;
@@ -112,6 +115,10 @@ type ExamWizardProps = {
   toggleQuiz: (q: QuizItem) => Promise<void>;
   deleteQuiz: (id: number) => Promise<void>;
   onDurationUpdated?: (quizId: number, durationMinutes: number | null) => void;
+  onAvailabilityUpdated?: (
+    quizId: number,
+    patch: { durationMinutes?: number | null; openHours?: number | null; availableUntil?: string | null },
+  ) => void;
   onNavigateToTestBank?: (targetTab?: "explorer" | "upload" | "generate" | "auto_daily") => void;
   onNavigateToMemoStudio?: () => void;
 };
@@ -130,6 +137,7 @@ export function ExamWizard({
   toggleQuiz,
   deleteQuiz,
   onDurationUpdated,
+  onAvailabilityUpdated,
   onNavigateToTestBank,
   onNavigateToMemoStudio,
 }: ExamWizardProps) {
@@ -512,7 +520,8 @@ export function ExamWizard({
                   isPublished: true,
                   shuffleQuestions: true,
                   showExplanations: true,
-                  durationMinutes: prev.durationMinutes || "20",
+                  durationMinutes: "",
+                  openHours: prev.openHours ?? "24",
                   maxAttempts: prev.maxAttempts || 1,
                 }));
                 setIsOnePageMode(true);
@@ -781,30 +790,44 @@ export function ExamWizard({
               </div>
 
               <div className="lg:col-span-3 space-y-1.5">
-                <label className="text-xs font-extrabold text-foreground block">الوقت (بالدقائق)</label>
+                <label className="text-xs font-extrabold text-foreground block">
+                  إتاحة الامتحان (بالساعات) · <span className="text-emerald-600">بدون مؤقت</span>
+                </label>
                 <div className="flex items-center gap-1.5">
-                  {[15, 20, 30, 45].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setQuizForm({ ...quizForm, durationMinutes: String(m) })}
-                      className={`h-11 flex-1 rounded-xl border text-xs font-black font-mono cursor-pointer transition ${
-                        Number(quizForm.durationMinutes) === m
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-border bg-muted/40 text-foreground hover:border-blue-500/40"
-                      }`}
-                    >
-                      {m}د
-                    </button>
-                  ))}
+                  {[
+                    { h: "12", label: "12س" },
+                    { h: "24", label: "24س" },
+                    { h: "48", label: "48س" },
+                    { h: "", label: "دائماً" },
+                  ].map((opt) => {
+                    const isSel =
+                      opt.h === ""
+                        ? !quizForm.openHours || Number(quizForm.openHours) <= 0
+                        : Number(quizForm.openHours) === Number(opt.h);
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setQuizForm({ ...quizForm, openHours: opt.h, durationMinutes: "" })}
+                        className={`h-11 flex-1 rounded-xl border text-xs font-black cursor-pointer transition ${
+                          isSel
+                            ? "border-blue-600 bg-blue-600 text-white"
+                            : "border-border bg-muted/40 text-foreground hover:border-blue-500/40"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                   <input
                     type="number"
-                    min={1}
-                    max={10080}
-                    value={quizForm.durationMinutes}
-                    onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.value })}
-                    className="h-11 w-16 rounded-xl border border-border bg-background text-center text-xs font-mono font-black text-foreground focus:outline-none"
-                    title="تحديد دقائق مخصصة"
+                    min={0}
+                    max={720}
+                    placeholder="س"
+                    value={quizForm.openHours ?? "24"}
+                    onChange={(e) => setQuizForm({ ...quizForm, openHours: e.target.value })}
+                    className="h-11 w-14 rounded-xl border border-border bg-background text-center text-xs font-mono font-black text-foreground focus:outline-none"
+                    title="تحديد عدد الساعات يدوياً (0 = مفتوح دائماً)"
                   />
                 </div>
               </div>
@@ -1102,30 +1125,58 @@ export function ExamWizard({
                 <p className="text-[11px] text-slate-400">الحد الأدنى لاجتياز الاختبار (الافتراضي 60%).</p>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-blue-500" /> مدة الاختبار (بالدقائق)
-                  </label>
-                  <label className="flex items-center gap-1 text-[11px] font-bold text-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isTimeUnlimited}
-                      onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.checked ? "" : "30" })}
-                      className="rounded"
-                    />
-                    بدون وقت
-                  </label>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-blue-500" /> مدة إتاحة الامتحان (بالساعات)
+                    </label>
+                    <label className="flex items-center gap-1 text-[11px] font-bold text-slate-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!quizForm.openHours || Number(quizForm.openHours) <= 0}
+                        onChange={(e) => setQuizForm({ ...quizForm, openHours: e.target.checked ? "" : "24" })}
+                        className="rounded"
+                      />
+                      مفتوح دائماً
+                    </label>
+                  </div>
+                  <input
+                    type="number"
+                    min={1}
+                    max={720}
+                    disabled={!quizForm.openHours || Number(quizForm.openHours) <= 0}
+                    placeholder={!quizForm.openHours || Number(quizForm.openHours) <= 0 ? "مفتوح دائماً" : "مثال: 24"}
+                    value={quizForm.openHours ?? "24"}
+                    onChange={(e) => setQuizForm({ ...quizForm, openHours: e.target.value })}
+                    className="w-full rounded-lg border border-slate-200 bg-white p-2 text-sm font-bold text-center disabled:bg-slate-100 focus:outline-none"
+                  />
                 </div>
-                <input
-                  type="number"
-                  disabled={isTimeUnlimited}
-                  placeholder={isTimeUnlimited ? "مفتوح بدون وقت" : "مثال: 30"}
-                  value={quizForm.durationMinutes}
-                  onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.value })}
-                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm font-bold text-center disabled:bg-slate-100 focus:outline-none"
-                />
-                <p className="text-[11px] text-slate-400">يظهر مؤقت تنازلي للطالب أثناء الامتحان.</p>
+                <div className="pt-2 border-t border-slate-200/80 space-y-1.5">
+                  <label className="flex items-center justify-between text-[11px] font-bold text-slate-600 cursor-pointer">
+                    <span>مؤقت داخلي للمحاولة (اختياري)</span>
+                    <span className="inline-flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={isTimeUnlimited}
+                        onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.checked ? "" : "30" })}
+                        className="rounded"
+                      />
+                      بدون مؤقت (موصى به)
+                    </span>
+                  </label>
+                  {!isTimeUnlimited && (
+                    <input
+                      type="number"
+                      min={1}
+                      max={10080}
+                      placeholder="بالدقائق (مثال: 30)"
+                      value={quizForm.durationMinutes}
+                      onChange={(e) => setQuizForm({ ...quizForm, durationMinutes: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 text-xs font-bold text-center focus:outline-none"
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2">
@@ -1672,7 +1723,15 @@ export function ExamWizard({
                   <div>إجمالي الأسئلة: <b className="text-primary">{quizForm.questions.length}</b></div>
                   <div>الأسئلة للطالب: <b className="text-purple-600">{quizForm.questionsToShow ? `${quizForm.questionsToShow} من ${quizForm.questions.length}` : "الكل"}</b></div>
                   <div>درجة النجاح: <b>{quizForm.passingScore}%</b></div>
-                  <div>المدة: <b>{isTimeUnlimited ? "مفتوح" : `${quizForm.durationMinutes} دقيقة`}</b></div>
+                  <div>
+                    الإتاحة:{" "}
+                    <b>
+                      {quizForm.openHours && Number(quizForm.openHours) > 0
+                        ? `${quizForm.openHours} ساعة`
+                        : "مفتوح دائماً"}
+                    </b>{" "}
+                    · <b>{isTimeUnlimited ? "بدون مؤقت" : `مؤقت ${quizForm.durationMinutes}د`}</b>
+                  </div>
                   <div>المحاولات: <b>{isAttemptsUnlimited ? "غير محدود" : quizForm.maxAttempts}</b></div>
                 </div>
               </div>
@@ -2145,11 +2204,25 @@ export function ExamWizard({
                           <strong>{q.questions.length}</strong> أسئلة
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-600">
+                      <div className="col-span-2 flex items-center gap-1.5 text-slate-600">
                         <InlineDurationEditor
                           quizId={q.id}
+                          mode="hours"
                           durationMinutes={q.durationMinutes}
+                          openHours={q.openHours}
+                          availableUntil={q.availableUntil}
                           onUpdated={(newDuration) => onDurationUpdated?.(q.id, newDuration)}
+                          onHoursUpdated={(newHours, newUntil, newDur) => {
+                            if (onAvailabilityUpdated) {
+                              onAvailabilityUpdated(q.id, {
+                                openHours: newHours,
+                                availableUntil: newUntil,
+                                ...(newDur !== undefined ? { durationMinutes: newDur } : {}),
+                              });
+                            } else if (newDur !== undefined) {
+                              onDurationUpdated?.(q.id, newDur);
+                            }
+                          }}
                         />
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-600">

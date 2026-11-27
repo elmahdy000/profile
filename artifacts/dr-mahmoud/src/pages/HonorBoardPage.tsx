@@ -283,13 +283,13 @@ export default function HonorBoardPage() {
                   <span className="text-blue-600 dark:text-blue-400">طلبة الدكتور</span>
                 </h1>
                 <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl leading-relaxed">
-                  تكريم أوائل طلاب البرمجة والذكاء الاصطناعي في العام واللغات — الترتيب بمجموع درجات أول محاولة مع تكرار المراكز لأصحاب المجموع الواحد.
+                  تكريم أوائل طلاب البرمجة والذكاء الاصطناعي في العام واللغات — يُحتسب أعلى مجموع درجات للطالب عبر المحاولات، مع أولوية الترتيب لمن حقق الدرجة من أول محاولة دون مساواته بمن أعاد الامتحان.
                 </p>
               </div>
 
               <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-500/10 border border-blue-500/25 px-3 py-1 rounded-xl">
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                <span>مجموع أول محاولة · الأول والأول مكرر · سرعة الإنجاز</span>
+                <span>أعلى محاولة · أولوية أول محاولة في الترتيب · سرعة الإنجاز</span>
               </div>
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function HonorBoardPage() {
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {searchQuery.trim()
                 ? "جرّب تكتب الاسم بشكل مختلف أو امسح البحث."
-                : "أول ما ينزل امتحان النهارده ويبدأ الطلاب يسلموا إجاباتهم، هيظهر ترتيب الأوائل هنا تلقائياً حسب درجة أول محاولة وسرعة الحل."}
+                : "أول ما ينزل امتحان النهارده ويبدأ الطلاب يسلموا إجاباتهم، هيظهر ترتيب الأوائل هنا تلقائياً حسب أعلى درجة مع أولوية أول محاولة وسرعة الحل."}
             </p>
           </div>
         ) : (() => {
@@ -454,10 +454,10 @@ export default function HonorBoardPage() {
           const renderPodiumCard = (student: RankedStudent) => {
             const rank = Number(student.track_rank);
             const isRepeated = Number(student.track_tie_order ?? 1) > 1;
-            const avgScore = Number(student.first_try_avg ?? student.avg_score ?? 0);
-            const firstTryAvg = Number(student.first_try_avg ?? avgScore);
-            const bestAvgScore = Number(student.best_avg_score ?? avgScore);
-            const totalPoints = Number(student.total_points ?? firstTryAvg * student.quizzes_taken);
+            const bestAvgScore = Number(student.best_avg_score ?? student.avg_score ?? 0);
+            const firstTryAvg = Number(student.first_try_avg ?? bestAvgScore);
+            const avgScore = bestAvgScore;
+            const totalPoints = Number(student.total_points ?? bestAvgScore * student.quizzes_taken);
             const completedAll = isOverallMultiExam && student.quizzes_taken >= availableExams.length;
             const isFirstTryAce =
               firstTryAvg >= bestAvgScore &&
@@ -525,15 +525,15 @@ export default function HonorBoardPage() {
                   {/* Clean 3-Metric Strip */}
                   <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/45 border border-border p-2.5 text-center">
                     <div className="space-y-0.5">
-                      <span className="block text-[10px] font-bold text-muted-foreground">أول محاولة</span>
+                      <span className="block text-[10px] font-bold text-muted-foreground">أعلى درجة</span>
                       <strong className="block text-xs font-mono font-black text-foreground">
-                        {firstTryAvg}%
+                        {bestAvgScore}%
                       </strong>
                     </div>
                     <div className="space-y-0.5 border-x border-border px-1">
-                      <span className="block text-[10px] font-bold text-muted-foreground">الزمن</span>
-                      <strong className="block text-xs font-black text-foreground truncate">
-                        {timeLabel || "—"}
+                      <span className="block text-[10px] font-bold text-muted-foreground">أول محاولة</span>
+                      <strong className="block text-xs font-mono font-black text-foreground">
+                        {firstTryAvg}%
                       </strong>
                     </div>
                     <div className="space-y-0.5">
@@ -547,14 +547,14 @@ export default function HonorBoardPage() {
                   </div>
 
                   {/* Non-redundant Distinction Tags */}
-                  {(completedAll || firstTryAvg === 100 || isFirstTryAce || bestAvgScore > firstTryAvg) && (
+                  {(completedAll || bestAvgScore === 100 || isFirstTryAce || bestAvgScore > firstTryAvg || timeLabel) && (
                     <div className="flex flex-wrap items-center gap-1.5">
                       {completedAll && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/10 border border-blue-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-blue-700 dark:text-blue-300">
                           <span>أتمّ جميع الاختبارات</span>
                         </span>
                       )}
-                      {firstTryAvg === 100 && (
+                      {bestAvgScore === 100 && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
                           <Award className="w-3 h-3" />
                           <span>علامة كاملة</span>
@@ -568,7 +568,13 @@ export default function HonorBoardPage() {
                       )}
                       {bestAvgScore > firstTryAvg && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-muted border border-border px-2.5 py-0.5 text-[10.5px] font-bold text-muted-foreground">
-                          <span>تحسين بالإعادة: {bestAvgScore}%</span>
+                          <span>محسّن بالإعادة (أول محاولة {firstTryAvg}%)</span>
+                        </span>
+                      )}
+                      {timeLabel && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-muted border border-border px-2.5 py-0.5 text-[10.5px] font-bold text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>{timeLabel}</span>
                         </span>
                       )}
                     </div>
@@ -620,9 +626,10 @@ export default function HonorBoardPage() {
                     {remainingStudents.map((student) => {
                       const rank = Number(student.track_rank);
                       const isRepeated = Number(student.track_tie_order ?? 1) > 1;
-                      const avgScore = Number(student.first_try_avg ?? student.avg_score ?? 0);
-                      const bestAvgScore = Number(student.best_avg_score ?? avgScore);
-                      const totalPoints = Number(student.total_points ?? avgScore * student.quizzes_taken);
+                      const bestAvgScore = Number(student.best_avg_score ?? student.avg_score ?? 0);
+                      const firstTryAvg = Number(student.first_try_avg ?? bestAvgScore);
+                      const avgScore = bestAvgScore;
+                      const totalPoints = Number(student.total_points ?? bestAvgScore * student.quizzes_taken);
                       const timeLabel = formatDurationArabic(student.avg_time_seconds);
 
                       return (
@@ -647,9 +654,9 @@ export default function HonorBoardPage() {
                                     <span>{formatCenterName(student.center_name)}</span>
                                   </span>
                                 )}
-                                {bestAvgScore > avgScore && (
-                                  <span className="text-emerald-600 dark:text-emerald-400">
-                                    • تحسين بالإعادة: {bestAvgScore}%
+                                {bestAvgScore > firstTryAvg && (
+                                  <span className="text-amber-600 dark:text-amber-400">
+                                    • محسّن بالإعادة (أول محاولة: {firstTryAvg}%)
                                   </span>
                                 )}
                               </div>
@@ -760,9 +767,9 @@ export default function HonorBoardPage() {
                     <div className="min-w-0 space-y-1">
                       <div className="font-extrabold text-foreground truncate">{q.quiz_title}</div>
                       <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                        <span>أول محاولة: {q.first_attempt_score ?? q.score}%</span>
-                        {q.best_score != null && q.best_score > (q.first_attempt_score ?? q.score) && (
-                          <span className="text-emerald-600 dark:text-emerald-400">· تحسين بالإعادة: {q.best_score}%</span>
+                        <span>أعلى درجة: {q.score}%</span>
+                        {q.first_attempt_score != null && q.first_attempt_score < q.score && (
+                          <span className="text-amber-600 dark:text-amber-400">· أول محاولة: {q.first_attempt_score}%</span>
                         )}
                         {qTime && <span>· الزمن: {qTime}</span>}
                         {q.attempts_count && <span>· المحاولات: {q.attempts_count}</span>}
@@ -801,7 +808,7 @@ export default function HonorBoardPage() {
       <footer className="border-t border-border bg-card py-6 mt-12 text-center text-xs text-muted-foreground">
         <p className="font-bold text-foreground">منصة د. محمود المهدي</p>
         <p className="text-[11px] mt-1">
-          يُحتسب الترتيب آلياً للاختبارات الجديدة: الأول، الأول مكرر لأصحاب النسبة نفسها، مع مراعاة دقة أول محاولة وسرعة الحل.
+          يُحتسب الترتيب آلياً بأعلى محاولة لكل امتحان، مع إعطاء الأولوية لمن حقق نفس الدرجة من أول محاولة وسرعة الإنجاز.
         </p>
       </footer>
     </div>

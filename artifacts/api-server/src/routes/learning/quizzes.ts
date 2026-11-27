@@ -6,6 +6,7 @@ import {
   quizAttemptsTable,
   quizViewsTable,
   quizExtraAttemptsTable,
+  quizDraftsTable,
   studentsTable,
   studentNotificationsTable,
   coursesTable,
@@ -32,6 +33,11 @@ import {
   matchStudentToStage,
   normalizeStringList,
   ensureAutomaticCourseAssignments,
+  ensureQuizAvailabilityColumns,
+  ensureQuizDraftsTable,
+  enrichQuizQuestionsWithMeta,
+  parseOptionalDurationMinutes,
+  resolveQuizAvailability,
 } from "./shared";
 import {
   extractTextFromUpload,
@@ -43,18 +49,30 @@ const router: IRouter = Router();
 
 router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   try {
+    await Promise.all([ensureQuizAvailabilityColumns(), ensureQuizDraftsTable()]);
     let student = res.locals.student as typeof studentsTable.$inferSelect;
     if (student.status === "approved" && (!(student.enrolledCourseIds?.length) || !(student.enrolledCategories?.length))) {
       try {
         student = await ensureAutomaticCourseAssignments(student);
-      } catch {}
+      } catch { }
     }
-    const [quizzes, attempts, progress, extraGrants] = await Promise.all([
-      db.select().from(quizzesTable).where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt)),
+    const [attempts, progress, extraGrants, drafts] = await Promise.all([
       db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId, score: quizAttemptsTable.score }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
       db.select({ videoId: videoProgressTable.videoId, progress: videoProgressTable.progress }).from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
       db.select().from(quizExtraAttemptsTable).where(eq(quizExtraAttemptsTable.studentId, student.id)),
+      db.select().from(quizDraftsTable).where(eq(quizDraftsTable.studentId, student.id)),
     ]);
+    const attemptedQuizIds = Array.from(new Set(attempts.map((a) => a.quizId)));
+    const quizzes = await db
+      .select()
+      .from(quizzesTable)
+      .where(
+        attemptedQuizIds.length > 0
+          ? or(eq(quizzesTable.isPublished, true), inArray(quizzesTable.id, attemptedQuizIds))
+          : eq(quizzesTable.isPublished, true),
+      )
+      .orderBy(desc(quizzesTable.createdAt));
+
     const attemptsByQuiz = new Map<number, { count: number; bestScore: number }>();
     for (const attempt of attempts) {
       const current = attemptsByQuiz.get(attempt.quizId) ?? { count: 0, bestScore: 0 };
@@ -65,9 +83,11 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
     }
     const extraGrantsMap = new Map(extraGrants.map((row) => [row.quizId, row.extraAttempts]));
     const progressByVideo = new Map(progress.map((row) => [row.videoId, row.progress]));
+    const draftByQuiz = new Map(drafts.map((row) => [row.quizId, row]));
     res.json(
       quizzes
         .filter((quiz) =>
+          attemptedQuizIds.includes(quiz.id) ||
           canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId),
         )
         .map((quiz) => {
@@ -80,22 +100,47 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
           const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
           const effectiveMaxAttempts = unlimitedAttempts ? null : quiz.maxAttempts + extraGranted;
           const attemptsLocked = !unlimitedAttempts && attemptsUsed >= (effectiveMaxAttempts ?? 0);
+          const windowExpired = Boolean(
+            quiz.availableUntil && Date.now() > new Date(quiz.availableUntil).getTime(),
+          );
+          const isArchivedReview = !quiz.isPublished && attemptsUsed > 0;
           const paymentLocked = student.status !== "approved" || student.paymentStatus !== "paid";
+          const expiredLabel = quiz.openHours ? `${quiz.openHours} ساعة` : "المدة المحددة";
+          const savedDraft = !paymentLocked ? draftByQuiz.get(quiz.id) : undefined;
+          const enrichedQuestions = enrichQuizQuestionsWithMeta(quiz.questions, quiz.unit, quiz.lesson);
           return {
             ...quiz,
             maxAttempts: effectiveMaxAttempts,
             extraAttemptsGranted: extraGranted,
             attemptsUsed,
             bestScore,
-            locked: paymentLocked || progressLocked || attemptsLocked,
+            windowExpired,
+            isArchivedReview,
+            draft: savedDraft
+              ? {
+                  questionOrder: savedDraft.questionOrder || [],
+                  answersByOriginalIndex: savedDraft.answersByOriginalIndex || {},
+                  essayByOriginalIndex: savedDraft.essayByOriginalIndex || {},
+                  flaggedByOriginalIndex: savedDraft.flaggedByOriginalIndex || {},
+                  lastQuestionIndex: savedDraft.lastQuestionIndex ?? 0,
+                  elapsedSeconds: savedDraft.elapsedSeconds ?? 0,
+                  clientSubmissionId: savedDraft.clientSubmissionId || "",
+                  updatedAt: savedDraft.updatedAt,
+                }
+              : null,
+            locked: paymentLocked || progressLocked || attemptsLocked || windowExpired || !quiz.isPublished,
             lockedReason: paymentLocked
               ? "هذا الاختبار مقفل لحين سداد اشتراك الشهر الجديد وتأكيد الدفع"
-              : attemptsLocked
-              ? "استخدمت كل المحاولات المتاحة"
-              : progressLocked
-                ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
-                : null,
-            questions: paymentLocked ? [] : quiz.questions.map(
+              : !quiz.isPublished
+                ? "تم إغلاق التسليم لهذا الاختبار — متاح للمراجعة فقط"
+                : windowExpired
+                  ? `انتهت مدة إتاحة الاختبار (${expiredLabel})`
+                  : attemptsLocked
+                    ? "استخدمت كل المحاولات المتاحة"
+                    : progressLocked
+                      ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
+                      : null,
+            questions: paymentLocked ? [] : enrichedQuestions.map(
               ({ correctIndex: _correctIndex, correctAnswer: _correctAnswer, ...question }) => question,
             ),
           };
@@ -137,7 +182,7 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
     if (totalAccessibleCount > 0) {
       const accessibleIds = new Set(studentAccessibleVideos.map((v) => v.id));
       const filteredRows = rows.filter((r) => accessibleIds.has(r.videoId));
-      
+
       const totalProgressSum = filteredRows.reduce((acc, curr) => acc + (curr.progress || 0), 0);
       completedCount = filteredRows.filter((r) => r.completed || (r.progress || 0) >= 90).length;
       overallProgress = Math.round(totalProgressSum / totalAccessibleCount);
@@ -639,7 +684,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
           SELECT id, 'essay' FROM essay_exams WHERE is_published = true
           ON CONFLICT (id) DO NOTHING;
         `);
-      } catch {}
+      } catch { }
 
       const backupCountRes = await db.execute(sql`SELECT count(*)::int as cnt FROM exams_active_backup;`);
       const backupCount = Number((backupCountRes as any)?.rows?.[0]?.cnt) || 0;
@@ -647,7 +692,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
       await db.execute(sql`UPDATE quizzes SET is_published = false WHERE is_published = true;`);
       try {
         await db.execute(sql`UPDATE essay_exams SET is_published = false WHERE is_published = true;`);
-      } catch {}
+      } catch { }
 
       try {
         await logAudit(
@@ -657,7 +702,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
           null,
           `تم إيقاف جميع الامتحانات مؤقتاً بواسطة الأدمن (${backupCount} امتحان)`,
         );
-      } catch {}
+      } catch { }
 
       res.json({
         success: true,
@@ -691,7 +736,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
             SET is_published = true 
             WHERE id IN (SELECT id FROM exams_active_backup WHERE exam_type = 'essay');
           `);
-        } catch {}
+        } catch { }
 
         await db.execute(sql`DROP TABLE IF EXISTS exams_active_backup;`);
       } else {
@@ -709,7 +754,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
           null,
           `تم إعادة تفعيل جميع الامتحانات بواسطة الأدمن (${restoredQuizzes} امتحان)`,
         );
-      } catch {}
+      } catch { }
 
       res.json({
         success: true,
@@ -725,6 +770,7 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
 
 router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
   try {
+    await ensureQuizAvailabilityColumns();
     const quizzes = await db
       .select()
       .from(quizzesTable)
@@ -864,6 +910,15 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
       const [linkedQuiz] = await db.select({ id: quizzesTable.id }).from(quizzesTable).where(eq(quizzesTable.videoId, video.id)).limit(1);
       if (linkedQuiz) { res.status(409).json({ error: "هذا الدرس مرتبط باختبار بالفعل" }); return; }
     }
+    await ensureQuizAvailabilityColumns();
+    const isPublished = req.body.isPublished === true;
+    const { openHours, availableUntil } = resolveQuizAvailability({
+      rawOpenHours: req.body.openHours,
+      rawAvailableUntil: req.body.availableUntil,
+      scope,
+      isPublished,
+      isCreate: true,
+    });
     const [quiz] = await db
       .insert(quizzesTable)
       .values({
@@ -879,7 +934,9 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
           0,
           Math.min(100, Number(req.body.passingScore ?? 60)),
         ),
-        durationMinutes: req.body.durationMinutes ? Number(req.body.durationMinutes) : null,
+        durationMinutes: parseOptionalDurationMinutes(req.body.durationMinutes),
+        openHours,
+        availableUntil,
         questionsToShow: req.body.questionsToShow ? Number(req.body.questionsToShow) : null,
         shuffleQuestions: Boolean(req.body.shuffleQuestions),
         showExplanations: req.body.showExplanations !== false,
@@ -887,7 +944,7 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
         maxAttempts: Math.max(0, Math.min(20, Number(req.body.maxAttempts ?? 3))),
         requiredProgress: scope === "lesson" ? Math.max(0, Math.min(100, Number(req.body.requiredProgress ?? 80))) : 0,
         questions,
-        isPublished: req.body.isPublished === true,
+        isPublished,
       })
       .returning();
     if (video) await db.update(videosTable).set({ quizId: quiz.id }).where(eq(videosTable.id, video.id));
@@ -924,6 +981,7 @@ router.patch(
   requireAdmin,
   async (req, res, next) => {
     try {
+      await ensureQuizAvailabilityColumns();
       const quizId = Number(req.params.id);
       const [current] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
       if (!current) { res.status(404).json({ error: "الاختبار غير موجود" }); return; }
@@ -977,6 +1035,22 @@ router.patch(
         }
         questions = validatedQuestions;
       }
+      const nextIsPublished = req.body.isPublished !== undefined ? Boolean(req.body.isPublished) : current.isPublished;
+      const shouldUpdateAvailability =
+        req.body.openHours !== undefined ||
+        req.body.availableUntil !== undefined ||
+        (!current.isPublished && nextIsPublished);
+      const availabilityPatch = shouldUpdateAvailability
+        ? resolveQuizAvailability({
+            rawOpenHours: req.body.openHours,
+            rawAvailableUntil: req.body.availableUntil,
+            scope,
+            isPublished: nextIsPublished,
+            wasPublished: current.isPublished,
+            currentOpenHours: current.openHours,
+            currentAvailableUntil: current.availableUntil,
+          })
+        : {};
       const [quiz] = await db
         .update(quizzesTable)
         .set({
@@ -998,7 +1072,10 @@ router.patch(
               Math.min(100, Number(req.body.passingScore)),
             ),
           }),
-          ...(req.body.durationMinutes !== undefined && { durationMinutes: req.body.durationMinutes ? Number(req.body.durationMinutes) : null }),
+          ...(req.body.durationMinutes !== undefined && {
+            durationMinutes: parseOptionalDurationMinutes(req.body.durationMinutes),
+          }),
+          ...availabilityPatch,
           ...(req.body.questionsToShow !== undefined && { questionsToShow: req.body.questionsToShow ? Number(req.body.questionsToShow) : null }),
           ...(req.body.shuffleQuestions !== undefined && { shuffleQuestions: Boolean(req.body.shuffleQuestions) }),
           ...(req.body.showExplanations !== undefined && { showExplanations: Boolean(req.body.showExplanations) }),
@@ -1267,6 +1344,10 @@ router.post(
         res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" });
         return;
       }
+      if (quiz.availableUntil && Date.now() > new Date(quiz.availableUntil).getTime() + 120_000) {
+        res.status(403).json({ error: "انتهت مدة إتاحة الاختبار وتم إغلاقه" });
+        return;
+      }
       // maxAttempts <= 0 means unlimited attempts
       const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
       const [extraGrant] = await db
@@ -1472,6 +1553,14 @@ router.post(
         return;
       }
 
+      // Clear saved resume draft once attempt is submitted
+      try {
+        await ensureQuizDraftsTable();
+        await db
+          .delete(quizDraftsTable)
+          .where(and(eq(quizDraftsTable.quizId, quiz.id), eq(quizDraftsTable.studentId, student.id)));
+      } catch { }
+
       // Update student activity timestamp
       try {
         const now = new Date();
@@ -1520,7 +1609,7 @@ router.post(
             isCorrect: d.isCorrect,
           })),
         });
-      } catch {}
+      } catch { }
 
       // Return correctIndex per question so frontend can highlight right/wrong
       const showExplanations = quiz.showExplanations !== false;
@@ -1631,9 +1720,23 @@ router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next
         ? storedDetails.reduce((cnt, d) => cnt + (d?.isCorrect ? 1 : 0), 0)
         : details.reduce((cnt, d) => cnt + (d.isCorrect ? 1 : 0), 0);
 
+    const enrichedQuiz = {
+      ...quiz,
+      questions: enrichQuizQuestionsWithMeta(quiz.questions, quiz.unit, quiz.lesson),
+    };
+
     res.json({
-      quiz,
+      quiz: enrichedQuiz,
       attempt: chosenAttempt,
+      selectedAttemptId: chosenAttempt.id,
+      attemptsHistory: attemptsList.map((a, idx) => ({
+        id: a.id,
+        score: a.score,
+        passed: a.passed,
+        timeSpentSeconds: a.timeSpentSeconds,
+        createdAt: a.createdAt,
+        attemptNumber: attemptsList.length - idx,
+      })),
       score: chosenAttempt.score,
       passed: chosenAttempt.passed,
       correct: Math.min(effectiveTotal, correctCount),
@@ -1646,9 +1749,78 @@ router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next
   }
 });
 
+// PUT /api/learning/quizzes/:id/draft - Persist in-progress quiz draft on server so student resumes from exact point
+router.put("/learning/quizzes/:id/draft", requireStudent, async (req, res, next) => {
+  try {
+    await ensureQuizDraftsTable();
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const quizId = Number(req.params.id);
+    if (!Number.isInteger(quizId) || quizId <= 0) {
+      res.status(400).json({ error: "معرف الاختبار غير صالح" });
+      return;
+    }
+
+    const questionOrder = Array.isArray(req.body?.questionOrder)
+      ? req.body.questionOrder.map((n: unknown) => Number(n)).filter((n: number) => Number.isInteger(n) && n >= 0)
+      : [];
+    const answersByOriginalIndex =
+      req.body?.answersByOriginalIndex && typeof req.body.answersByOriginalIndex === "object"
+        ? req.body.answersByOriginalIndex
+        : {};
+    const essayByOriginalIndex =
+      req.body?.essayByOriginalIndex && typeof req.body.essayByOriginalIndex === "object"
+        ? req.body.essayByOriginalIndex
+        : {};
+    const flaggedByOriginalIndex =
+      req.body?.flaggedByOriginalIndex && typeof req.body.flaggedByOriginalIndex === "object"
+        ? req.body.flaggedByOriginalIndex
+        : {};
+    const lastQuestionIndex = Math.max(0, Math.floor(Number(req.body?.lastQuestionIndex) || 0));
+    const elapsedSeconds = Math.max(0, Math.floor(Number(req.body?.elapsedSeconds) || 0));
+    const clientSubmissionId =
+      typeof req.body?.clientSubmissionId === "string"
+        ? req.body.clientSubmissionId.trim().slice(0, 120)
+        : null;
+
+    const now = new Date();
+    await db
+      .insert(quizDraftsTable)
+      .values({
+        quizId,
+        studentId: student.id,
+        questionOrder,
+        answersByOriginalIndex,
+        essayByOriginalIndex,
+        flaggedByOriginalIndex,
+        lastQuestionIndex,
+        elapsedSeconds,
+        clientSubmissionId,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [quizDraftsTable.quizId, quizDraftsTable.studentId],
+        set: {
+          questionOrder,
+          answersByOriginalIndex,
+          essayByOriginalIndex,
+          flaggedByOriginalIndex,
+          lastQuestionIndex,
+          elapsedSeconds,
+          clientSubmissionId,
+          updatedAt: now,
+        },
+      });
+
+    res.json({ success: true, updatedAt: now.toISOString() });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/learning/quizzes/:id/timer - Lightweight realtime timer sync for active exams & homeworks
 router.get("/learning/quizzes/:id/timer", requireStudent, async (req, res, next) => {
   try {
+    await ensureQuizAvailabilityColumns();
     const quizId = Number(req.params.id);
     if (!Number.isInteger(quizId) || quizId <= 0) {
       res.status(400).json({ error: "معرف غير صالح" });
@@ -1659,6 +1831,8 @@ router.get("/learning/quizzes/:id/timer", requireStudent, async (req, res, next)
       .select({
         id: quizzesTable.id,
         durationMinutes: quizzesTable.durationMinutes,
+        openHours: quizzesTable.openHours,
+        availableUntil: quizzesTable.availableUntil,
         isPublished: quizzesTable.isPublished,
         updatedAt: quizzesTable.updatedAt,
       })

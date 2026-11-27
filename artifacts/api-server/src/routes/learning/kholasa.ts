@@ -42,6 +42,9 @@ import {
   normalizeCanonicalStage,
   parseLessonSortOrder,
   parseUnitSortOrder,
+  ensureQuizAvailabilityColumns,
+  parseOptionalDurationMinutes,
+  resolveQuizAvailability,
 } from "./shared";
 
 const router: IRouter = Router();
@@ -1433,6 +1436,15 @@ router.post("/admin/learning/kholasa/materials/:id/create-quiz", requireAdmin, a
     }
 
     const finalStages = material.stages?.length ? material.stages : [material.stage];
+    await ensureQuizAvailabilityColumns();
+    const isPublished = req.body?.isPublished !== false;
+    const { openHours, availableUntil } = resolveQuizAvailability({
+      rawOpenHours: req.body?.openHours,
+      rawAvailableUntil: req.body?.availableUntil,
+      scope: requestedScope,
+      isPublished,
+      isCreate: true,
+    });
 
     const [createdQuiz] = await db
       .insert(quizzesTable)
@@ -1445,14 +1457,16 @@ router.post("/admin/learning/kholasa/materials/:id/create-quiz", requireAdmin, a
         category: quizCategory,
         stage: material.stage,
         stages: finalStages,
-        durationMinutes: req.body?.durationMinutes ? Number(req.body.durationMinutes) : null,
+        durationMinutes: parseOptionalDurationMinutes(req.body?.durationMinutes),
+        openHours,
+        availableUntil,
         passingScore: Math.max(0, Math.min(100, Number(req.body?.passingScore ?? 60))),
         maxAttempts: Math.max(0, Math.min(20, Number(req.body?.maxAttempts ?? 3))),
         shuffleQuestions: req.body?.shuffleQuestions !== false,
         showExplanations: req.body?.showExplanations !== false,
         requiredProgress: requestedScope === "lesson" ? Math.max(0, Math.min(100, Number(req.body?.requiredProgress ?? 80))) : 0,
         questions: validQuestions,
-        isPublished: req.body?.isPublished !== false,
+        isPublished,
       })
       .returning();
 

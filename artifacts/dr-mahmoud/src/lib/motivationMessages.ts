@@ -175,7 +175,7 @@ export function getEffectiveQuizDurationMinutes(quiz?: Partial<Quiz> | null): nu
 
 /** Formats duration in minutes cleanly in Arabic (e.g. 2880 -> "48 ساعة", 90 -> "90 دقيقة"). */
 export function formatQuizDurationAr(minutes?: number | null): string {
-  if (!minutes || minutes <= 0) return "مفتوح";
+  if (!minutes || minutes <= 0) return "بدون مؤقت";
   if (minutes >= 60 && minutes % 60 === 0) {
     const hours = minutes / 60;
     if (hours === 1) return "ساعة واحدة";
@@ -184,6 +184,59 @@ export function formatQuizDurationAr(minutes?: number | null): string {
     return `${hours} ساعة`;
   }
   return `${minutes} دقيقة`;
+}
+
+export function formatOpenHoursAr(hours?: number | null): string {
+  if (!hours || hours <= 0) return "مفتوح دائماً";
+  if (hours === 1) return "ساعة واحدة";
+  if (hours === 2) return "ساعتان";
+  if (hours >= 3 && hours <= 10) return `${hours} ساعات`;
+  return `${hours} ساعة`;
+}
+
+export function formatRemainingWindowAr(
+  availableUntil?: string | null,
+  openHours?: number | null,
+): { label: string; expired: boolean; remainingMs: number | null } {
+  if (!availableUntil) {
+    return {
+      label: openHours && openHours > 0 ? `متاح ${formatOpenHoursAr(openHours)}` : "مفتوح دائماً",
+      expired: false,
+      remainingMs: null,
+    };
+  }
+  const endMs = new Date(availableUntil).getTime();
+  if (Number.isNaN(endMs)) {
+    return { label: "مفتوح دائماً", expired: false, remainingMs: null };
+  }
+  const diffMs = endMs - Date.now();
+  if (diffMs <= 0) {
+    return { label: "انتهت مدة الإتاحة", expired: true, remainingMs: 0 };
+  }
+  const totalMins = Math.ceil(diffMs / 60000);
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const remH = hours % 24;
+    return {
+      label: remH > 0 ? `متاح · باقي ${days} ي و ${remH} س` : `متاح · باقي ${days === 1 ? "يوم" : `${days} أيام`}`,
+      expired: false,
+      remainingMs: diffMs,
+    };
+  }
+  if (hours > 0) {
+    return {
+      label: mins > 0 ? `متاح · باقي ${hours} س و ${mins} د` : `متاح · باقي ${hours} س`,
+      expired: false,
+      remainingMs: diffMs,
+    };
+  }
+  return {
+    label: `يغلق بعد ${Math.max(1, totalMins)} دقيقة`,
+    expired: false,
+    remainingMs: diffMs,
+  };
 }
 
 /** Formats countdown seconds as HH:MM:SS when >= 1 hour, otherwise MM:SS. */

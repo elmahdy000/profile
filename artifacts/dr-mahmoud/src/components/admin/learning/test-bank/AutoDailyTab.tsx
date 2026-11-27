@@ -40,6 +40,7 @@ export function AutoDailyTab({
     courseId?: number | null;
     questionsCount: number;
     durationMinutes: number;
+    openHours?: number | null;
     passingScore: number;
     difficultyDistribution: { easy: number; medium: number; hard: number };
     lastRunDate?: string;
@@ -64,6 +65,7 @@ export function AutoDailyTab({
     courseId?: number | null;
     questionsCount: number;
     durationMinutes: number;
+    openHours?: number | null;
     passingScore: number;
     difficultyDistribution: { easy: number; medium: number; hard: number };
   } | null>(null);
@@ -270,7 +272,8 @@ export function AutoDailyTab({
                       lesson: "all",
                       courseId: null,
                       questionsCount: 10,
-                      durationMinutes: 20,
+                      durationMinutes: 0,
+                      openHours: 24,
                       passingScore: 60,
                       difficultyDistribution: { easy: 3, medium: 5, hard: 2 },
                     });
@@ -328,7 +331,8 @@ export function AutoDailyTab({
                     lesson: "all",
                     courseId: null,
                     questionsCount: 10,
-                    durationMinutes: 20,
+                    durationMinutes: 0,
+                    openHours: 24,
                     passingScore: 60,
                     difficultyDistribution: { easy: 3, medium: 5, hard: 2 },
                   });
@@ -416,8 +420,11 @@ export function AutoDailyTab({
                     </div>
 
                     <div className="bg-background rounded-xl p-2 border border-border">
-                      <span className="block text-[10px] text-muted-foreground font-bold">المدة</span>
-                      <strong className="text-foreground font-black text-sm">{schedule.durationMinutes} دقيقة</strong>
+                      <span className="block text-[10px] text-muted-foreground font-bold">الإتاحة والمؤقت</span>
+                      <strong className="text-foreground font-black text-sm">
+                        {schedule.openHours ? `${schedule.openHours} ساعة` : "24 ساعة"} ·{" "}
+                        {schedule.durationMinutes > 0 ? `${schedule.durationMinutes}د` : "بدون مؤقت"}
+                      </strong>
                     </div>
 
                     <div className="bg-background rounded-xl p-2 border border-border">
@@ -468,6 +475,7 @@ export function AutoDailyTab({
                             courseId: schedule.courseId || null,
                             questionsCount: schedule.questionsCount,
                             durationMinutes: schedule.durationMinutes,
+                            openHours: schedule.openHours ?? 24,
                             passingScore: schedule.passingScore,
                             difficultyDistribution: schedule.difficultyDistribution || { easy: 3, medium: 5, hard: 2 },
                           });
@@ -696,7 +704,24 @@ export function AutoDailyTab({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-foreground">المدة (دقيقة):</label>
+                      <label className="text-xs font-bold text-foreground">ساعات الإتاحة (0=دائماً):</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={720}
+                        value={editingSchedule.openHours ?? 24}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            openHours: Math.max(0, Number(e.target.value) || 0) || null,
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">المؤقت بالدقائق (0=بدون):</label>
                       <input
                         type="number"
                         min={0}

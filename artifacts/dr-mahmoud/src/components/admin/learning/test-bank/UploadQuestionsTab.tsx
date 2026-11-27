@@ -117,7 +117,8 @@ export function UploadQuestionsTab({
   const [createQuizDirectly, setCreateQuizDirectly] = useState<boolean>(true);
   const [quizTitleInput, setQuizTitleInput] = useState<string>("");
   const [isQuizTitleCustom, setIsQuizTitleCustom] = useState<boolean>(false);
-  const [quizDurationInput, setQuizDurationInput] = useState<number>(30);
+  const [quizOpenHoursInput, setQuizOpenHoursInput] = useState<number>(24);
+  const [quizDurationInput, setQuizDurationInput] = useState<number>(0);
   const [quizPassingScoreInput, setQuizPassingScoreInput] = useState<number>(60);
   const [quizMaxAttemptsInput, setQuizMaxAttemptsInput] = useState<number>(3);
   const [quizIsPublished, setQuizIsPublished] = useState<boolean>(true);
@@ -293,7 +294,8 @@ export function UploadQuestionsTab({
           skipDuplicates: skipDuplicatesOnImport,
           createQuiz: shouldCreateQuiz,
           quizTitle: quizTitleInput.trim() || defaultQuizTitle,
-          durationMinutes: quizDurationInput || 30,
+          openHours: quizOpenHoursInput > 0 ? quizOpenHoursInput : null,
+          durationMinutes: quizDurationInput > 0 ? quizDurationInput : null,
           passingScore: quizPassingScoreInput || 60,
           maxAttempts: quizMaxAttemptsInput || 3,
           isPublished: quizIsPublished,
@@ -1144,13 +1146,24 @@ export function UploadQuestionsTab({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-foreground">مدة الاختبار (بالدقائق):</label>
+                    <label className="text-[11px] font-bold text-foreground">ساعات إتاحة الامتحان (0 = دائماً):</label>
                     <input
                       type="number"
-                      min={5}
-                      max={180}
+                      min={0}
+                      max={720}
+                      value={quizOpenHoursInput}
+                      onChange={(e) => setQuizOpenHoursInput(Math.max(0, Number(e.target.value) || 0))}
+                      className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-foreground">مؤقت المحاولة بالدقائق (0 = بدون مؤقت):</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={10080}
                       value={quizDurationInput}
-                      onChange={(e) => setQuizDurationInput(Number(e.target.value))}
+                      onChange={(e) => setQuizDurationInput(Math.max(0, Number(e.target.value) || 0))}
                       className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
                     />
                   </div>

@@ -114,6 +114,8 @@ export const quizzesTable = pgTable("quizzes", {
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
   durationMinutes: integer("duration_minutes"), // null = no time limit, e.g. 30 = 30-minute exam timer
+  openHours: integer("open_hours"), // null = always open; e.g. 24 = open for 24 hours
+  availableUntil: timestamp("available_until"), // null = always open; closing timestamp for the exam window
   passingScore: integer("passing_score").notNull().default(60),
   maxAttempts: integer("max_attempts").notNull().default(3),
   requiredProgress: integer("required_progress").notNull().default(80),
@@ -197,6 +199,23 @@ export const quizExtraAttemptsTable = pgTable("quiz_extra_attempts", {
   quizStudentUnique: uniqueIndex("quiz_extra_attempts_unique").on(table.quizId, table.studentId),
   quizIdx: index("quiz_extra_attempts_quiz_idx").on(table.quizId),
   studentIdx: index("quiz_extra_attempts_student_idx").on(table.studentId),
+}));
+
+export const quizDraftsTable = pgTable("quiz_drafts", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").notNull().references(() => quizzesTable.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  questionOrder: jsonb("question_order").$type<number[]>().notNull().default([]),
+  answersByOriginalIndex: jsonb("answers_by_original_index").$type<Record<string, number>>().notNull().default({}),
+  essayByOriginalIndex: jsonb("essay_by_original_index").$type<Record<string, string>>().notNull().default({}),
+  flaggedByOriginalIndex: jsonb("flagged_by_original_index").$type<Record<string, boolean>>().notNull().default({}),
+  lastQuestionIndex: integer("last_question_index").notNull().default(0),
+  elapsedSeconds: integer("elapsed_seconds").notNull().default(0),
+  clientSubmissionId: text("client_submission_id"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  quizStudentUnique: uniqueIndex("quiz_drafts_quiz_student_idx").on(table.quizId, table.studentId),
+  studentIdx: index("quiz_drafts_student_idx").on(table.studentId),
 }));
 
 export const videoProgressTable = pgTable("video_progress", {

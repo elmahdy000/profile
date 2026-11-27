@@ -196,7 +196,9 @@ export function ExpressExamModal({
   // Advanced settings (collapsed by default)
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [isHomework, setIsHomework] = useState<boolean>(false);
-  const [durationMinutes, setDurationMinutes] = useState<number>(15);
+  const [useTimer, setUseTimer] = useState<boolean>(false);
+  const [durationMinutes, setDurationMinutes] = useState<number>(30);
+  const [openHours, setOpenHours] = useState<number | null>(24);
   const [passingScore, setPassingScore] = useState<number>(60);
   const [maxAttempts, setMaxAttempts] = useState<number>(2);
   const [shuffleQuestions, setShuffleQuestions] = useState<boolean>(true);
@@ -439,7 +441,8 @@ export function ExpressExamModal({
       count: customQuestions ? customQuestions.length : Math.max(1, Number(questionsCount) || 10),
       questionType: selectedTypes.length === 1 ? selectedTypes[0] : undefined,
       questionTypes: selectedTypes.length > 0 && selectedTypes.length < 3 ? selectedTypes : undefined,
-      durationMinutes: Math.max(5, Number(durationMinutes) || (isHomework ? 30 : 15)),
+      durationMinutes: useTimer ? Math.max(5, Number(durationMinutes) || 30) : null,
+      openHours: isHomework ? null : openHours,
       passingScore: Math.max(10, Math.min(100, Number(passingScore) || 60)),
       maxAttempts: Math.max(1, Number(maxAttempts) || 1),
       shuffleQuestions,
@@ -578,7 +581,7 @@ export function ExpressExamModal({
       isHomework ? `📝 واجب جديد على المنصة:` : `⚡ امتحان جديد نزل على المنصة:`,
       `📌 ${createdQuiz.title}`,
       `🎓 المرحلة: ${selectedStage}`,
-      `📊 عدد الأسئلة: ${qCount} سؤال${!isHomework && durationMinutes ? ` · المدة: ${durationMinutes} دقيقة` : ""}`,
+      `📊 عدد الأسئلة: ${qCount} سؤال${!isHomework ? (openHours ? ` · متاح لمدة ${openHours} ساعة (بدون مؤقت)` : " · مفتوح بدون مؤقت") : ""}`,
       `🔗 ادخل دلوقتي وحلّه: https://drelmahdy.com/platform`,
     ].join("\n");
     navigator.clipboard?.writeText(text);
@@ -1071,7 +1074,10 @@ export function ExpressExamModal({
                     <span className="flex items-center gap-2 flex-wrap">
                       <span>إعدادات متقدمة:</span>
                       <span className="text-[11px] font-mono text-foreground">
-                        {isHomework ? `واجب (${durationMinutes} دقيقة)` : `${durationMinutes} دقيقة`} · نجاح {passingScore}% · {maxAttempts} محاولة · {isPublished ? "نشر فوري" : "مسودة"}
+                        {isHomework
+                          ? `واجب (${useTimer ? `${durationMinutes}د` : "بدون مؤقت"})`
+                          : `${openHours ? `مفتوح ${openHours}س` : "مفتوح دائماً"} · ${useTimer ? `مؤقت ${durationMinutes}د` : "بدون مؤقت"}`}
+                        {" · "}نجاح {passingScore}% · {maxAttempts} محاولة · {isPublished ? "نشر فوري" : "مسودة"}
                       </span>
                     </span>
                     {showAdvanced ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
@@ -1081,15 +1087,20 @@ export function ExpressExamModal({
                     <div className="px-3.5 pb-3.5 pt-2 border-t border-border/60 grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="space-y-1">
                         <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> المدة (دقيقة)
+                          <Clock className="h-3 w-3" /> ساعات الإتاحة (0=دائماً)
                         </label>
                         <input
                           type="number"
-                          min={5}
-                          max={240}
-                          value={durationMinutes}
-                          onChange={(e) => setDurationMinutes(Number(e.target.value) || 15)}
-                          className="w-full h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                          min={0}
+                          max={720}
+                          disabled={isHomework}
+                          value={isHomework ? "" : (openHours ?? 0)}
+                          placeholder={isHomework ? "دائماً" : "24"}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            setOpenHours(v > 0 ? Math.min(720, v) : null);
+                          }}
+                          className="w-full h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-center disabled:opacity-50"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1126,6 +1137,29 @@ export function ExpressExamModal({
                         </select>
                       </div>
                       <div className="col-span-2 sm:col-span-4 flex flex-wrap items-center gap-4 pt-1">
+                        <label className="inline-flex items-center gap-2 text-xs font-bold cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!useTimer}
+                            onChange={(e) => setUseTimer(!e.target.checked)}
+                            className="h-4 w-4 accent-emerald-600 rounded cursor-pointer"
+                          />
+                          <span>بدون مؤقت زمني أثناء الحل (موصى به)</span>
+                        </label>
+                        {useTimer && (
+                          <div className="inline-flex items-center gap-1.5 text-xs font-bold">
+                            <span>مؤقت المحاولة:</span>
+                            <input
+                              type="number"
+                              min={5}
+                              max={240}
+                              value={durationMinutes}
+                              onChange={(e) => setDurationMinutes(Number(e.target.value) || 30)}
+                              className="w-16 h-7 px-2 rounded-lg border border-border bg-background text-xs font-bold text-center"
+                            />
+                            <span>دقيقة</span>
+                          </div>
+                        )}
                         <label className="inline-flex items-center gap-2 text-xs font-bold cursor-pointer">
                           <input
                             type="checkbox"

@@ -59,6 +59,17 @@ export type QuizQuestion = {
   points?: number;
 };
 
+export type QuizDraft = {
+  questionOrder: number[];
+  answersByOriginalIndex: Record<string, number>;
+  essayByOriginalIndex: Record<string, string>;
+  flaggedByOriginalIndex: Record<string, boolean>;
+  lastQuestionIndex: number;
+  elapsedSeconds: number;
+  clientSubmissionId?: string;
+  updatedAt?: string;
+};
+
 export type Quiz = {
   id: number;
   scope?: "course" | "lesson" | "homework" | "unit" | string;
@@ -72,6 +83,11 @@ export type Quiz = {
   unit?: string | null;
   lesson?: string | null;
   durationMinutes?: number | null;
+  openHours?: number | null;
+  availableUntil?: string | null;
+  windowExpired?: boolean;
+  isArchivedReview?: boolean;
+  draft?: QuizDraft | null;
   passingScore: number;
   maxAttempts?: number | null;
   shuffleQuestions?: boolean;

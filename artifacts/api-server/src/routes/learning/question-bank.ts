@@ -26,6 +26,9 @@ import {
   normalizeQuestionPrompt,
   cleanOptionString,
   quizImportUpload,
+  ensureQuizAvailabilityColumns,
+  parseOptionalDurationMinutes,
+  resolveQuizAvailability,
 } from "./shared";
 import {
   extractTextFromUpload,
@@ -563,6 +566,7 @@ router.delete("/admin/learning/curriculum/delete-lesson", requireAdmin, async (r
 // GET /api/admin/learning/curriculum/quizzes - Get quizzes associated with a stage, unit, or lesson
 router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, next) => {
   try {
+    await ensureQuizAvailabilityColumns();
     const stage = req.query.stage ? String(req.query.stage).trim() : undefined;
     const unit = req.query.unit ? String(req.query.unit).trim() : undefined;
     const lesson = req.query.lesson ? String(req.query.lesson).trim() : undefined;
@@ -1632,10 +1636,11 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
       // Optional: Direct Quiz Creation on the fly
       let createdQuiz: any = null;
       if (req.body.createQuiz === true || req.body.createQuiz === "true") {
+        await ensureQuizAvailabilityColumns();
         const quizTitle =
           String(req.body.quizTitle || "").trim() ||
           (lesson === "شامل الوحدة" ? `اختبار شامل على ${unit}` : `اختبار على ${lesson}`);
-        const durationMinutes = Number(req.body.durationMinutes) || 30;
+        const durationMinutes = parseOptionalDurationMinutes(req.body.durationMinutes);
         const passingScore = Number(req.body.passingScore) || 60;
         const maxAttempts = Number(req.body.maxAttempts) || 3;
         const isPublished = req.body.isPublished !== false && req.body.isPublished !== "false";
@@ -1677,9 +1682,19 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
               : opts[cIdx] || "",
             explanation: String(q.explanation || "").trim() || undefined,
             imageUrl: String(q.imageUrl || "").trim() || undefined,
+            unit: (q as any).unit || (unit && unit !== "all" ? unit : undefined),
+            lesson: (q as any).lesson || (lesson && lesson !== "all" ? lesson : undefined),
             questionType: q.questionType || (isEssay ? "essay" : opts.length === 2 ? "true_false" : "mcq"),
             points: q.points || defaultPoints,
           };
+        });
+
+        const { openHours, availableUntil } = resolveQuizAvailability({
+          rawOpenHours: req.body.openHours,
+          rawAvailableUntil: req.body.availableUntil,
+          scope: isLessonScope ? "lesson" : "course",
+          isPublished,
+          isCreate: true,
         });
 
         const [newQuiz] = await db
@@ -1694,6 +1709,8 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             stage: finalStages[0] || stage,
             stages: finalStages,
             durationMinutes,
+            openHours,
+            availableUntil,
             passingScore,
             maxAttempts,
             shuffleQuestions: true,
@@ -1814,6 +1831,8 @@ interface GenerateQuizParams {
   count?: number | string;
   difficultyDistribution?: { easy?: number; medium?: number; hard?: number };
   durationMinutes?: number | string | null;
+  openHours?: number | string | null;
+  availableUntil?: string | null;
   passingScore?: number | string;
   maxAttempts?: number | string;
   shuffleQuestions?: boolean;
@@ -1898,6 +1917,8 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     count,
     difficultyDistribution,
     durationMinutes,
+    openHours,
+    availableUntil,
     passingScore,
     maxAttempts,
     shuffleQuestions,
@@ -2521,6 +2542,15 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
         : `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`).trim();
 
   const finalScope = isHomeworkMode ? "homework" : (isLessonScope ? "lesson" : "course");
+  await ensureQuizAvailabilityColumns();
+  const effectiveIsPublished = isPublished !== false;
+  const resolvedAvailability = resolveQuizAvailability({
+    rawOpenHours: openHours,
+    rawAvailableUntil: availableUntil,
+    scope: finalScope,
+    isPublished: effectiveIsPublished,
+    isCreate: true,
+  });
 
   const [newQuiz] = await db
     .insert(quizzesTable)
@@ -2535,14 +2565,16 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
       stages: finalStages,
       unit: unit && unit !== "all" ? unit : null,
       lesson: hasSpecificLessons ? targetLessons.join("، ") : (lesson && lesson !== "all" ? lesson : null),
-      durationMinutes: durationMinutes ? Number(durationMinutes) : (isHomeworkMode ? null : 30),
+      durationMinutes: parseOptionalDurationMinutes(durationMinutes),
+      openHours: resolvedAvailability.openHours,
+      availableUntil: resolvedAvailability.availableUntil,
       passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
       maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? (isHomeworkMode ? 3 : 3)))),
       shuffleQuestions: shuffleQuestions !== false,
       showExplanations: showExplanations !== false,
       requiredProgress: isLessonScope ? Math.max(0, Math.min(100, Number(requiredProgress ?? 80))) : 0,
       questions: finalQuestions,
-      isPublished: isPublished !== false,
+      isPublished: effectiveIsPublished,
     })
     .returning();
 

@@ -14,6 +14,12 @@ import { and, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { canStudentAccessContent } from "../middleware/student-auth";
 import { logger } from "../lib/logger";
 import { sendPushToStudents } from "./push-notifications";
+import {
+  ensureQuizAvailabilityColumns,
+  parseOpenHours,
+  parseOptionalDurationMinutes,
+  resolveQuizAvailability,
+} from "../routes/learning/shared";
 
 export interface AutoExamSchedule {
   id: string;
@@ -25,7 +31,8 @@ export interface AutoExamSchedule {
   lesson?: string; // "all" or specific lesson
   courseId?: number | null;
   questionsCount: number; // default 10
-  durationMinutes: number; // default 20
+  durationMinutes: number; // 0 = untimed (no countdown timer)
+  openHours?: number | null; // default 24 hours open window
   passingScore: number; // default 60%
   difficultyDistribution: {
     easy: number;
@@ -77,7 +84,8 @@ export const DEFAULT_SCHEDULE: AutoExamSchedule = {
   lesson: "all",
   courseId: null,
   questionsCount: 10,
-  durationMinutes: 20,
+  durationMinutes: 0,
+  openHours: 24,
   passingScore: 60,
   difficultyDistribution: {
     easy: 3,
@@ -490,6 +498,8 @@ export async function generateDraftExamForSchedule(
       correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي للإجابة الصحيحة
       explanation: r.question.explanation || undefined,
       imageUrl: r.question.imageUrl || undefined,
+      unit: r.unit || undefined,
+      lesson: r.lesson || undefined,
       points: r.points || r.question.points || 1,
     };
   });
@@ -512,6 +522,10 @@ export async function generateDraftExamForSchedule(
     : (targetCourse?.stages?.length ? targetCourse.stages : [stageName]);
 
   // 6. Insert as DRAFT (isPublished = false)
+  await ensureQuizAvailabilityColumns();
+  const resolvedOpenHours =
+    schedule.openHours !== undefined ? parseOpenHours(schedule.openHours) : 24;
+  const resolvedDurationMinutes = parseOptionalDurationMinutes(schedule.durationMinutes);
   const [createdQuiz] = await db
     .insert(quizzesTable)
     .values({
@@ -522,7 +536,9 @@ export async function generateDraftExamForSchedule(
       category: targetCourse?.title || targetCourse?.category || "عام",
       stage: stageName,
       stages,
-      durationMinutes: schedule.durationMinutes,
+      durationMinutes: resolvedDurationMinutes,
+      openHours: resolvedOpenHours,
+      availableUntil: null,
       passingScore: schedule.passingScore,
       maxAttempts: 3,
       shuffleQuestions: true,
@@ -742,6 +758,7 @@ export async function approveAndPublishQuiz(quizId: number): Promise<{
   notifiedCount: number;
   alreadyPublished?: boolean;
 }> {
+  await ensureQuizAvailabilityColumns();
   const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
 
   if (!quiz) {
@@ -752,11 +769,21 @@ export async function approveAndPublishQuiz(quizId: number): Promise<{
     return { success: true, quiz, notifiedCount: 0, alreadyPublished: true };
   }
 
-  // Update quiz to published
+  const availability = resolveQuizAvailability({
+    scope: quiz.scope,
+    isPublished: true,
+    wasPublished: quiz.isPublished,
+    currentOpenHours: quiz.openHours,
+    currentAvailableUntil: quiz.availableUntil,
+  });
+
+  // Update quiz to published and start the availability window
   const [updatedQuiz] = await db
     .update(quizzesTable)
     .set({
       isPublished: true,
+      openHours: availability.openHours,
+      availableUntil: availability.availableUntil,
       updatedAt: new Date(),
     })
     .where(eq(quizzesTable.id, quizId))

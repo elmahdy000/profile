@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -51,12 +51,14 @@ import {
 import {
   formatExamDayAndTime,
   formatQuizDurationAr,
+  formatRemainingWindowAr,
   formatTimerClock,
   getEffectiveQuizDurationMinutes,
   getMotivationTierForScore,
   getNextMotivationMessage,
   isQuizHomework,
 } from "@/lib/motivationMessages";
+import { analyzeQuizSections, groupQuestionsByLesson } from "@/lib/quizSections";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
@@ -658,6 +660,15 @@ export function StudentPlatform() {
     total: number;
     attemptsUsed: number;
     attemptsRemaining?: number | null;
+    selectedAttemptId?: number;
+    attemptsHistory?: Array<{
+      id: number;
+      score: number;
+      passed: boolean;
+      timeSpentSeconds?: number;
+      createdAt: string;
+      attemptNumber: number;
+    }>;
     details?: Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }>;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
@@ -668,6 +679,9 @@ export function StudentPlatform() {
   // same tick could slip past the state-based checks. This ref blocks that.
   const quizSubmitInFlightRef = useRef(false);
   const quizSubmissionIdRef = useRef<string>("");
+  const lastQuestionIndexRef = useRef<number>(0);
+  const serverDraftTimerRef = useRef<number | null>(null);
+  const [resumedNotice, setResumedNotice] = useState<string>("");
   const quizScrollContainerRef = useRef<HTMLDivElement>(null);
   const playNotificationSound = useNotificationSound();
 
@@ -692,31 +706,75 @@ export function StudentPlatform() {
 
     const syncTimer = async () => {
       try {
-        const data = await api<{ id: number; durationMinutes: number | null }>(
+        const data = await api<{
+          id: number;
+          durationMinutes: number | null;
+          openHours?: number | null;
+          availableUntil?: string | null;
+        }>(
           `/api/learning/quizzes/${activeQuiz.id}/timer`
         );
         if (cancelled || !data) return;
         const incomingDuration = data.durationMinutes ?? null;
         const currentDuration = activeQuiz.durationMinutes ?? null;
-        if (incomingDuration !== currentDuration) {
-          const updatedQuiz = { ...activeQuiz, durationMinutes: incomingDuration };
+        const incomingOpenHours = data.openHours ?? null;
+        const incomingAvailableUntil = data.availableUntil ?? null;
+        const availabilityChanged =
+          incomingOpenHours !== (activeQuiz.openHours ?? null) ||
+          incomingAvailableUntil !== (activeQuiz.availableUntil ?? null);
+
+        if (incomingDuration !== currentDuration || availabilityChanged) {
+          const updatedQuiz = {
+            ...activeQuiz,
+            durationMinutes: incomingDuration,
+            openHours: incomingOpenHours,
+            availableUntil: incomingAvailableUntil,
+          };
           const nextEffective = getEffectiveQuizDurationMinutes(updatedQuiz);
           setActiveQuiz((prev) =>
-            prev && prev.id === activeQuiz.id ? { ...prev, durationMinutes: incomingDuration } : prev
+            prev && prev.id === activeQuiz.id
+              ? {
+                  ...prev,
+                  durationMinutes: incomingDuration,
+                  openHours: incomingOpenHours,
+                  availableUntil: incomingAvailableUntil,
+                }
+              : prev
           );
           setQuizzes((prev) =>
-            prev.map((q) => (q.id === activeQuiz.id ? { ...q, durationMinutes: incomingDuration } : q))
+            prev.map((q) =>
+              q.id === activeQuiz.id
+                ? {
+                    ...q,
+                    durationMinutes: incomingDuration,
+                    openHours: incomingOpenHours,
+                    availableUntil: incomingAvailableUntil,
+                  }
+                : q
+            )
           );
-          if (nextEffective !== null) {
-            const remaining = Math.max(0, nextEffective * 60 - quizElapsedSecondsRef.current);
-            setQuizTimeRemaining(remaining);
-            const extended = currentDuration !== null && incomingDuration !== null && incomingDuration > currentDuration;
+          if (incomingDuration !== currentDuration) {
+            if (nextEffective !== null) {
+              const remaining = Math.max(0, nextEffective * 60 - quizElapsedSecondsRef.current);
+              setQuizTimeRemaining(remaining);
+              const extended = currentDuration !== null && incomingDuration !== null && incomingDuration > currentDuration;
+              toast({
+                title: extended ? "⏱️ تم زيادة الوقت!" : "⏱️ تم تحديث الوقت",
+                description: `الوقت الجديد: ${formatQuizDurationAr(nextEffective)} (اتحدّث تلقائياً).`,
+              });
+            } else {
+              setQuizTimeRemaining(null);
+              toast({
+                title: "✅ تم إلغاء المؤقت",
+                description: "أصبح الاختبار الآن مفتوحاً بدون مؤقت أثناء الحل.",
+              });
+            }
+          } else if (availabilityChanged && incomingAvailableUntil) {
+            const winInfo = formatRemainingWindowAr(incomingAvailableUntil, incomingOpenHours);
             toast({
-              title: extended ? "⏱️ تم زيادة الوقت!" : "⏱️ تم تحديث الوقت",
-              description: `الوقت الجديد: ${formatQuizDurationAr(nextEffective)} (اتحدّث تلقائياً).`,
+              title: "🕒 تم تحديث مدة إتاحة الاختبار",
+              description: winInfo.label,
             });
-          } else {
-            setQuizTimeRemaining(null);
           }
         }
       } catch {
@@ -790,47 +848,131 @@ export function StudentPlatform() {
   const getQuizDraftKeyV2 = (quizId: number) =>
     `dr_mahmoud_quiz_draft_v2_${student?.id || "anon"}_${quizId}`;
 
+  const buildDraftPayload = (
+    quizObj: Quiz,
+    nextAnswers: number[],
+    nextEssay: Record<number, string>,
+    nextFlags: Record<number, boolean>,
+    lastQuestionIndex: number,
+  ) => {
+    const answersByOriginalIndex: Record<string, number> = {};
+    const flaggedByOriginalIndex: Record<string, boolean> = {};
+    const questionOrder: number[] = [];
+
+    quizObj.questions.forEach((q: any, displayIdx: number) => {
+      const origIdx = typeof q._originalIndex === "number" ? q._originalIndex : displayIdx;
+      questionOrder.push(origIdx);
+      const sel = nextAnswers[displayIdx];
+      if (typeof sel === "number" && sel >= 0) {
+        answersByOriginalIndex[String(origIdx)] = sel;
+      }
+      if (nextFlags[displayIdx]) {
+        flaggedByOriginalIndex[String(origIdx)] = true;
+      }
+    });
+
+    const essayByOriginalIndex: Record<string, string> = {};
+    for (const [k, v] of Object.entries(nextEssay)) {
+      if (typeof v === "string" && v.trim()) {
+        essayByOriginalIndex[String(k)] = v;
+      }
+    }
+
+    return {
+      version: 2,
+      studentId: student?.id ?? null,
+      quizId: quizObj.id,
+      questionOrder,
+      answersByOriginalIndex,
+      essayByOriginalIndex,
+      flaggedByOriginalIndex,
+      lastQuestionIndex,
+      clientSubmissionId: quizSubmissionIdRef.current,
+      elapsedSeconds: quizElapsedSecondsRef.current,
+      savedAt: Date.now(),
+    };
+  };
+
+  const syncServerDraftNow = (
+    quizId: number,
+    payload: ReturnType<typeof buildDraftPayload>,
+    keepalive = false,
+  ) => {
+    if (!quizId || isUnpaid) return;
+    const body = JSON.stringify({
+      questionOrder: payload.questionOrder,
+      answersByOriginalIndex: payload.answersByOriginalIndex,
+      essayByOriginalIndex: payload.essayByOriginalIndex,
+      flaggedByOriginalIndex: payload.flaggedByOriginalIndex,
+      lastQuestionIndex: payload.lastQuestionIndex,
+      elapsedSeconds: payload.elapsedSeconds,
+      clientSubmissionId: payload.clientSubmissionId,
+    });
+    fetch(`/api/learning/quizzes/${quizId}/draft`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive,
+    }).catch(() => {});
+  };
+
   const persistQuizDraft = (
     quizObj: Quiz | null,
     nextAnswers: number[],
     nextEssay: Record<number, string>,
     nextFlags: Record<number, boolean>,
+    overrideLastIndex?: number,
+    immediateServerSync = false,
   ) => {
     if (!quizObj?.id || isQuizHomework(quizObj)) return;
+    if (typeof overrideLastIndex === "number" && overrideLastIndex >= 0) {
+      lastQuestionIndexRef.current = overrideLastIndex;
+    }
+    const payload = buildDraftPayload(
+      quizObj,
+      nextAnswers,
+      nextEssay,
+      nextFlags,
+      lastQuestionIndexRef.current,
+    );
     try {
-      const answersByOriginalIndex: Record<number, number> = {};
-      const flaggedByOriginalIndex: Record<number, boolean> = {};
-      const questionOrder: number[] = [];
-
-      quizObj.questions.forEach((q: any, displayIdx: number) => {
-        const origIdx = typeof q._originalIndex === "number" ? q._originalIndex : displayIdx;
-        questionOrder.push(origIdx);
-        const sel = nextAnswers[displayIdx];
-        if (typeof sel === "number" && sel >= 0) {
-          answersByOriginalIndex[origIdx] = sel;
-        }
-        if (nextFlags[displayIdx]) {
-          flaggedByOriginalIndex[origIdx] = true;
-        }
-      });
-
-      localStorage.setItem(
-        getQuizDraftKeyV2(quizObj.id),
-        JSON.stringify({
-          version: 2,
-          studentId: student?.id ?? null,
-          quizId: quizObj.id,
-          questionOrder,
-          answersByOriginalIndex,
-          essayByOriginalIndex: nextEssay,
-          flaggedByOriginalIndex,
-          clientSubmissionId: quizSubmissionIdRef.current,
-          elapsedSeconds: quizElapsedSecondsRef.current,
-          savedAt: Date.now(),
-        }),
-      );
+      localStorage.setItem(getQuizDraftKeyV2(quizObj.id), JSON.stringify(payload));
       localStorage.removeItem(`dr_mahmoud_quiz_draft_${quizObj.id}`);
     } catch {}
+
+    // Keep ExamCard draft summary synced locally
+    setQuizzes((prev) =>
+      prev.map((item) =>
+        item.id === quizObj.id
+          ? {
+              ...item,
+              draft: {
+                questionOrder: payload.questionOrder,
+                answersByOriginalIndex: payload.answersByOriginalIndex,
+                essayByOriginalIndex: payload.essayByOriginalIndex,
+                flaggedByOriginalIndex: payload.flaggedByOriginalIndex,
+                lastQuestionIndex: payload.lastQuestionIndex,
+                elapsedSeconds: payload.elapsedSeconds,
+                clientSubmissionId: payload.clientSubmissionId,
+                updatedAt: new Date(payload.savedAt).toISOString(),
+              },
+            }
+          : item,
+      ),
+    );
+
+    if (serverDraftTimerRef.current) {
+      window.clearTimeout(serverDraftTimerRef.current);
+      serverDraftTimerRef.current = null;
+    }
+    if (immediateServerSync) {
+      syncServerDraftNow(quizObj.id, payload, true);
+    } else {
+      serverDraftTimerRef.current = window.setTimeout(() => {
+        syncServerDraftNow(quizObj.id, payload, false);
+      }, 750);
+    }
   };
 
   // Auto-retry pending failed quiz submission immediately when internet connection returns
@@ -885,59 +1027,83 @@ export function StudentPlatform() {
     let initialEssayAnswers: Record<number, string> = {};
     let initialFlagged: Record<number, boolean> = {};
     let initialElapsed = 0;
+    let initialLastIdx = 0;
     let restoredSubmissionId = "";
+    let wasResumed = false;
 
-    // Restore student-scoped v2 draft (preserving the EXACT shuffled question order & originalIndex mapping!)
+    const isDraftOrderValid = (draftObj: any) =>
+      draftObj &&
+      Array.isArray(draftObj.questionOrder) &&
+      draftObj.questionOrder.length === targetCount &&
+      draftObj.questionOrder.every(
+        (origIdx: unknown) => typeof origIdx === "number" && origIdx >= 0 && origIdx < originalTotal,
+      );
+
+    // Pick freshest valid draft between localStorage (7-day TTL) and server-side quiz.draft
+    let chosenDraft: any = null;
     try {
       const savedRaw = localStorage.getItem(getQuizDraftKeyV2(quiz.id));
-      if (savedRaw) {
-        const saved = JSON.parse(savedRaw);
-        const validAge = Date.now() - (saved?.savedAt || 0) < 6 * 60 * 60 * 1000;
-        const validOrder =
-          saved?.version === 2 &&
-          Array.isArray(saved.questionOrder) &&
-          saved.questionOrder.length === targetCount &&
-          saved.questionOrder.every(
-            (origIdx: unknown) => typeof origIdx === "number" && origIdx >= 0 && origIdx < originalTotal,
-          );
+      const localDraft = savedRaw ? JSON.parse(savedRaw) : null;
+      const localValid =
+        localDraft?.version === 2 &&
+        Date.now() - (localDraft?.savedAt || 0) < 7 * 24 * 60 * 60 * 1000 &&
+        isDraftOrderValid(localDraft);
+      const serverDraft = quiz.draft && isDraftOrderValid(quiz.draft) ? quiz.draft : null;
 
-        if (validAge && validOrder) {
-          mappedQuestions = saved.questionOrder.map((origIdx: number) => allMapped[origIdx]);
-          const ansMap = saved.answersByOriginalIndex || {};
-          initialAnswers = mappedQuestions.map((q: any) => {
-            const val = ansMap[q._originalIndex];
-            if (typeof val !== "number" || val < 0) return -1;
-            if (Array.isArray(q.options) && q.options.length > 0 && val >= q.options.length) return -1;
-            return val;
-          });
-          if (saved.essayByOriginalIndex && typeof saved.essayByOriginalIndex === "object") {
-            initialEssayAnswers = saved.essayByOriginalIndex;
-          }
-          if (saved.flaggedByOriginalIndex && typeof saved.flaggedByOriginalIndex === "object") {
-            mappedQuestions.forEach((q: any, dIdx: number) => {
-              if (saved.flaggedByOriginalIndex[q._originalIndex]) {
-                initialFlagged[dIdx] = true;
-              }
-            });
-          }
-          initialElapsed = Math.max(0, Math.floor(Number(saved.elapsedSeconds) || 0));
-          if (typeof saved.clientSubmissionId === "string" && saved.clientSubmissionId) {
-            restoredSubmissionId = saved.clientSubmissionId;
-          }
-        }
+      if (localValid && serverDraft) {
+        const localTime = Number(localDraft.savedAt) || 0;
+        const serverTime = serverDraft.updatedAt ? new Date(serverDraft.updatedAt).getTime() : 0;
+        chosenDraft = serverTime > localTime ? serverDraft : localDraft;
+      } else if (localValid) {
+        chosenDraft = localDraft;
+      } else if (serverDraft) {
+        chosenDraft = serverDraft;
       }
-    } catch {}
+    } catch {
+      if (quiz.draft && isDraftOrderValid(quiz.draft)) {
+        chosenDraft = quiz.draft;
+      }
+    }
+
+    if (chosenDraft) {
+      wasResumed = true;
+      mappedQuestions = chosenDraft.questionOrder.map((origIdx: number) => allMapped[origIdx]);
+      const ansMap = chosenDraft.answersByOriginalIndex || {};
+      initialAnswers = mappedQuestions.map((q: any) => {
+        const val = ansMap[q._originalIndex] ?? ansMap[String(q._originalIndex)];
+        if (typeof val !== "number" || val < 0) return -1;
+        if (Array.isArray(q.options) && q.options.length > 0 && val >= q.options.length) return -1;
+        return val;
+      });
+      if (chosenDraft.essayByOriginalIndex && typeof chosenDraft.essayByOriginalIndex === "object") {
+        initialEssayAnswers = chosenDraft.essayByOriginalIndex;
+      }
+      if (chosenDraft.flaggedByOriginalIndex && typeof chosenDraft.flaggedByOriginalIndex === "object") {
+        mappedQuestions.forEach((q: any, dIdx: number) => {
+          if (chosenDraft.flaggedByOriginalIndex[q._originalIndex] || chosenDraft.flaggedByOriginalIndex[String(q._originalIndex)]) {
+            initialFlagged[dIdx] = true;
+          }
+        });
+      }
+      initialElapsed = Math.max(0, Math.floor(Number(chosenDraft.elapsedSeconds) || 0));
+      initialLastIdx = Math.max(0, Math.min(mappedQuestions.length - 1, Number(chosenDraft.lastQuestionIndex) || 0));
+      if (typeof chosenDraft.clientSubmissionId === "string" && chosenDraft.clientSubmissionId) {
+        restoredSubmissionId = chosenDraft.clientSubmissionId;
+      }
+    }
 
     if (!initialAnswers) {
-      if (quiz.shuffleQuestions) {
-        for (let i = mappedQuestions.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
-        }
-      }
       if (targetCount < mappedQuestions.length) {
+        if (quiz.shuffleQuestions) {
+          for (let i = mappedQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
+          }
+        }
         mappedQuestions = mappedQuestions.slice(0, targetCount);
       }
+      // Group cleanly by Lesson (and Unit when multi-unit), shuffling only inside each lesson
+      mappedQuestions = groupQuestionsByLesson(mappedQuestions, Boolean(quiz.shuffleQuestions));
       initialAnswers = Array(mappedQuestions.length).fill(-1);
     }
 
@@ -945,9 +1111,28 @@ export function StudentPlatform() {
       restoredSubmissionId ||
       `sub_${student?.id || 0}_${quiz.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
+    lastQuestionIndexRef.current = initialLastIdx;
     const preparedQuiz = { ...quiz, questions: mappedQuestions };
-    // Persist question order right away so any accidental refresh keeps the exact same question sequence
-    persistQuizDraft(preparedQuiz, initialAnswers, initialEssayAnswers, initialFlagged);
+    // Persist question order & initial draft state locally + sync to server
+    persistQuizDraft(preparedQuiz, initialAnswers, initialEssayAnswers, initialFlagged, initialLastIdx, false);
+
+    // Compute how many questions were already answered when resuming
+    const resumedAnsweredCount = mappedQuestions.filter((q: any, dIdx: number) => {
+      const origIdx = q._originalIndex !== undefined ? q._originalIndex : dIdx;
+      const isEssayQ = q.questionType === "essay" || !q.options || q.options.length === 0;
+      if (isEssayQ) return Boolean((initialEssayAnswers[origIdx] ?? "").trim());
+      return (initialAnswers![dIdx] ?? -1) >= 0;
+    }).length;
+
+    if (wasResumed && (resumedAnsweredCount > 0 || initialLastIdx > 0)) {
+      const resumeMsg = `تم استكمال الاختبار من مكان ما وقفت (السؤال #${initialLastIdx + 1} · ${resumedAnsweredCount} من ${mappedQuestions.length} إجابة محفوظة)`;
+      setResumedNotice(resumeMsg);
+      setTimeout(() => {
+        document.getElementById(`quiz-q-${initialLastIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 160);
+    } else {
+      setResumedNotice("");
+    }
 
     // _originalTotal is carried on every question so submitQuiz can build the right-sized array
     setActiveQuiz(preparedQuiz);
@@ -974,29 +1159,42 @@ export function StudentPlatform() {
     setLiveMotivation(getNextMotivationMessage("start"));
   };
 
-  const startQuizReview = async (quiz: Quiz) => {
+  const startQuizReview = async (quiz: Quiz, attemptId?: number) => {
     try {
+      const qs = attemptId ? `?attemptId=${attemptId}` : "";
       const res = await api<{
         quiz: Quiz;
         attempt: any;
+        selectedAttemptId?: number;
+        attemptsHistory?: Array<{
+          id: number;
+          score: number;
+          passed: boolean;
+          timeSpentSeconds?: number;
+          createdAt: string;
+          attemptNumber: number;
+        }>;
         score: number;
         passed: boolean;
         correct: number;
         total: number;
         attemptsUsed: number;
         details?: Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }>;
-      }>(`/api/learning/quizzes/${quiz.id}/review`);
+      }>(`/api/learning/quizzes/${quiz.id}/review${qs}`);
 
       const reviewQuiz = res.quiz || quiz;
       const originalTotal = reviewQuiz.questions.length;
-      const mappedQuestions = reviewQuiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
+      const rawMapped = reviewQuiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
+      const groupedQuestions = groupQuestionsByLesson(rawMapped, false);
 
-      setActiveQuiz({ ...reviewQuiz, questions: mappedQuestions });
+      setResumedNotice("");
+      setActiveQuiz({ ...reviewQuiz, questions: groupedQuestions });
       setFlaggedQuestions({});
       setQuizSubmitFailedError("");
 
-      const studentAnswers = mappedQuestions.map((_, idx) => {
-        const found = res.details?.find((d) => d.questionIndex === idx);
+      const studentAnswers = groupedQuestions.map((q: any) => {
+        const origIdx = typeof q._originalIndex === "number" ? q._originalIndex : 0;
+        const found = res.details?.find((d) => d.questionIndex === origIdx);
         return found ? found.selectedOption : -1;
       });
 
@@ -1016,6 +1214,8 @@ export function StudentPlatform() {
         total: res.total,
         attemptsUsed: res.attemptsUsed,
         attemptsRemaining: null,
+        selectedAttemptId: res.selectedAttemptId || res.attempt?.id,
+        attemptsHistory: res.attemptsHistory,
         details: res.details,
       });
       setQuizTimeRemaining(null);
@@ -1169,6 +1369,7 @@ export function StudentPlatform() {
           quiz.id === activeQuiz.id
             ? {
                 ...quiz,
+                draft: null,
                 bestScore:
                   typeof quiz.bestScore === "number"
                     ? Math.max(quiz.bestScore, res.score)
@@ -2411,6 +2612,13 @@ export function StudentPlatform() {
           }).length;
           const progressPct = totalQ > 0 ? Math.round((answeredQ / totalQ) * 100) : 0;
           const flaggedCount = Object.values(flaggedQuestions).filter(Boolean).length;
+          const sectionAnalysis = analyzeQuizSections(
+            activeQuiz.questions,
+            quizAnswers,
+            essayTextAnswers,
+            (quizResult as any)?.details,
+            Boolean(quizResult),
+          );
           return (
             <motion.div
               className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
@@ -2460,37 +2668,59 @@ export function StudentPlatform() {
                     </div>
                   </div>
 
-                  {/* Left side (LTR): Actions + Live Countdown Timer (for BOTH Exams & Homeworks!) */}
+                  {/* Left side (LTR): Actions + Countdown (only if timed) or Calm Open Status */}
                   <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
-                    {!quizResult && (
-                      <div
-                        className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
-                          quizTimeRemaining === null
-                            ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
-                            : quizTimeRemaining <= 60
-                            ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
-                            : quizTimeRemaining <= 300
-                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                            : isHomework
-                            ? "bg-amber-50/90 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-400/40"
-                            : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
-                        }`}
-                        title={isHomework ? "مؤقت حل الواجب" : "الوقت المتبقي للاختبار"}
-                      >
-                        <Clock className="h-4 w-4 shrink-0" />
-                        <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
-                          {quizTimeRemaining !== null
-                            ? formatTimerClock(quizTimeRemaining)
-                            : formatTimerClock(quizElapsedSeconds)
-                          }
-                        </span>
-                        {quizTimeRemaining !== null && effectiveDurationMinutes && (
-                          <span className="text-[10px] font-bold font-mono opacity-70 hidden sm:inline">
-                            {`/ ${formatTimerClock(effectiveDurationMinutes * 60)}`}
+                    {!quizResult && (() => {
+                      const winInfo = !isHomework
+                        ? formatRemainingWindowAr(activeQuiz.availableUntil, activeQuiz.openHours)
+                        : null;
+                      if (quizTimeRemaining !== null) {
+                        return (
+                          <div
+                            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
+                              quizTimeRemaining <= 60
+                                ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
+                                : quizTimeRemaining <= 300
+                                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                                : isHomework
+                                ? "bg-amber-50/90 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-400/40"
+                                : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
+                            }`}
+                            title={isHomework ? "مؤقت حل الواجب" : "الوقت المتبقي للاختبار"}
+                          >
+                            <Clock className="h-4 w-4 shrink-0" />
+                            <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
+                              {formatTimerClock(quizTimeRemaining)}
+                            </span>
+                            {effectiveDurationMinutes && (
+                              <span className="text-[10px] font-bold font-mono opacity-70 hidden sm:inline">
+                                {`/ ${formatTimerClock(effectiveDurationMinutes * 60)}`}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div
+                          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border shadow-2xs ${
+                            winInfo?.expired
+                              ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40"
+                              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25"
+                          }`}
+                          dir="rtl"
+                          title="بدون مؤقت زمني أثناء الحل"
+                        >
+                          <Clock className="h-3.5 w-3.5 shrink-0" />
+                          <span>
+                            {isHomework
+                              ? "بدون وقت محدد"
+                              : winInfo
+                                ? `بدون مؤقت · ${winInfo.label}`
+                                : "بدون مؤقت"}
                           </span>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      );
+                    })()}
 
                     {isHomework && (
                       <Button
@@ -2522,28 +2752,34 @@ export function StudentPlatform() {
                       </Button>
                     )}
 
-                    {/* Exit button */}
+                    {/* Save & Exit button */}
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => {
                         if (!quizResult && !isHomework) {
-                          if (
-                            !window.confirm(
-                              "هل أنت متأكد من رغبتك في الخروج المؤقت؟ إجاباتك محفوظة كمسودة على جهازك، لكن لن يتم اعتماد درجتك إلا عند الضغط على «تسليم الاختبار»."
-                            )
-                          ) {
-                            return;
-                          }
+                          persistQuizDraft(
+                            activeQuiz,
+                            quizAnswers,
+                            essayTextAnswers,
+                            flaggedQuestions,
+                            lastQuestionIndexRef.current,
+                            true,
+                          );
+                          toast({
+                            title: "تم حفظ تقدمك بنجاح 💾",
+                            description: `حفظنا ${answeredQ} من ${totalQ} إجابة — عند العودة ستكمل من السؤال #${lastQuestionIndexRef.current + 1}.`,
+                          });
                         }
+                        setResumedNotice("");
                         setActiveQuiz(null);
                         setQuizResult(null);
                       }}
-                      className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all cursor-pointer"
+                      className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all cursor-pointer"
                     >
                       <X className="h-4 w-4 ml-1" />
-                      <span>{quizResult || isHomework ? "إغلاق" : "خروج"}</span>
+                      <span>{quizResult || isHomework ? "إغلاق" : "حفظ وخروج"}</span>
                     </Button>
                   </div>
                 </div>
@@ -2692,6 +2928,10 @@ export function StudentPlatform() {
                             key={nIdx}
                             type="button"
                             onClick={() => {
+                              lastQuestionIndexRef.current = nIdx;
+                              if (!quizResult && !isHomework) {
+                                persistQuizDraft(activeQuiz, quizAnswers, essayTextAnswers, flaggedQuestions, nIdx, false);
+                              }
                               document.getElementById(`quiz-q-${nIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
                             }}
                             title={`الانتقال للسؤال ${nIdx + 1}${navFlagged ? " (معلّم للمراجعة)" : ""}`}
@@ -2713,6 +2953,23 @@ export function StudentPlatform() {
               className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 md:py-8 scroll-smooth"
             >
               <div className="max-w-3xl lg:max-w-4xl mx-auto space-y-6 pb-20">
+                {/* Resumed Progress Banner */}
+                {!quizResult && resumedNotice && (
+                  <div
+                    className="rounded-2xl border border-indigo-500/35 bg-indigo-500/10 px-4 py-3 text-xs sm:text-sm font-bold text-indigo-800 dark:text-indigo-200 flex items-center justify-between gap-2"
+                    dir="rtl"
+                  >
+                    <span>⏸️ {resumedNotice}</span>
+                    <button
+                      type="button"
+                      onClick={() => setResumedNotice("")}
+                      className="text-xs opacity-70 hover:opacity-100 cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Result Card: Placed at TOP when exam is finished */}
                 {quizResult && (
                   <div
@@ -2796,6 +3053,102 @@ export function StudentPlatform() {
                     <div className="mt-4 pt-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
                       <span>↓ مرر لأسفل لمراجعة الأسئلة والشروحات التفصيلية</span>
                     </div>
+
+                    {/* Saved Attempts Switcher (when multiple attempts exist in review) */}
+                    {quizResult.attemptsHistory && quizResult.attemptsHistory.length > 1 && activeQuiz && (
+                      <div className="mt-4 pt-4 border-t border-current/15 text-right space-y-2">
+                        <span className="text-[11px] font-black text-slate-600 dark:text-slate-300 block">
+                          المحاولات المحفوظة لهذا الامتحان:
+                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {quizResult.attemptsHistory.map((att) => {
+                            const isActiveAtt = att.id === quizResult.selectedAttemptId;
+                            return (
+                              <button
+                                key={att.id}
+                                type="button"
+                                onClick={() => void startQuizReview(activeQuiz, att.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                                  isActiveAtt
+                                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                    : "bg-white/80 dark:bg-[#0F1D32]/80 text-slate-700 dark:text-slate-200 border-current/15 hover:border-blue-500/50"
+                                }`}
+                              >
+                                محاولة #{att.attemptNumber} ({att.score}%)
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Per-Lesson / Per-Unit Weakness Breakdown */}
+                    {sectionAnalysis.aggregatedSections.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-current/15 text-right space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                            📊 مستواك في كل درس{sectionAnalysis.hasMultipleUnits ? " ووحدة" : ""}
+                          </strong>
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            اضغط على الدرس للانتقال لأسئلته
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {sectionAnalysis.aggregatedSections.map((sec) => {
+                            const secPct = sec.count > 0 ? Math.round((sec.correctCount / sec.count) * 100) : 0;
+                            const isWeak = secPct < 60;
+                            const isStrong = secPct >= 85;
+                            return (
+                              <button
+                                key={sec.key}
+                                type="button"
+                                onClick={() => {
+                                  document.getElementById(`quiz-sec-${sec.startIndex}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                }}
+                                className="text-right rounded-2xl bg-white/85 dark:bg-[#0F1D32]/85 border border-current/15 hover:border-blue-500/50 p-3 space-y-1.5 transition cursor-pointer"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0 flex-1 space-y-0.5">
+                                    {sectionAnalysis.hasMultipleUnits && sec.unit && (
+                                      <span className="block text-[10px] font-bold text-blue-600 dark:text-blue-400 truncate">
+                                        {sec.unit}
+                                      </span>
+                                    )}
+                                    <span className="block text-xs font-black text-slate-900 dark:text-white line-clamp-1">
+                                      {sec.lesson || sec.unit}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={`shrink-0 px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-black ${
+                                      isStrong
+                                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                        : isWeak
+                                          ? "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                                          : "bg-blue-500/15 text-blue-700 dark:text-blue-300"
+                                    }`}
+                                  >
+                                    {sec.correctCount}/{sec.count} ({secPct}%)
+                                  </span>
+                                </div>
+                                <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      isStrong ? "bg-emerald-500" : isWeak ? "bg-rose-500" : "bg-blue-500"
+                                    }`}
+                                    style={{ width: `${secPct}%` }}
+                                  />
+                                </div>
+                                {isWeak && (
+                                  <span className="block text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                    ⚠️ جزء يحتاج مراجعة
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2846,11 +3199,57 @@ export function StudentPlatform() {
                   const isWrong = quizResult && isSelected && !isCorrect;
                   const isEng = isEnglishQuestion(q.prompt, q.options);
                   const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+                  const sectionHeader = sectionAnalysis.contiguousSectionsByStartIndex.get(qi);
+                  const showSectionHeader = Boolean(
+                    sectionHeader &&
+                      (sectionHeader.lesson || sectionHeader.unit) &&
+                      (sectionAnalysis.hasMultipleLessons || sectionAnalysis.hasMultipleUnits || qi === 0),
+                  );
 
                   return (
+                    <Fragment key={qi}>
+                      {showSectionHeader && sectionHeader && (
+                        <div
+                          id={`quiz-sec-${sectionHeader.startIndex}`}
+                          className="rounded-2xl border border-blue-500/30 bg-blue-50/80 dark:bg-blue-950/35 px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-2xs"
+                          dir="rtl"
+                        >
+                          <div className="flex flex-wrap items-center gap-2 min-w-0">
+                            {sectionAnalysis.hasMultipleUnits && sectionHeader.unit && (
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 text-white px-2.5 py-0.5 text-[11px] font-black shrink-0">
+                                <span>{sectionHeader.unit}</span>
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                              <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                              <span>{sectionHeader.lesson || sectionHeader.unit}</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] font-bold shrink-0">
+                            <span className="px-2 py-0.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-border text-slate-700 dark:text-slate-200 font-mono">
+                              س {sectionHeader.startIndex + 1} – {sectionHeader.endIndex + 1} ({sectionHeader.count})
+                            </span>
+                            {quizResult && (() => {
+                              const secPct = sectionHeader.count > 0 ? Math.round((sectionHeader.correctCount / sectionHeader.count) * 100) : 0;
+                              return (
+                                <span
+                                  className={`px-2 py-0.5 rounded-lg font-mono font-black ${
+                                    secPct >= 85
+                                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                                      : secPct < 60
+                                        ? "bg-rose-500/20 text-rose-700 dark:text-rose-300"
+                                        : "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+                                  }`}
+                                >
+                                  {sectionHeader.correctCount}/{sectionHeader.count} ({secPct}%)
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      )}
                     <div
                       id={`quiz-q-${qi}`}
-                      key={qi}
                       className={`relative overflow-hidden space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
                         quizResult
                           ? isCorrect
@@ -2873,7 +3272,7 @@ export function StudentPlatform() {
                             onClick={() => {
                               setFlaggedQuestions((prev) => {
                                 const nextFlags = { ...prev, [qi]: !prev[qi] };
-                                persistQuizDraft(activeQuiz, quizAnswers, essayTextAnswers, nextFlags);
+                                persistQuizDraft(activeQuiz, quizAnswers, essayTextAnswers, nextFlags, qi);
                                 return nextFlags;
                               });
                             }}
@@ -3031,7 +3430,7 @@ export function StudentPlatform() {
                                   const val = e.target.value;
                                   setEssayTextAnswers((prev) => {
                                     const nextEssay = { ...prev, [origIdx]: val };
-                                    persistQuizDraft(activeQuiz, quizAnswers, nextEssay, flaggedQuestions);
+                                    persistQuizDraft(activeQuiz, quizAnswers, nextEssay, flaggedQuestions, qi);
                                     return nextEssay;
                                   });
                                 }}
@@ -3088,7 +3487,7 @@ export function StudentPlatform() {
                                   onChange={() => {
                                     const nextAnswers = quizAnswers.map((a, i) => (i === qi ? oi : a));
                                     setQuizAnswers(nextAnswers);
-                                    persistQuizDraft(activeQuiz, nextAnswers, essayTextAnswers, flaggedQuestions);
+                                    persistQuizDraft(activeQuiz, nextAnswers, essayTextAnswers, flaggedQuestions, qi);
                                   }}
                                   className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                                 />
@@ -3135,6 +3534,7 @@ export function StudentPlatform() {
                         );
                       })()}
                     </div>
+                    </Fragment>
                   );
                 })}
 

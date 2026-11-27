@@ -19,7 +19,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Quiz } from "@/types/platform";
-import { formatExamDayAndTime, formatQuizDurationAr, getEffectiveQuizDurationMinutes } from "@/lib/motivationMessages";
+import {
+  formatExamDayAndTime,
+  formatQuizDurationAr,
+  formatRemainingWindowAr,
+  getEffectiveQuizDurationMinutes,
+} from "@/lib/motivationMessages";
 
 // ── 1. Compact Page Header ──
 export function ExamsPageHeader({ totalCount }: { totalCount: number }) {
@@ -206,7 +211,7 @@ export function ExamFilters({
         {[
           ["all", "الكل"],
           ["available", "متاح الآن"],
-          ["completed", "تم الحل"],
+          ["completed", "تم الحل (محفوظ للمراجعة)"],
           ["locked", "مغلق"],
         ].map(([val, label]) => {
           const isActive = statusFilter === val;
@@ -246,7 +251,16 @@ export function ExamCard({
   const isCompleted = attemptsUsed > 0;
   const isLocked = !!quiz.locked;
   const questionsCount = quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length;
+  const draftAnswersCount =
+    Object.keys(quiz.draft?.answersByOriginalIndex || {}).length +
+    Object.keys(quiz.draft?.essayByOriginalIndex || {}).length;
+  const hasSavedDraft = Boolean(
+    !isLocked &&
+      quiz.draft &&
+      (draftAnswersCount > 0 || (quiz.draft.lastQuestionIndex ?? 0) > 0),
+  );
   const effectiveDuration = getEffectiveQuizDurationMinutes(quiz);
+  const windowInfo = formatRemainingWindowAr(quiz.availableUntil, quiz.openHours);
   const examDateInfo = formatExamDayAndTime(quiz.createdAt);
 
   let statusBadgeText = "جديد — لم يتم حله";
@@ -254,23 +268,27 @@ export function ExamCard({
   let cardBorderBg = "border border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-blue-500/50";
   let showPulsingDot = true;
 
-  if (isLocked) {
+  if (isCompleted) {
+    showPulsingDot = false;
+    statusBadgeText = isLocked ? "محفوظ للمراجعة ✓" : "تم الاختبار بنجاح ✓";
+    statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60";
+    cardBorderBg = "border border-emerald-300/70 dark:border-emerald-700/60 bg-card dark:bg-[#0A101D] hover:border-emerald-500";
+  } else if (isLocked) {
     statusBadgeText = "مغلق 🔒";
     statusBadgeClass = "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60";
     cardBorderBg = "border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40 opacity-75";
     showPulsingDot = false;
-  } else if (isCompleted) {
-    showPulsingDot = false;
-    statusBadgeText = "تم الاختبار بنجاح ✓";
-    statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60";
-    cardBorderBg = "border border-emerald-300/70 dark:border-emerald-700/60 bg-card dark:bg-[#0A101D] hover:border-emerald-500";
+  } else if (hasSavedDraft) {
+    statusBadgeText = "جاري الحل (محفوظ) ⏸️";
+    statusBadgeClass = "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/60";
+    cardBorderBg = "border border-indigo-300/80 dark:border-indigo-700/60 bg-card dark:bg-[#0A101D] hover:border-indigo-500";
   }
 
   return (
     <article className={`group relative flex flex-col justify-between rounded-2xl ${cardBorderBg} p-3.5 sm:p-4 shadow-2xs hover:shadow-xs transition-all duration-200 w-full overflow-hidden`} dir="rtl">
       <div className="space-y-2.5">
-        {/* 1. Status Badge & Duration */}
-        <div className="flex items-center justify-between gap-2">
+        {/* 1. Status Badge & Availability Window / Timer */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[10.5px] font-bold border ${statusBadgeClass}`}>
             {showPulsingDot && (
               <span className="relative flex h-1.5 w-1.5">
@@ -282,12 +300,28 @@ export function ExamCard({
             {statusBadgeText}
           </span>
 
-          {effectiveDuration && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
-              <Clock className="h-3 w-3 text-amber-500" />
-              <span>{formatQuizDurationAr(effectiveDuration)}</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg border ${
+                windowInfo.expired
+                  ? "text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/40 border-rose-200/70 dark:border-rose-800/50"
+                  : "text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/40 border-blue-200/70 dark:border-blue-800/50"
+              }`}
+            >
+              <Clock className="h-3 w-3 shrink-0" />
+              <span>{windowInfo.label}</span>
             </span>
-          )}
+
+            {effectiveDuration ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 px-2 py-0.5 rounded-lg">
+                <span>مؤقت {formatQuizDurationAr(effectiveDuration)}</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/50 px-2 py-0.5 rounded-lg">
+                <span>بدون مؤقت</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 1.5. Day & Time of Exam / Homework */}
@@ -385,11 +419,27 @@ export function ExamCard({
           );
         })()}
 
-        {/* Locked Reason Warning */}
+        {/* Resume Progress Notice (if draft saved) */}
+        {hasSavedDraft && (
+          <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/80 dark:bg-indigo-950/40 p-2 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 flex items-center justify-between gap-2">
+            <span>
+              تم حفظ {draftAnswersCount} من {questionsCount} سؤال
+              {(quiz.draft?.lastQuestionIndex ?? 0) > 0
+                ? ` · توقفت عند س ${(quiz.draft?.lastQuestionIndex ?? 0) + 1}`
+                : ""}
+            </span>
+          </div>
+        )}
+
+        {/* Locked Reason Warning (only if not already completed, or subtle archive note) */}
         {isLocked && quiz.lockedReason && (
           <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 p-2 text-[11px] font-bold text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
             <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <span>{quiz.lockedReason}</span>
+            <span>
+              {isCompleted
+                ? `${quiz.lockedReason} — يمكنك مراجعة إجاباتك ونتيجتك في أي وقت`
+                : quiz.lockedReason}
+            </span>
           </div>
         )}
       </div>
@@ -406,16 +456,16 @@ export function ExamCard({
               <Eye className="h-3.5 w-3.5" />
               <span>مراجعة الإجابات 👁️</span>
             </Button>
-            {attemptsLeft === null || attemptsLeft > 0 ? (
+            {!isLocked && (attemptsLeft === null || attemptsLeft > 0) ? (
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onStartQuiz(quiz)}
                 className="h-9 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0"
-                title="إعادة المحاولة"
+                title={hasSavedDraft ? "استكمال المحاولة الجارية" : "إعادة المحاولة"}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">إعادة</span>
+                <span className="hidden sm:inline">{hasSavedDraft ? "استكمال" : "إعادة"}</span>
               </Button>
             ) : null}
           </div>
@@ -427,10 +477,18 @@ export function ExamCard({
             className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
               isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
                 ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                : hasSavedDraft
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
             }`}
           >
-            {isLocked ? "غير متاح حالياً" : attemptsLeft !== null && attemptsLeft <= 0 ? "خلصت كل محاولاتك" : "ابدأ الاختبار 🚀"}
+            {isLocked
+              ? "غير متاح حالياً"
+              : attemptsLeft !== null && attemptsLeft <= 0
+                ? "خلصت كل محاولاتك"
+                : hasSavedDraft
+                  ? "استكمال من مكان ما وقفت ▶️"
+                  : "ابدأ الاختبار 🚀"}
           </Button>
         )}
       </div>

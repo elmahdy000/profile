@@ -85,39 +85,39 @@ const SELF_CONTAINED_ADMIN_TABS = new Set<string>([
 const WORKSPACE_SUBNAV_GROUPS: Array<{
   tabs: Array<{ id: AdminLearningTab; label: string }>;
 }> = [
-  {
-    tabs: [
-      { id: "students", label: "قائمة الطلاب" },
-      { id: "attendance", label: "حضور السنتر QR" },
-      { id: "center-bookings", label: "جدول السناتر" },
-      { id: "summaries", label: "كشكول التلخيصات" },
-    ],
-  },
-  {
-    tabs: [
-      { id: "payments", label: "إيصالات الدفع" },
-      { id: "subscriptions", label: "الاشتراكات الشهرية" },
-    ],
-  },
-  {
-    tabs: [
-      { id: "testbank", label: "بنك الأسئلة والمولد" },
-      { id: "quizzes", label: "الاختبارات الإلكترونية" },
-      { id: "homework", label: "الواجبات المنزلية" },
-      { id: "essay-exams", label: "تصحيح المقالي" },
-      { id: "grades-sheet", label: "شيت الدرجات" },
-      { id: "memo-studio", label: "استوديو A4" },
-      { id: "self-assessment-packs", label: "باقات التقييم الذاتي" },
-    ],
-  },
-  {
-    tabs: [
-      { id: "overview", label: "اللوحة التشغيلية" },
-      { id: "reports", label: "التقارير والتحليلات" },
-      { id: "notifications", label: "الإشعارات والرسائل" },
-    ],
-  },
-];
+    {
+      tabs: [
+        { id: "students", label: "قائمة الطلاب" },
+        { id: "attendance", label: "حضور السنتر QR" },
+        { id: "center-bookings", label: "جدول السناتر" },
+        { id: "summaries", label: "كشكول التلخيصات" },
+      ],
+    },
+    {
+      tabs: [
+        { id: "payments", label: "إيصالات الدفع" },
+        { id: "subscriptions", label: "الاشتراكات الشهرية" },
+      ],
+    },
+    {
+      tabs: [
+        { id: "testbank", label: "بنك الأسئلة والمولد" },
+        { id: "quizzes", label: "الاختبارات الإلكترونية" },
+        { id: "homework", label: "الواجبات المنزلية" },
+        { id: "essay-exams", label: "تصحيح المقالي" },
+        { id: "grades-sheet", label: "شيت الدرجات" },
+        { id: "memo-studio", label: "استوديو A4" },
+        { id: "self-assessment-packs", label: "باقات التقييم الذاتي" },
+      ],
+    },
+    {
+      tabs: [
+        { id: "overview", label: "اللوحة التشغيلية" },
+        { id: "reports", label: "التقارير والتحليلات" },
+        { id: "notifications", label: "الإشعارات والرسائل" },
+      ],
+    },
+  ];
 
 function AdminTabFallback() {
   return (
@@ -181,6 +181,8 @@ interface Quiz {
   stage?: string | null;
   stages: string[];
   durationMinutes?: number | null;
+  openHours?: number | null;
+  availableUntil?: string | null;
   passingScore: number;
   maxAttempts: number;
   requiredProgress: number;
@@ -442,6 +444,7 @@ export function AdminLearning({
     stages: [] as string[],
     description: "",
     durationMinutes: "" as number | string,
+    openHours: "24" as number | string,
     passingScore: 60,
     maxAttempts: 3,
     requiredProgress: 80,
@@ -500,6 +503,7 @@ export function AdminLearning({
       stages: [],
       description: "",
       durationMinutes: "",
+      openHours: "24",
       passingScore: 60,
       maxAttempts: 3,
       requiredProgress: 80,
@@ -1007,7 +1011,7 @@ export function AdminLearning({
         (fileForm.targetType === "videos"
           ? (file.videoIds || []).some((id) => fileForm.videoIds.includes(String(id)))
           : file.category === fileForm.category &&
-            (file.stages || (file.stage ? [file.stage] : [])).some((stage) => fileForm.stages.includes(stage))),
+          (file.stages || (file.stage ? [file.stage] : [])).some((stage) => fileForm.stages.includes(stage))),
     );
     if (duplicate) {
       toast({
@@ -1153,17 +1157,19 @@ export function AdminLearning({
       : editingFile.category;
     const updated = await adminApi<FileItem>(
       `/api/admin/learning/files/${editingFile.id}`,
-      { method: "PATCH", body: JSON.stringify({
-        title: editingFile.title,
-        unit: editingFile.unit ? editingFile.unit.trim() : null,
-        lesson: editingFile.lesson ? editingFile.lesson.trim() : null,
-        targetType: editingFile.targetType || "stages",
-        courseId: editingFile.courseId,
-        subject: editingFile.subject || (learningCourses.find(c => c.id === editingFile.courseId)?.title) || "الحاسب الآلي والذكاء الاصطناعي",
-        category: editingCategory,
-        stages: editingFile.stages || [],
-        videoIds: editingFile.videoIds || [],
-      }) },
+      {
+        method: "PATCH", body: JSON.stringify({
+          title: editingFile.title,
+          unit: editingFile.unit ? editingFile.unit.trim() : null,
+          lesson: editingFile.lesson ? editingFile.lesson.trim() : null,
+          targetType: editingFile.targetType || "stages",
+          courseId: editingFile.courseId,
+          subject: editingFile.subject || (learningCourses.find(c => c.id === editingFile.courseId)?.title) || "الحاسب الآلي والذكاء الاصطناعي",
+          category: editingCategory,
+          stages: editingFile.stages || [],
+          videoIds: editingFile.videoIds || [],
+        })
+      },
     );
     setFiles(prev => prev.map((item) => (item.id === editingFile.id ? { ...updated, videoIds: editingFile.videoIds } : item)));
     setEditingFile(null);
@@ -1192,6 +1198,7 @@ export function AdminLearning({
         courseId: Number(quizForm.courseId),
         videoId: quizForm.scope === "lesson" && quizForm.videoId ? Number(quizForm.videoId) : null,
         durationMinutes: quizForm.durationMinutes ? Number(quizForm.durationMinutes) : null,
+        openHours: quizForm.openHours !== "" && quizForm.openHours !== null && Number(quizForm.openHours) > 0 ? Number(quizForm.openHours) : null,
         questionsToShow: quizForm.questionsToShow ? Number(quizForm.questionsToShow) : null,
       };
       const created = await adminApi<Quiz>(editingQuizId ? `/api/admin/learning/quizzes/${editingQuizId}` : "/api/admin/learning/quizzes", {
@@ -1219,6 +1226,7 @@ export function AdminLearning({
       stages: quiz.stages?.length ? quiz.stages : quiz.stage ? [quiz.stage] : [],
       description: quiz.description || "",
       durationMinutes: quiz.durationMinutes ? String(quiz.durationMinutes) : "",
+      openHours: quiz.openHours ? String(quiz.openHours) : "",
       passingScore: quiz.passingScore,
       maxAttempts: quiz.maxAttempts ?? 3,
       requiredProgress: quiz.requiredProgress ?? 80,
@@ -1300,9 +1308,9 @@ export function AdminLearning({
   const availableFileStages = selectedFileTrack?.stages ?? [];
   const fileStageGroups = selectedFileTrack?.id === "baccalaureate"
     ? [
-        { title: "البكالوريا", stages: availableFileStages.filter((stage) => stage.startsWith("البكالوريا")) },
-        { title: "الثانوية العامة", stages: availableFileStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
-      ]
+      { title: "البكالوريا", stages: availableFileStages.filter((stage) => stage.startsWith("البكالوريا")) },
+      { title: "الثانوية العامة", stages: availableFileStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
+    ]
     : selectedFileTrack
       ? [{ title: selectedFileTrack.shortTitle, stages: availableFileStages }]
       : [];
@@ -1345,10 +1353,10 @@ export function AdminLearning({
       : ACADEMIC_TRACKS.flatMap((track) => track.stages);
   const quizStageGroups = selectedQuizTrack?.id === "baccalaureate" || (!selectedQuizCourse && ACADEMIC_TRACKS.some((t) => t.id === "baccalaureate"))
     ? [
-        { title: "البكالوريا", stages: availableQuizStages.filter((stage) => stage.startsWith("البكالوريا")) },
-        { title: "الثانوية العامة", stages: availableQuizStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
-        { title: "الكليات والجامعات", stages: availableQuizStages.filter((stage) => stage.includes("كلية") || stage.includes("جامعة") || stage.includes("الفرقة")) },
-      ]
+      { title: "البكالوريا", stages: availableQuizStages.filter((stage) => stage.startsWith("البكالوريا")) },
+      { title: "الثانوية العامة", stages: availableQuizStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
+      { title: "الكليات والجامعات", stages: availableQuizStages.filter((stage) => stage.includes("كلية") || stage.includes("جامعة") || stage.includes("الفرقة")) },
+    ]
     : selectedQuizTrack
       ? [{ title: selectedQuizTrack.shortTitle, stages: availableQuizStages }]
       : availableQuizStages.length ? [{ title: selectedQuizCourse?.title || "المراحل المتاحة", stages: availableQuizStages }] : [];
@@ -1535,13 +1543,13 @@ export function AdminLearning({
         const activeTitle = tab === "students" && urlMode === "offline"
           ? "حجوزات السناتر والمواعيد (أوفلاين)"
           : tab === "students" && urlStatus === "pending"
-          ? "الحجوزات والطلبات ينتظر التفعيل"
-          : tabMeta[tab]?.[0] || tab;
+            ? "الحجوزات والطلبات ينتظر التفعيل"
+            : tabMeta[tab]?.[0] || tab;
         const activeSub = tab === "students" && urlMode === "offline"
           ? "سجل حجوزات وطلاب السناتر الحضورية بالزقازيق والمواعيد المحددة."
           : tab === "students" && urlStatus === "pending"
-          ? "طلبات التسجيل الجديدة والاشتراكات المعلقة بانتظار تفعيل المشرف."
-          : tabMeta[tab]?.[1] || "";
+            ? "طلبات التسجيل الجديدة والاشتراكات المعلقة بانتظار تفعيل المشرف."
+            : tabMeta[tab]?.[1] || "";
         const pillarName = PILLAR_NAMES[tab] || "لوحة الإدارة";
 
         return (
@@ -1608,11 +1616,10 @@ export function AdminLearning({
                   key={t.id}
                   type="button"
                   onClick={() => setTab(t.id)}
-                  className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
-                    isCurrent
-                      ? "bg-[#2563EB] text-white shadow-xs"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
+                  className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${isCurrent
+                    ? "bg-[#2563EB] text-white shadow-xs"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
                 >
                   {t.label}
                 </button>
@@ -1649,66 +1656,66 @@ export function AdminLearning({
           {tab === "students" && (
             <div id="students-tab-section">
               <StudentsTab
-              key={`${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") || "all" : "all"}_${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") || "all" : "all"}`}
-              role={role}
-              students={students}
-              recoveryRequests={recoveryRequests}
-              paymentReceipts={paymentReceipts}
-              studentStages={studentStages}
-              learningCourses={learningCourses}
-              onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
-              onUpdateStatusBulk={updateStudentsBulk}
-              onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
-              onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
-              onUpdateStudentCourses={async (student, courseIds) => { await updateStudentCourses(student, courseIds); }}
-              onDeleteStudent={async (id) => { await deleteStudent(id); }}
-              onSetMaxDevices={async (s) => {
-                const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
-                try {
-                  await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
-                    method: "POST",
-                    body: JSON.stringify({ maxDevices: newMax }),
-                  });
-                  toast({
-                    title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
-                    description: newMax === 2 ? `يمكن للطالب ${s.name} الآن تسجيل الدخول من جهازين في نفس الوقت.` : `تمت إعادة الحد الأقصى للطالب ${s.name} إلى جهاز واحد فقط.`,
-                  });
-                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
-                } catch (err) {
-                  toast({ variant: "destructive", description: (err as Error).message });
-                }
-              }}
-              onResetDevice={async (s) => {
-                if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
-                try {
-                  await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
-                  toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
-                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
-                } catch (err) {
-                  toast({ variant: "destructive", description: (err as Error).message });
-                }
-              }}
-              onCopyStudentCode={(s) => copyStudentCode(s)}
-              copiedStudentId={copiedStudentId}
-              onNavigateToReports={() => setTab("reports")}
-              onApproveReceipt={async (receiptId) => {
-                try {
-                  await adminApi(`/api/admin/payment-receipts/${receiptId}`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ status: "approved" }),
-                  });
-                  toast({ title: "تم تأكيد الدفع وتفعيل الكورس للطالب 💳" });
-                  void load(true); // silent refresh — don't show extra "تم تحديث البيانات" toast
-                } catch (err) {
-                  toast({ variant: "destructive", description: (err as Error).message });
-                }
-              }}
-              onStudentUpdated={(updatedStudent) => {
-                setStudents((prev) =>
-                  prev.map((item) => (item.id === updatedStudent.id ? { ...item, ...updatedStudent } : item))
-                );
-              }}
-            />
+                key={`${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") || "all" : "all"}_${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") || "all" : "all"}`}
+                role={role}
+                students={students}
+                recoveryRequests={recoveryRequests}
+                paymentReceipts={paymentReceipts}
+                studentStages={studentStages}
+                learningCourses={learningCourses}
+                onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
+                onUpdateStatusBulk={updateStudentsBulk}
+                onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
+                onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
+                onUpdateStudentCourses={async (student, courseIds) => { await updateStudentCourses(student, courseIds); }}
+                onDeleteStudent={async (id) => { await deleteStudent(id); }}
+                onSetMaxDevices={async (s) => {
+                  const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
+                  try {
+                    await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
+                      method: "POST",
+                      body: JSON.stringify({ maxDevices: newMax }),
+                    });
+                    toast({
+                      title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
+                      description: newMax === 2 ? `يمكن للطالب ${s.name} الآن تسجيل الدخول من جهازين في نفس الوقت.` : `تمت إعادة الحد الأقصى للطالب ${s.name} إلى جهاز واحد فقط.`,
+                    });
+                    setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
+                  } catch (err) {
+                    toast({ variant: "destructive", description: (err as Error).message });
+                  }
+                }}
+                onResetDevice={async (s) => {
+                  if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
+                  try {
+                    await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                    toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
+                    setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
+                  } catch (err) {
+                    toast({ variant: "destructive", description: (err as Error).message });
+                  }
+                }}
+                onCopyStudentCode={(s) => copyStudentCode(s)}
+                copiedStudentId={copiedStudentId}
+                onNavigateToReports={() => setTab("reports")}
+                onApproveReceipt={async (receiptId) => {
+                  try {
+                    await adminApi(`/api/admin/payment-receipts/${receiptId}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({ status: "approved" }),
+                    });
+                    toast({ title: "تم تأكيد الدفع وتفعيل الكورس للطالب 💳" });
+                    void load(true); // silent refresh — don't show extra "تم تحديث البيانات" toast
+                  } catch (err) {
+                    toast({ variant: "destructive", description: (err as Error).message });
+                  }
+                }}
+                onStudentUpdated={(updatedStudent) => {
+                  setStudents((prev) =>
+                    prev.map((item) => (item.id === updatedStudent.id ? { ...item, ...updatedStudent } : item))
+                  );
+                }}
+              />
             </div>
           )}
           {tab === "attendance" && (
@@ -1895,129 +1902,129 @@ export function AdminLearning({
                       {fileForm.videoIds.length > 0 && <p className="mt-2 text-xs font-bold text-primary">تم اختيار {fileForm.videoIds.length} {fileForm.videoIds.length === 1 ? "درس" : "دروس"}</p>}
                     </div>}
                     {fileForm.targetType === "stages" && <>
-                    <div className="md:col-span-2">
-                      <span className="block text-xs font-black text-primary">الخطوة 2</span>
-                      <span className="block text-base font-black text-slate-900">حدد الكورس والقسم والمراحل</span>
-                      <p className="mt-1 text-xs text-slate-500">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <Field label="الكورس التابع له الملف 📚">
-                        <select
-                          value={fileForm.courseId}
-                          onChange={(e) => {
-                            setFileForm({
-                              ...fileForm,
-                              courseId: e.target.value,
-                            });
-                          }}
-                          className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
-                        >
-                          <option value="">-- اختياري: اختر الكورس التابع له الملف --</option>
-                          {learningCourses.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              📚 {c.title}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
-                    <div className="md:col-span-2 grid gap-2 sm:grid-cols-3">
-                      {ACADEMIC_TRACKS.map((track) => {
-                        const selected = selectedFileTrack?.id === track.id;
-                        return <button
-                          key={track.id}
-                          type="button"
-                          onClick={() => setFileForm({
-                            ...fileForm,
-                            category: track.id,
-                            courseId: "",
-                            stage: "",
-                            stages: [],
-                          })}
-                          className={`rounded-xl border p-4 text-right transition ${selected ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10" : "border-slate-200 bg-white text-slate-700 hover:border-primary/50"}`}
-                        >
-                          <strong className="block text-sm">{track.title}</strong>
-                          <span className="mt-1 block text-xs font-normal text-slate-500">{track.eyebrow}</span>
-                        </button>;
-                      })}
-                    </div>
-                    <div className="md:col-span-2">
-                    <Field label="المراحل التي سيظهر لها الملف">
-                      <div className="min-h-12 rounded-xl border border-slate-300 bg-white p-3">
-                        {!selectedFileTrack && <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>}
-                        {selectedFileTrack && availableFileStages.length > 5 && <div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" /><input value={fileStageSearch} onChange={(event) => setFileStageSearch(event.target.value)} placeholder="ابحث داخل مراحل القسم..." className="input-admin min-h-10 pr-9 text-xs" /></div>}
-                        {fileForm.stages.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3"><span className="ml-1 text-[11px] font-bold text-slate-500">المحدد ({fileForm.stages.length}):</span>{fileForm.stages.slice(0, 4).map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}{fileForm.stages.length > 4 && <span className="text-[11px] font-bold text-slate-500">+{fileForm.stages.length - 4}</span>}</div>}
-                        <div className="flex flex-wrap gap-2">
-                        {selectedFileTrack && <button
-                          type="button"
-                          onClick={() => {
-                            const allSelected = availableFileStages.every((stage) => fileForm.stages.includes(stage));
-                            const stages = allSelected ? [] : [...availableFileStages];
-                            setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
-                          }}
-                          className="rounded-lg border border-dashed border-primary px-3 py-2 text-xs font-black text-primary"
-                        >
-                          {availableFileStages.every((stage) => fileForm.stages.includes(stage)) ? "إلغاء تحديد الكل" : "تحديد كل مراحل القسم"}
-                        </button>}
-                        {visibleFileStageGroups.map((group) => <details key={group.title} open className="w-full rounded-xl bg-slate-50 p-3">
-                          <summary className="mb-2 cursor-pointer text-xs font-bold text-slate-800">{group.title} <span className="font-normal text-slate-400">({group.stages.length})</span></summary>
-                          <div className="flex flex-wrap gap-2">{group.stages.map((stage) => {
-                            const checked = fileForm.stages.includes(stage);
-                            return <button key={stage} type="button" onClick={() => {
-                              const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
-                              setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
-                            }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-600 hover:border-primary"}`}>
-                              {stage.replace(`${group.title} · `, "")}
-                            </button>;
-                          })}</div>
-                        </details>)}
-                        {selectedFileTrack && visibleFileStageGroups.length === 0 && <p className="w-full py-3 text-center text-xs text-slate-500">لا توجد مرحلة مطابقة للبحث</p>}
-                        </div>
+                      <div className="md:col-span-2">
+                        <span className="block text-xs font-black text-primary">الخطوة 2</span>
+                        <span className="block text-base font-black text-slate-900">حدد الكورس والقسم والمراحل</span>
+                        <p className="mt-1 text-xs text-slate-500">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
                       </div>
-                    </Field>
-                    </div>
+                      <div className="md:col-span-2">
+                        <Field label="الكورس التابع له الملف 📚">
+                          <select
+                            value={fileForm.courseId}
+                            onChange={(e) => {
+                              setFileForm({
+                                ...fileForm,
+                                courseId: e.target.value,
+                              });
+                            }}
+                            className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
+                          >
+                            <option value="">-- اختياري: اختر الكورس التابع له الملف --</option>
+                            {learningCourses.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                📚 {c.title}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      </div>
+                      <div className="md:col-span-2 grid gap-2 sm:grid-cols-3">
+                        {ACADEMIC_TRACKS.map((track) => {
+                          const selected = selectedFileTrack?.id === track.id;
+                          return <button
+                            key={track.id}
+                            type="button"
+                            onClick={() => setFileForm({
+                              ...fileForm,
+                              category: track.id,
+                              courseId: "",
+                              stage: "",
+                              stages: [],
+                            })}
+                            className={`rounded-xl border p-4 text-right transition ${selected ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10" : "border-slate-200 bg-white text-slate-700 hover:border-primary/50"}`}
+                          >
+                            <strong className="block text-sm">{track.title}</strong>
+                            <span className="mt-1 block text-xs font-normal text-slate-500">{track.eyebrow}</span>
+                          </button>;
+                        })}
+                      </div>
+                      <div className="md:col-span-2">
+                        <Field label="المراحل التي سيظهر لها الملف">
+                          <div className="min-h-12 rounded-xl border border-slate-300 bg-white p-3">
+                            {!selectedFileTrack && <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>}
+                            {selectedFileTrack && availableFileStages.length > 5 && <div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" /><input value={fileStageSearch} onChange={(event) => setFileStageSearch(event.target.value)} placeholder="ابحث داخل مراحل القسم..." className="input-admin min-h-10 pr-9 text-xs" /></div>}
+                            {fileForm.stages.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3"><span className="ml-1 text-[11px] font-bold text-slate-500">المحدد ({fileForm.stages.length}):</span>{fileForm.stages.slice(0, 4).map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}{fileForm.stages.length > 4 && <span className="text-[11px] font-bold text-slate-500">+{fileForm.stages.length - 4}</span>}</div>}
+                            <div className="flex flex-wrap gap-2">
+                              {selectedFileTrack && <button
+                                type="button"
+                                onClick={() => {
+                                  const allSelected = availableFileStages.every((stage) => fileForm.stages.includes(stage));
+                                  const stages = allSelected ? [] : [...availableFileStages];
+                                  setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
+                                }}
+                                className="rounded-lg border border-dashed border-primary px-3 py-2 text-xs font-black text-primary"
+                              >
+                                {availableFileStages.every((stage) => fileForm.stages.includes(stage)) ? "إلغاء تحديد الكل" : "تحديد كل مراحل القسم"}
+                              </button>}
+                              {visibleFileStageGroups.map((group) => <details key={group.title} open className="w-full rounded-xl bg-slate-50 p-3">
+                                <summary className="mb-2 cursor-pointer text-xs font-bold text-slate-800">{group.title} <span className="font-normal text-slate-400">({group.stages.length})</span></summary>
+                                <div className="flex flex-wrap gap-2">{group.stages.map((stage) => {
+                                  const checked = fileForm.stages.includes(stage);
+                                  return <button key={stage} type="button" onClick={() => {
+                                    const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
+                                    setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
+                                  }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-600 hover:border-primary"}`}>
+                                    {stage.replace(`${group.title} · `, "")}
+                                  </button>;
+                                })}</div>
+                              </details>)}
+                              {selectedFileTrack && visibleFileStageGroups.length === 0 && <p className="w-full py-3 text-center text-xs text-slate-500">لا توجد مرحلة مطابقة للبحث</p>}
+                            </div>
+                          </div>
+                        </Field>
+                      </div>
                     </>}
                     <details className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                       <summary className="cursor-pointer select-none text-sm font-bold text-slate-700">تفاصيل إضافية (اختياري)</summary>
                       <div className="mt-4 grid gap-5 md:grid-cols-2">
-                    <Field label="المادة">
-                      <input
-                        value={fileForm.subject}
-                        onChange={(e) =>
-                          setFileForm({ ...fileForm, subject: e.target.value })
-                        }
-                        placeholder="مثال: البرمجة وعلوم الحاسب"
-                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
-                      />
-                    </Field>
-                    <Field label="الكلمات المفتاحية">
-                      <input
-                        value={fileForm.tags}
-                        onChange={(e) =>
-                          setFileForm({ ...fileForm, tags: e.target.value })
-                        }
-                        placeholder="PDF، مراجعة، تمارين"
-                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
-                      />
-                      <p className="text-xs text-slate-500">
-                        افصل بين الكلمات بفاصلة.
-                      </p>
-                    </Field>
-                    <div className="md:col-span-2">
-                      <Field label="وصف الملف">
-                        <textarea
-                          value={fileForm.description}
-                          onChange={(e) =>
-                            setFileForm({
-                              ...fileForm,
-                              description: e.target.value,
-                            })
-                          }
-                          placeholder="اشرح محتوى الملف وطريقة استخدامه للطالب"
-                          className="input-admin min-h-28 resize-none border-slate-300 focus:border-primary"
-                        />
-                      </Field>
-                    </div>
+                        <Field label="المادة">
+                          <input
+                            value={fileForm.subject}
+                            onChange={(e) =>
+                              setFileForm({ ...fileForm, subject: e.target.value })
+                            }
+                            placeholder="مثال: البرمجة وعلوم الحاسب"
+                            className="input-admin min-h-12 border-slate-300 focus:border-primary"
+                          />
+                        </Field>
+                        <Field label="الكلمات المفتاحية">
+                          <input
+                            value={fileForm.tags}
+                            onChange={(e) =>
+                              setFileForm({ ...fileForm, tags: e.target.value })
+                            }
+                            placeholder="PDF، مراجعة، تمارين"
+                            className="input-admin min-h-12 border-slate-300 focus:border-primary"
+                          />
+                          <p className="text-xs text-slate-500">
+                            افصل بين الكلمات بفاصلة.
+                          </p>
+                        </Field>
+                        <div className="md:col-span-2">
+                          <Field label="وصف الملف">
+                            <textarea
+                              value={fileForm.description}
+                              onChange={(e) =>
+                                setFileForm({
+                                  ...fileForm,
+                                  description: e.target.value,
+                                })
+                              }
+                              placeholder="اشرح محتوى الملف وطريقة استخدامه للطالب"
+                              className="input-admin min-h-28 resize-none border-slate-300 focus:border-primary"
+                            />
+                          </Field>
+                        </div>
                       </div>
                     </details>
                   </div>
@@ -2239,147 +2246,147 @@ export function AdminLearning({
                   </div>
                 ) : (
                   <>
-                  <div className="grid gap-3 p-4 md:hidden">
-                    {visibleFiles.map((file) => {
-                      const linkedLessons = videoOptions.filter((video) => file.videoIds?.includes(video.id));
-                      const fileStages = file.stages?.length ? file.stages : file.stage ? [file.stage] : [];
-                      return (
-                        <article key={file.id} className="rounded-xl border border-slate-200 p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary"><FileText className="h-5 w-5" /></div>
-                            <div className="min-w-0 flex-1">
-                              <strong className="block truncate text-sm">{file.title}</strong>
-                              <span className="block truncate text-xs text-slate-500">{file.originalName}</span>
-                            </div>
-                            <button type="button" onClick={() => void toggleFile(file)} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                              {file.isPublished ? "منشور" : "مسودة"}
-                            </button>
-                          </div>
-                          <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                            <strong className="mb-1 block text-slate-800">مكان الظهور</strong>
-                            {file.targetType === "videos"
-                              ? linkedLessons.length
-                                ? linkedLessons.map((video) => video.title).join("، ")
-                                : `داخل ${file.videoIds?.length || 0} درس`
-                              : `${getTrack(file.category)?.title || file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
-                          </div>
-                          <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                            <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
-                            <div className="flex gap-1">
-                              <button type="button" onClick={() => setPreviewFile(file)} className="rounded-lg p-2 hover:bg-blue-50" aria-label="معاينة"><Eye className="h-4 w-4" /></button>
-                              <button type="button" onClick={() => void editFile(file)} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تعديل"><Edit2 className="h-4 w-4" /></button>
-                              <a href={`/api/learning/files/${file.id}/download`} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تحميل"><Download className="h-4 w-4" /></a>
-                              <button type="button" onClick={() => void deleteFile(file.id)} className="rounded-lg p-2 text-red-500 hover:bg-red-50" aria-label="حذف"><Trash2 className="h-4 w-4" /></button>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full min-w-[1050px] text-sm">
-                      <thead className="bg-slate-50 text-xs text-slate-500">
-                        <tr>
-                          <th className="p-4 text-right">اسم الملف</th>
-                          <th className="p-4 text-right">مكان الظهور</th>
-                          <th className="p-4 text-right">التحديد</th>
-                          <th className="p-4">النوع</th>
-                          <th className="p-4">الحجم</th>
-                          <th className="p-4">تاريخ الرفع</th>
-                          <th className="p-4">الحالة</th>
-                          <th className="p-4">الإجراءات</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleFiles.map((file) => (
-                          <tr
-                            key={file.id}
-                            className="border-t border-slate-100 hover:bg-slate-50/70"
-                          >
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-primary">
-                                  <FileText className="h-4 w-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <strong className="block max-w-52 truncate">
-                                    {file.title}
-                                  </strong>
-                                  <small className="block max-w-52 truncate text-slate-500">
-                                    {file.originalName}
-                                  </small>
-                                </div>
+                    <div className="grid gap-3 p-4 md:hidden">
+                      {visibleFiles.map((file) => {
+                        const linkedLessons = videoOptions.filter((video) => file.videoIds?.includes(video.id));
+                        const fileStages = file.stages?.length ? file.stages : file.stage ? [file.stage] : [];
+                        return (
+                          <article key={file.id} className="rounded-xl border border-slate-200 p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary"><FileText className="h-5 w-5" /></div>
+                              <div className="min-w-0 flex-1">
+                                <strong className="block truncate text-sm">{file.title}</strong>
+                                <span className="block truncate text-xs text-slate-500">{file.originalName}</span>
                               </div>
-                            </td>
-                            <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : getTrack(file.category)?.title || file.category}</td>
-                            <td className="max-w-56 p-4 text-slate-600">
-                              {file.targetType === "videos"
-                                ? videoOptions.filter((video) => file.videoIds?.includes(video.id)).map((video) => video.title).join("، ") || `${file.videoIds?.length || 0} درس`
-                                : (file.stages?.length ? file.stages.join("، ") : file.stage || "غير محدد")}
-                            </td>
-                            <td className="p-4 text-center">
-                              {file.mimeType?.split("/").pop()?.toUpperCase() ||
-                                "FILE"}
-                            </td>
-                            <td className="p-4 text-center">
-                              {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
-                            </td>
-                            <td className="p-4 text-center text-slate-500">
-                              {file.createdAt
-                                ? new Date(file.createdAt).toLocaleDateString(
-                                    "ar-EG",
-                                  )
-                                : "—"}
-                            </td>
-                            <td className="p-4 text-center">
-                              <button
-                                type="button"
-                                onClick={() => void toggleFile(file)}
-                                className={`rounded-full px-2.5 py-1 text-xs font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                              >
+                              <button type="button" onClick={() => void toggleFile(file)} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
                                 {file.isPublished ? "منشور" : "مسودة"}
                               </button>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center justify-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewFile(file)}
-                                  className="rounded-lg p-2 text-slate-500 hover:bg-blue-50 hover:text-primary"
-                                  title="معاينة"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void editFile(file)}
-                                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-                                  title="تعديل"
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </button>
-                                <a
-                                  href={`/api/learning/files/${file.id}/download`}
-                                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-                                  title="تحميل"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </a>
-                                <button
-                                  type="button"
-                                  onClick={() => void deleteFile(file.id)}
-                                  className="rounded-lg p-2 text-red-500 hover:bg-red-50"
-                                  title="حذف"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
+                            </div>
+                            <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                              <strong className="mb-1 block text-slate-800">مكان الظهور</strong>
+                              {file.targetType === "videos"
+                                ? linkedLessons.length
+                                  ? linkedLessons.map((video) => video.title).join("، ")
+                                  : `داخل ${file.videoIds?.length || 0} درس`
+                                : `${getTrack(file.category)?.title || file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
+                            </div>
+                            <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                              <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
+                              <div className="flex gap-1">
+                                <button type="button" onClick={() => setPreviewFile(file)} className="rounded-lg p-2 hover:bg-blue-50" aria-label="معاينة"><Eye className="h-4 w-4" /></button>
+                                <button type="button" onClick={() => void editFile(file)} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تعديل"><Edit2 className="h-4 w-4" /></button>
+                                <a href={`/api/learning/files/${file.id}/download`} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تحميل"><Download className="h-4 w-4" /></a>
+                                <button type="button" onClick={() => void deleteFile(file.id)} className="rounded-lg p-2 text-red-500 hover:bg-red-50" aria-label="حذف"><Trash2 className="h-4 w-4" /></button>
                               </div>
-                            </td>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full min-w-[1050px] text-sm">
+                        <thead className="bg-slate-50 text-xs text-slate-500">
+                          <tr>
+                            <th className="p-4 text-right">اسم الملف</th>
+                            <th className="p-4 text-right">مكان الظهور</th>
+                            <th className="p-4 text-right">التحديد</th>
+                            <th className="p-4">النوع</th>
+                            <th className="p-4">الحجم</th>
+                            <th className="p-4">تاريخ الرفع</th>
+                            <th className="p-4">الحالة</th>
+                            <th className="p-4">الإجراءات</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {visibleFiles.map((file) => (
+                            <tr
+                              key={file.id}
+                              className="border-t border-slate-100 hover:bg-slate-50/70"
+                            >
+                              <td className="p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-primary">
+                                    <FileText className="h-4 w-4" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <strong className="block max-w-52 truncate">
+                                      {file.title}
+                                    </strong>
+                                    <small className="block max-w-52 truncate text-slate-500">
+                                      {file.originalName}
+                                    </small>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : getTrack(file.category)?.title || file.category}</td>
+                              <td className="max-w-56 p-4 text-slate-600">
+                                {file.targetType === "videos"
+                                  ? videoOptions.filter((video) => file.videoIds?.includes(video.id)).map((video) => video.title).join("، ") || `${file.videoIds?.length || 0} درس`
+                                  : (file.stages?.length ? file.stages.join("، ") : file.stage || "غير محدد")}
+                              </td>
+                              <td className="p-4 text-center">
+                                {file.mimeType?.split("/").pop()?.toUpperCase() ||
+                                  "FILE"}
+                              </td>
+                              <td className="p-4 text-center">
+                                {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
+                              </td>
+                              <td className="p-4 text-center text-slate-500">
+                                {file.createdAt
+                                  ? new Date(file.createdAt).toLocaleDateString(
+                                    "ar-EG",
+                                  )
+                                  : "—"}
+                              </td>
+                              <td className="p-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => void toggleFile(file)}
+                                  className={`rounded-full px-2.5 py-1 text-xs font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                                >
+                                  {file.isPublished ? "منشور" : "مسودة"}
+                                </button>
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewFile(file)}
+                                    className="rounded-lg p-2 text-slate-500 hover:bg-blue-50 hover:text-primary"
+                                    title="معاينة"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => void editFile(file)}
+                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                                    title="تعديل"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                  <a
+                                    href={`/api/learning/files/${file.id}/download`}
+                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                                    title="تحميل"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => void deleteFile(file.id)}
+                                    className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                                    title="حذف"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </>
                 )}
                 <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm">
@@ -2558,6 +2565,11 @@ export function AdminLearning({
                   prev.map((item) => (item.id === quizId ? { ...item, durationMinutes } : item))
                 );
               }}
+              onAvailabilityUpdated={(quizId, patch) => {
+                setQuizzes((prev) =>
+                  prev.map((item) => (item.id === quizId ? { ...item, ...patch } : item))
+                );
+              }}
               onNavigateToTestBank={(targetSubTab = "generate") => {
                 setTestBankInitialTab(targetSubTab);
                 setTab("testbank");
@@ -2600,13 +2612,12 @@ export function AdminLearning({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start gap-4">
-                <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${
-                  confirmModal.variant === "destructive"
-                    ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
-                    : confirmModal.variant === "warning"
+                <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${confirmModal.variant === "destructive"
+                  ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
+                  : confirmModal.variant === "warning"
                     ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
                     : "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
-                }`}>
+                  }`}>
                   <AlertCircle className="h-6 w-6" />
                 </div>
                 <div className="space-y-1 text-right">
@@ -2634,11 +2645,10 @@ export function AdminLearning({
                     setConfirmModal(null);
                     await action();
                   }}
-                  className={`rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer ${
-                    confirmModal.variant === "destructive"
-                      ? "bg-red-600 hover:bg-red-700"
-                      : "bg-[#2583F7] hover:bg-[#1470DB]"
-                  }`}
+                  className={`rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer ${confirmModal.variant === "destructive"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-[#2583F7] hover:bg-[#1470DB]"
+                    }`}
                 >
                   {confirmModal.confirmText || "تأكيد"}
                 </button>
@@ -2701,10 +2711,10 @@ function CourseAccess({
   const selected = student.enrolledCourseIds?.length
     ? student.enrolledCourseIds
     : courses
-        .filter((course) =>
-          (student.enrolledCategories || []).includes(course.title),
-        )
-        .map((course) => course.id);
+      .filter((course) =>
+        (student.enrolledCategories || []).includes(course.title),
+      )
+      .map((course) => course.id);
   return (
     <div className="rounded-xl border bg-muted/30 p-4">
       <div className="mb-3">
