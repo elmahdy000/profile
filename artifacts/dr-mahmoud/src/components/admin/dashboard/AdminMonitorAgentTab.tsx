@@ -7,6 +7,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Copy,
   CreditCard,
   FileText,
   Link2,
@@ -14,9 +15,11 @@ import {
   QrCode,
   RefreshCw,
   Send,
+  Server,
   Settings,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +43,8 @@ interface MonitorConfigState {
   hasGeminiKey: boolean;
   hasGeminiKeyOverride: boolean;
   webhookRegisteredUrl: string | null;
+  botUsername?: string | null;
+  botConnected?: boolean;
   lastDailyReportDate: string | null;
 }
 
@@ -47,6 +52,18 @@ interface PlatformPulse {
   generatedAt: string;
   cairoDate: string;
   cairoTimeLabel: string;
+  systemHealth: {
+    dbOk: boolean;
+    dbLatencyMs: number;
+    uptimeSeconds: number;
+    processRssMb: number;
+    osFreeMemMb: number;
+    osTotalMemMb: number;
+    osMemUsedPercent: number;
+    loadAvg1m: number;
+    errorsLast24hCount: number;
+    recentErrors: Array<{ method: string; path: string; message: string; at: string }>;
+  };
   students: {
     total: number;
     activeApproved: number;
@@ -72,7 +89,7 @@ interface PlatformPulse {
     pendingReceiptsCount: number;
     pendingReceiptsLatest: Array<{ id: number; studentName: string; phone: string; createdAt: string }>;
     pendingBookingsCount: number;
-    pendingBookingsLatest: Array<{ id: number; name: string; phone: string; createdAt: string }>;
+    pendingBookingsLatest: Array<{ id: number; name: string; phone: string; message?: string; createdAt: string }>;
     pendingRecoveryRequests: number;
     pendingSummaries: number;
     pendingEssaySubmissions: number;
@@ -119,6 +136,7 @@ interface ReportEntry {
 interface ChatMessage {
   role: "user" | "assistant";
   text: string;
+  questionRef?: string;
   modelUsed?: string;
   timestamp: string;
 }
@@ -143,6 +161,7 @@ export function AdminMonitorAgentTab() {
   const [botTokenInput, setBotTokenInput] = useState("");
   const [chatIdInput, setChatIdInput] = useState("");
   const [geminiOverrideInput, setGeminiOverrideInput] = useState("");
+  const [hasUnsavedConfig, setHasUnsavedConfig] = useState(false);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [isTestingTelegram, setIsTestingTelegram] = useState(false);
   const [isSettingWebhook, setIsSettingWebhook] = useState(false);
@@ -166,6 +185,7 @@ export function AdminMonitorAgentTab() {
       setChatIdInput(data.config?.telegramChatId || "");
       setPulse(data.pulse);
       setReports(data.reports || []);
+      setHasUnsavedConfig(false);
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -180,6 +200,11 @@ export function AdminMonitorAgentTab() {
   useEffect(() => {
     void loadState();
   }, [loadState]);
+
+  const updateConfigField = <K extends keyof MonitorConfigState>(key: K, val: MonitorConfigState[K]) => {
+    setConfig((prev) => (prev ? { ...prev, [key]: val } : prev));
+    setHasUnsavedConfig(true);
+  };
 
   const handleRunReport = async (sendToTelegram: boolean) => {
     setIsRunningReport(true);
@@ -209,6 +234,20 @@ export function AdminMonitorAgentTab() {
       toast({ variant: "destructive", title: "خطأ", description: err.message });
     } finally {
       setIsRunningReport(false);
+    }
+  };
+
+  const handleDeleteReport = async (id?: string) => {
+    try {
+      const res = await fetch(id ? `/api/admin/monitor/reports/${encodeURIComponent(id)}` : "/api/admin/monitor/reports", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("تعذر حذف السجل");
+      setReports((prev) => (id ? prev.filter((r) => r.id !== id) : []));
+      toast({ title: id ? "تم حذف التقرير" : "تم مسح أرشيف التقارير" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ", description: err.message });
     }
   };
 
@@ -245,6 +284,7 @@ export function AdminMonitorAgentTab() {
         {
           role: "assistant",
           text: data.answer,
+          questionRef: q,
           modelUsed: data.modelUsed,
           timestamp: data.generatedAt || new Date().toISOString(),
         },
@@ -308,6 +348,11 @@ export function AdminMonitorAgentTab() {
       const res = await fetch("/api/admin/monitor/telegram-test", {
         method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(botTokenInput.trim() ? { botToken: botTokenInput.trim() } : {}),
+          ...(chatIdInput.trim() ? { chatId: chatIdInput.trim() } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "فشل اختبار الاتصال بتليجرام");
@@ -325,6 +370,10 @@ export function AdminMonitorAgentTab() {
       const res = await fetch("/api/admin/monitor/telegram-webhook-setup", {
         method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(botTokenInput.trim() ? { botToken: botTokenInput.trim() } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "فشل تفعيل الرد التفاعلي");
@@ -362,7 +411,7 @@ export function AdminMonitorAgentTab() {
                 <h2 className="text-lg sm:text-xl font-black">الوكيل الذكي ومراقب المنصة (Gemini AI + Telegram)</h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 inline-flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  {config?.hasGeminiKey ? "Gemini متصل" : "وضع الإحصاء المباشر"}
+                  {config?.hasGeminiKey ? "Gemini 4 متصل" : "وضع الإحصاء المباشر"}
                 </span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border inline-flex items-center gap-1 ${
@@ -372,11 +421,15 @@ export function AdminMonitorAgentTab() {
                   }`}
                 >
                   <MessageCircle className="h-3 w-3" />
-                  {config?.hasResolvedTelegram ? "بوت تليجرام جاهز" : "ربط تليجرام يحتاج ضبط"}
+                  {config?.hasResolvedTelegram
+                    ? config.botUsername
+                      ? `@${config.botUsername} جاهز`
+                      : "بوت تليجرام جاهز"
+                    : "ربط تليجرام يحتاج ضبط"}
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                يراقب الحضور، الإيصالات، الحجوزات، الاختبارات، ونشاط المساعدين على مدار الساعة ويرسل تقارير ذكية لك وللبوت.
+                يراقب الحضور، الإيصالات، الحجوزات، الاختبارات، نشاط المساعدين، وصحة السيرفر على مدار الساعة ويرسل تقارير ذكية لك وللبوت.
               </p>
             </div>
           </div>
@@ -414,7 +467,7 @@ export function AdminMonitorAgentTab() {
 
       {/* Live Telemetry Cards */}
       {pulse && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
             <div className="flex items-center justify-between text-xs text-slate-500 font-bold mb-1">
               <span>الطلاب والاشتراكات</span>
@@ -457,7 +510,20 @@ export function AdminMonitorAgentTab() {
             </div>
             <div className="text-2xl font-black text-indigo-700">{pulse.academics.attemptsLast7Days}</div>
             <div className="text-[11px] text-slate-600 mt-1">
-              متوسط الدرجات: <strong>{pulse.academics.avgScoreLast7Days}%</strong> • نجاح: <strong>{pulse.academics.passRateLast7Days}%</strong>
+              متوسط: <strong>{pulse.academics.avgScoreLast7Days}%</strong> • نجاح: <strong>{pulse.academics.passRateLast7Days}%</strong>
+            </div>
+          </div>
+
+          <div className="col-span-2 lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-bold mb-1">
+              <span>صحة السيرفر والـ DB</span>
+              <Server className={`h-4 w-4 ${pulse.systemHealth.dbOk ? "text-emerald-600" : "text-red-600"}`} />
+            </div>
+            <div className={`text-2xl font-black ${pulse.systemHealth.errorsLast24hCount > 0 ? "text-amber-600" : "text-emerald-700"}`}>
+              {pulse.systemHealth.dbOk ? `${pulse.systemHealth.dbLatencyMs}ms` : "عطل"}
+            </div>
+            <div className="text-[11px] text-slate-600 mt-1">
+              RAM: <strong>{pulse.systemHealth.osMemUsedPercent}%</strong> • أخطاء 500: <strong>{pulse.systemHealth.errorsLast24hCount}</strong>
             </div>
           </div>
         </div>
@@ -494,19 +560,20 @@ export function AdminMonitorAgentTab() {
         >
           <Settings className="h-3.5 w-3.5" />
           <span>إعدادات بوت تليجرام والمراقبة</span>
+          {hasUnsavedConfig && <span className="h-2 w-2 rounded-full bg-amber-500" />}
         </button>
       </div>
 
       {/* SUBTAB 1: AI AGENT CHAT */}
       {subTab === "chat" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col min-h-[460px]">
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs flex flex-col min-h-[480px]">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-3">
               <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Bot className="h-4 w-4 text-blue-600" />
                 <span>المحادثة المباشرة مع مراقب المنصة</span>
               </h3>
-              <span className="text-[11px] font-bold text-slate-500">يقرأ الأرقام والطلاب مباشرة من قاعدة البيانات</span>
+              <span className="text-[11px] font-bold text-slate-500">يبحث في الطلاب (مع تطابق الهمزات) والاختبارات والسيرفر</span>
             </div>
 
             {/* Suggested Prompts */}
@@ -530,7 +597,7 @@ export function AdminMonitorAgentTab() {
                 <div className="h-full min-h-[200px] flex flex-col items-center justify-center text-center text-slate-400 p-6 border border-dashed border-slate-200 rounded-2xl">
                   <Sparkles className="h-8 w-8 text-blue-400 mb-2" />
                   <p className="text-xs font-bold text-slate-600">اسأل عن أي طالب (بالاسم أو الكود)، سنتر، غياب، إيصالات، أو أداء الامتحانات</p>
-                  <p className="text-[11px] text-slate-400 mt-1">مثال: "مين غاب أكتر من مرتين الأسبوع ده؟" أو "اعرض حالة الطالب كود ..."</p>
+                  <p className="text-[11px] text-slate-400 mt-1">مثال: "طالب أحمد محمد عمل إيه في الامتحانات وحضوره؟" أو "اعرض حالة السيرفر اليوم"</p>
                 </div>
               ) : (
                 chatMessages.map((msg, idx) => (
@@ -542,11 +609,38 @@ export function AdminMonitorAgentTab() {
                         : "bg-slate-50 border border-slate-200 text-slate-800 ml-4"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1 text-[10px] opacity-75 font-bold">
+                    <div className="flex items-center justify-between gap-2 mb-1.5 text-[10px] opacity-80 font-bold">
                       <span>{msg.role === "user" ? "د. محمود" : `المساعد الذكي (${msg.modelUsed || "Gemini"})`}</span>
-                      <span>
-                        {new Intl.DateTimeFormat("ar-EG", { timeStyle: "short" }).format(new Date(msg.timestamp))}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {msg.role === "assistant" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void navigator.clipboard.writeText(msg.text);
+                                toast({ title: "تم نسخ الإجابة ✅" });
+                              }}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer"
+                              title="نسخ الإجابة"
+                            >
+                              <Copy className="h-2.5 w-2.5" /> نسخ
+                            </button>
+                            {msg.questionRef && (
+                              <button
+                                type="button"
+                                onClick={() => void handleAskQuestion(msg.questionRef, true)}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 cursor-pointer"
+                                title="إرسال هذا التحليل إلى بوت تليجرام"
+                              >
+                                <Send className="h-2.5 w-2.5" /> لتليجرام
+                              </button>
+                            )}
+                          </>
+                        )}
+                        <span>
+                          {new Intl.DateTimeFormat("ar-EG", { timeStyle: "short" }).format(new Date(msg.timestamp))}
+                        </span>
+                      </div>
                     </div>
                     {msg.text}
                   </div>
@@ -594,35 +688,35 @@ export function AdminMonitorAgentTab() {
                 <span>نقاط تحتاج متابعة سريعة</span>
               </h3>
 
-              <div className="space-y-2.5 text-xs">
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div className="space-y-2 text-xs">
+                <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <span className="font-bold text-slate-700">طلاب لم يؤكدوا السنتر بعد</span>
                   <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black">
                     {pulse.students.unconfirmedCenterCount}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <span className="font-bold text-slate-700">طلبات استعادة كود معلقة</span>
                   <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-black">
                     {pulse.financeAndActions.pendingRecoveryRequests}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <span className="font-bold text-slate-700">تلخيصات ومقالي بانتظار التقييم</span>
                   <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-black">
                     {pulse.financeAndActions.pendingSummaries + pulse.financeAndActions.pendingEssaySubmissions}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <span className="font-bold text-slate-700">اشتراكات تنتهي خلال 3 أيام</span>
                   <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-black">
                     {pulse.financeAndActions.expiringSubscriptionsNext3Days}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <span className="font-bold text-slate-700">مشتركون غير نشطين (+7 أيام)</span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 font-black">
-                    {pulse.students.inactivePaid7Days}
+                <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <span className="font-bold text-slate-700">مزامنة Google Sheets</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px]">
+                    {pulse.operations.googleSheetConfigured ? (pulse.operations.googleSheetLastSyncStatus || "مفعلة") : "غير مربوطة"}
                   </span>
                 </div>
               </div>
@@ -630,11 +724,24 @@ export function AdminMonitorAgentTab() {
               {pulse.attendanceToday.repeatAbsentees7Days.length > 0 && (
                 <div className="pt-2 border-t border-slate-100">
                   <p className="text-xs font-black text-red-700 mb-2">⚠️ تكرار غياب (آخر 7 أيام):</p>
-                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
                     {pulse.attendanceToday.repeatAbsentees7Days.map((x) => (
                       <div key={x.studentId} className="text-[11px] bg-red-50/70 border border-red-100 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
                         <span className="font-bold text-slate-800 truncate">{x.name}</span>
                         <span className="text-red-700 font-black shrink-0">{x.absentDays} مرات</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {pulse.systemHealth.recentErrors.length > 0 && (
+                <div className="pt-2 border-t border-slate-100">
+                  <p className="text-xs font-black text-amber-700 mb-1.5">🖥️ آخر أخطاء السيرفر (500):</p>
+                  <div className="space-y-1 max-h-28 overflow-y-auto text-[10px] font-mono">
+                    {pulse.systemHealth.recentErrors.slice(0, 4).map((e, i) => (
+                      <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 text-amber-900 truncate" dir="ltr">
+                        {e.method} {e.path}: {e.message}
                       </div>
                     ))}
                   </div>
@@ -673,6 +780,16 @@ export function AdminMonitorAgentTab() {
                   {label}
                 </button>
               ))}
+              {reports.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteReport()}
+                  className="px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                  title="مسح كل السجلات"
+                >
+                  <Trash2 className="h-3 w-3" /> مسح الكل
+                </button>
+              )}
             </div>
           </div>
 
@@ -719,6 +836,14 @@ export function AdminMonitorAgentTab() {
                           new Date(rep.createdAt),
                         )}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteReport(rep.id)}
+                        className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
+                        title="حذف التقرير"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                   <div className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-white rounded-xl border border-slate-200/80 p-3.5">
@@ -734,14 +859,21 @@ export function AdminMonitorAgentTab() {
       {/* SUBTAB 3: SETTINGS & TELEGRAM WEBHOOK */}
       {subTab === "settings" && config && (
         <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5 max-w-3xl">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-blue-600" />
-              <span>إعدادات المراقبة التلقائية وربط بوت التليجرام</span>
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              البيانات محفوظة بشكل آمن في الخادم ومتاحة لصلاحية المدير الرئيسي فقط (د. محمود).
-            </p>
+          <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                <span>إعدادات المراقبة التلقائية وربط بوت التليجرام</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                البيانات محفوظة بشكل آمن في الخادم ومتاحة لصلاحية المدير الرئيسي فقط (د. محمود).
+              </p>
+            </div>
+            {hasUnsavedConfig && (
+              <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-black">
+                تغييرات غير محفوظة
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -749,7 +881,7 @@ export function AdminMonitorAgentTab() {
               <input
                 type="checkbox"
                 checked={config.enabled}
-                onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+                onChange={(e) => updateConfigField("enabled", e.target.checked)}
                 className="h-4 w-4 accent-blue-600"
               />
               <span className="text-xs font-black text-slate-800">تفعيل مراقبة المنصة في الخلفية</span>
@@ -759,7 +891,7 @@ export function AdminMonitorAgentTab() {
               <input
                 type="checkbox"
                 checked={config.dailyReportEnabled}
-                onChange={(e) => setConfig({ ...config, dailyReportEnabled: e.target.checked })}
+                onChange={(e) => updateConfigField("dailyReportEnabled", e.target.checked)}
                 className="h-4 w-4 accent-blue-600"
               />
               <span className="text-xs font-black text-slate-800">إرسال تقرير يومي شامل تلقائياً</span>
@@ -776,7 +908,7 @@ export function AdminMonitorAgentTab() {
                 <input
                   type="time"
                   value={config.dailyReportTime}
-                  onChange={(e) => setConfig({ ...config, dailyReportTime: e.target.value })}
+                  onChange={(e) => updateConfigField("dailyReportTime", e.target.value)}
                   className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white"
                 />
               </div>
@@ -791,14 +923,14 @@ export function AdminMonitorAgentTab() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-black text-slate-900">التنبيهات الفورية اللحظية:</p>
+            <p className="text-xs font-black text-slate-900">التنبيهات الفورية والذكية:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
               {[
                 ["alertOnNewReceipt", "تنبيه فور رفع إيصال دفع جديد"],
                 ["alertOnNewBooking", "تنبيه عند وجود طلب حجز جديد"],
                 ["alertOnNewStudent", "تنبيه عند تسجيل طالب جديد"],
-                ["alertOnRepeatAbsence", "تنبيهات الحضور والغياب المتكرر"],
-                ["alertOnExpiringSubscriptions", "متابعة الاشتراكات القريبة من الانتهاء"],
+                ["alertOnRepeatAbsence", "تنبيه يومي للطلاب متكرري الغياب (9 مساءً)"],
+                ["alertOnExpiringSubscriptions", "تنبيه يومي للاشتراكات القريبة من الانتهاء (1 ظهراً)"],
               ].map(([key, label]) => (
                 <label
                   key={key}
@@ -807,7 +939,7 @@ export function AdminMonitorAgentTab() {
                   <input
                     type="checkbox"
                     checked={Boolean((config as any)[key])}
-                    onChange={(e) => setConfig({ ...config, [key]: e.target.checked })}
+                    onChange={(e) => updateConfigField(key as keyof MonitorConfigState, e.target.checked as any)}
                     className="h-4 w-4 accent-emerald-600"
                   />
                   <span className="font-bold text-slate-700">{label}</span>
@@ -826,12 +958,16 @@ export function AdminMonitorAgentTab() {
                 <input
                   type="checkbox"
                   checked={config.useAutoExamBot}
-                  onChange={(e) => setConfig({ ...config, useAutoExamBot: e.target.checked })}
+                  onChange={(e) => updateConfigField("useAutoExamBot", e.target.checked)}
                   className="h-3.5 w-3.5 accent-sky-600"
                 />
                 <span>استخدام بوت الاختبارات اليومية تلقائياً إذا وُجد</span>
               </label>
             </div>
+
+            <p className="text-[11px] text-sky-900/80 leading-relaxed">
+              ملاحظة: يمكنك استخدام نفس البوت الخاص بالاختبارات اليومية دون أي تعارض؛ سيستمر في إرسال اعتماد الاختبارات ويضيف قائمة الأوامر التفاعلية والرد على أسئلتك.
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -842,7 +978,10 @@ export function AdminMonitorAgentTab() {
                   type="password"
                   dir="ltr"
                   value={botTokenInput}
-                  onChange={(e) => setBotTokenInput(e.target.value)}
+                  onChange={(e) => {
+                    setBotTokenInput(e.target.value);
+                    setHasUnsavedConfig(true);
+                  }}
                   placeholder={config.hasCustomBotToken ? "•••••••• (محفوظ — اتركه فارغاً للإبقاء)" : "123456789:AAF..."}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white"
                 />
@@ -856,7 +995,10 @@ export function AdminMonitorAgentTab() {
                   type="text"
                   dir="ltr"
                   value={chatIdInput}
-                  onChange={(e) => setChatIdInput(e.target.value)}
+                  onChange={(e) => {
+                    setChatIdInput(e.target.value);
+                    setHasUnsavedConfig(true);
+                  }}
                   placeholder="مثال: 5123456789"
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white"
                 />
@@ -868,13 +1010,18 @@ export function AdminMonitorAgentTab() {
                 الحالة:{" "}
                 <strong className={config.hasResolvedTelegram ? "text-emerald-700" : "text-amber-700"}>
                   {config.hasResolvedTelegram
-                    ? `متصل (${config.resolvedTelegramSource === "custom" ? "بوت مخصص" : "مستورد من بوت الاختبارات"} - ${config.resolvedTelegramChatId})`
+                    ? `متصل (${config.botUsername ? `@${config.botUsername} — ` : ""}${config.resolvedTelegramSource === "custom" ? "بوت مخصص" : "مستورد من بوت الاختبارات"} - ${config.resolvedTelegramChatId})`
                     : "غير متصل بعد"}
                 </strong>
               </span>
               {config.webhookRegisteredUrl && (
-                <span className="text-emerald-700 font-bold">الرد التفاعلي (Webhook) مفعل ✅</span>
+                <span className="text-emerald-700 font-bold">الرد التفاعلي وقائمة الأوامر مفعلون ✅</span>
               )}
+            </div>
+
+            <div className="rounded-xl bg-white/80 border border-sky-200/70 p-2.5 text-[11px] text-slate-700">
+              <strong className="text-slate-900">أوامر البوت الجاهزة:</strong>{" "}
+              <span className="font-mono" dir="ltr">/menu • /today • /pending • /absent • /exams • /health • /audit • /student</span>
             </div>
           </div>
 
@@ -886,7 +1033,10 @@ export function AdminMonitorAgentTab() {
               type="password"
               dir="ltr"
               value={geminiOverrideInput}
-              onChange={(e) => setGeminiOverrideInput(e.target.value)}
+              onChange={(e) => {
+                setGeminiOverrideInput(e.target.value);
+                setHasUnsavedConfig(true);
+              }}
               placeholder={config.hasGeminiKey ? "•••••••• (محفوظ ويعمل بنجاح)" : "أدخل Gemini API Key"}
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white"
             />

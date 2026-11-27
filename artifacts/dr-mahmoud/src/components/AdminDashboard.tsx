@@ -1914,6 +1914,21 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
+            {adminRole === "superadmin" && (
+              <button
+                type="button"
+                onClick={() => handleTabChange("ai-agent")}
+                className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                  activeTab === "ai-agent"
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
+                }`}
+                aria-label="الوكيل الذكي ومراقب المنصة"
+                title="الوكيل الذكي وتقارير تليجرام"
+              >
+                <Bot className="w-4 h-4" />
+              </button>
+            )}
             <AdminNotificationsCenter
               onNavigate={handleNavigateFromNotification}
               bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}

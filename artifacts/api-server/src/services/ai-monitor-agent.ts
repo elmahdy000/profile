@@ -15,8 +15,9 @@ import {
   studentLessonSummariesTable,
   studentsTable,
 } from "@workspace/db";
-import { and, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { getProcessRuntimeStats } from "../lib/runtime-health";
 import { getAutoExamFullConfig } from "./auto-exam";
 
 const MONITOR_CONFIG_KEY = "ai_monitor_config";
@@ -40,8 +41,6 @@ export interface MonitorAgentConfig {
   webhookSecret: string;
   webhookRegisteredUrl: string | null;
   geminiKeyOverride?: string;
-  lastDailyReportDate?: string | null;
-  lastHourlyCheckHour?: string | null;
 }
 
 export interface MonitorReportEntry {
@@ -63,7 +62,10 @@ interface MonitorWatermark {
   lastRecoveryId: number;
   lastEssaySubmissionId: number;
   lastSheetErrorSignature: string;
+  lastServerErrorId: string;
+  lastDailyReportDate: string;
   alertedExpiringDate: string;
+  alertedAbsenceDate: string;
   initializedAt: string;
 }
 
@@ -71,6 +73,18 @@ export interface PlatformPulseSnapshot {
   generatedAt: string;
   cairoDate: string;
   cairoTimeLabel: string;
+  systemHealth: {
+    dbOk: boolean;
+    dbLatencyMs: number;
+    uptimeSeconds: number;
+    processRssMb: number;
+    osFreeMemMb: number;
+    osTotalMemMb: number;
+    osMemUsedPercent: number;
+    loadAvg1m: number;
+    errorsLast24hCount: number;
+    recentErrors: Array<{ method: string; path: string; message: string; at: string }>;
+  };
   students: {
     total: number;
     activeApproved: number;
@@ -96,12 +110,13 @@ export interface PlatformPulseSnapshot {
     pendingReceiptsCount: number;
     pendingReceiptsLatest: Array<{ id: number; studentName: string; phone: string; createdAt: string }>;
     pendingBookingsCount: number;
-    pendingBookingsLatest: Array<{ id: number; name: string; phone: string; createdAt: string }>;
+    pendingBookingsLatest: Array<{ id: number; name: string; phone: string; message: string; createdAt: string }>;
     pendingRecoveryRequests: number;
     pendingSummaries: number;
     pendingEssaySubmissions: number;
     pendingMonthlySubscriptions: number;
     expiringSubscriptionsNext3Days: number;
+    expiringStudentsPreview: Array<{ name: string; phone: string; endsAt: string }>;
   };
   academics: {
     publishedQuizzesCount: number;
@@ -123,6 +138,24 @@ export interface PlatformPulseSnapshot {
   };
 }
 
+export type TelegramInlineKeyboard = Array<Array<{ text: string; callback_data?: string; url?: string }>>;
+
+export const DEFAULT_TELEGRAM_KEYBOARD: TelegramInlineKeyboard = [
+  [
+    { text: "📊 تقرير اليوم AI", callback_data: "cmd:/today" },
+    { text: "💳 المعلق الآن", callback_data: "cmd:/pending" },
+  ],
+  [
+    { text: "🏫 الغياب والسناتر", callback_data: "cmd:/absent" },
+    { text: "📝 الاختبارات", callback_data: "cmd:/exams" },
+  ],
+  [
+    { text: "🖥️ صحة السيرفر", callback_data: "cmd:/health" },
+    { text: "🛡️ نشاط المساعدين", callback_data: "cmd:/audit" },
+  ],
+  [{ text: "🔗 فتح لوحة الوكيل على الموقع", url: "https://drelmahdy.com/admin/ai-agent" }],
+];
+
 function getDefaultConfig(): MonitorAgentConfig {
   return {
     enabled: true,
@@ -139,8 +172,6 @@ function getDefaultConfig(): MonitorAgentConfig {
     telegramChatId: "",
     webhookSecret: randomBytes(18).toString("hex"),
     webhookRegisteredUrl: null,
-    lastDailyReportDate: null,
-    lastHourlyCheckHour: null,
   };
 }
 
@@ -239,11 +270,8 @@ export async function getMonitorReportsHistory(): Promise<MonitorReportEntry[]> 
   return [];
 }
 
-async function appendMonitorReport(entry: MonitorReportEntry): Promise<void> {
-  const existing = await getMonitorReportsHistory();
-  const next = [entry, ...existing].slice(0, 50);
-  const serialized = JSON.stringify(next);
-
+async function saveMonitorReportsHistory(list: MonitorReportEntry[]): Promise<void> {
+  const serialized = JSON.stringify(list.slice(0, 60));
   const [row] = await db
     .select({ id: siteSettingsTable.id })
     .from(siteSettingsTable)
@@ -262,6 +290,20 @@ async function appendMonitorReport(entry: MonitorReportEntry): Promise<void> {
       type: "json",
     });
   }
+}
+
+async function appendMonitorReport(entry: MonitorReportEntry): Promise<void> {
+  const existing = await getMonitorReportsHistory();
+  await saveMonitorReportsHistory([entry, ...existing]);
+}
+
+export async function deleteMonitorReportById(id?: string): Promise<void> {
+  if (!id) {
+    await saveMonitorReportsHistory([]);
+    return;
+  }
+  const existing = await getMonitorReportsHistory();
+  await saveMonitorReportsHistory(existing.filter((r) => r.id !== id));
 }
 
 export function getEffectiveGeminiApiKey(cfg?: MonitorAgentConfig): string {
@@ -297,10 +339,32 @@ export async function resolveTelegramCredentials(cfg: MonitorAgentConfig): Promi
   return { enabled: false, botToken: customToken, chatId: customChat, source: "none" };
 }
 
+export async function getMonitorBotStatus(cfg: MonitorAgentConfig) {
+  const tg = await resolveTelegramCredentials(cfg);
+  if (!tg.botToken) {
+    return { connected: false, botUsername: null as string | null, webhookUrl: null as string | null, pendingUpdates: 0 };
+  }
+  try {
+    const [meRes, whRes] = await Promise.all([
+      fetch(`https://api.telegram.org/bot${tg.botToken}/getMe`).then((r) => r.json()).catch(() => null),
+      fetch(`https://api.telegram.org/bot${tg.botToken}/getWebhookInfo`).then((r) => r.json()).catch(() => null),
+    ]);
+    return {
+      connected: Boolean((meRes as any)?.ok),
+      botUsername: (meRes as any)?.result?.username || null,
+      webhookUrl: (whRes as any)?.result?.url || null,
+      pendingUpdates: Number((whRes as any)?.result?.pending_update_count || 0),
+    };
+  } catch {
+    return { connected: false, botUsername: null, webhookUrl: null, pendingUpdates: 0 };
+  }
+}
+
 export async function sendTelegramMonitorMessage(
   botToken: string,
   chatId: string,
   messageText: string,
+  inlineKeyboard?: TelegramInlineKeyboard,
 ): Promise<{ success: boolean; error?: string }> {
   if (!botToken || !chatId) {
     return { success: false, error: "يرجى إدخال Telegram Bot Token و Chat ID" };
@@ -324,14 +388,16 @@ export async function sendTelegramMonitorMessage(
   }
 
   try {
-    for (const chunk of chunks) {
+    for (let i = 0; i < chunks.length; i++) {
+      const isLast = i === chunks.length - 1;
       const resp = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: chatId,
-          text: chunk,
+          text: chunks[i],
           disable_web_page_preview: true,
+          ...(isLast && inlineKeyboard ? { reply_markup: { inline_keyboard: inlineKeyboard } } : {}),
         }),
       });
       const data = (await resp.json().catch(() => ({}))) as any;
@@ -356,6 +422,16 @@ export async function collectPlatformPulse(dateInput?: string): Promise<Platform
   const sevenDaysAgoDate = getCairoDateString(sevenDaysAgo);
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  const dbPingStart = Date.now();
+  let dbOk = true;
+  try {
+    await db.execute(sql`SELECT 1`);
+  } catch {
+    dbOk = false;
+  }
+  const dbLatencyMs = Date.now() - dbPingStart;
+  const runtimeStats = getProcessRuntimeStats();
 
   const [
     allStudents,
@@ -422,18 +498,19 @@ export async function collectPlatformPulse(dateInput?: string): Promise<Platform
       .from(paymentReceiptsTable)
       .where(eq(paymentReceiptsTable.status, "pending"))
       .orderBy(desc(paymentReceiptsTable.createdAt))
-      .limit(10),
+      .limit(12),
     db
       .select({
         id: bookingsTable.id,
         name: bookingsTable.name,
         phone: bookingsTable.phone,
+        message: bookingsTable.message,
         createdAt: bookingsTable.createdAt,
       })
       .from(bookingsTable)
       .where(eq(bookingsTable.status, "pending"))
       .orderBy(desc(bookingsTable.createdAt))
-      .limit(10),
+      .limit(12),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(codeRecoveryRequestsTable)
@@ -451,15 +528,21 @@ export async function collectPlatformPulse(dateInput?: string): Promise<Platform
       .from(monthlySubscriptionsTable)
       .where(eq(monthlySubscriptionsTable.paymentStatus, "pending")),
     db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({
+        studentName: studentsTable.name,
+        studentPhone: studentsTable.phone,
+        monthEndDate: monthlySubscriptionsTable.monthEndDate,
+      })
       .from(monthlySubscriptionsTable)
+      .innerJoin(studentsTable, eq(monthlySubscriptionsTable.studentId, studentsTable.id))
       .where(
         and(
           eq(monthlySubscriptionsTable.paymentStatus, "paid"),
           gte(monthlySubscriptionsTable.monthEndDate, now),
           lte(monthlySubscriptionsTable.monthEndDate, threeDaysLater),
         ),
-      ),
+      )
+      .limit(20),
     db
       .select({ id: quizzesTable.id, title: quizzesTable.title })
       .from(quizzesTable)
@@ -634,6 +717,11 @@ export async function collectPlatformPulse(dateInput?: string): Promise<Platform
     generatedAt: now.toISOString(),
     cairoDate,
     cairoTimeLabel: getCairoHumanTime(now),
+    systemHealth: {
+      dbOk,
+      dbLatencyMs,
+      ...runtimeStats,
+    },
     students: {
       total: allStudents.length,
       activeApproved,
@@ -657,24 +745,30 @@ export async function collectPlatformPulse(dateInput?: string): Promise<Platform
     },
     financeAndActions: {
       pendingReceiptsCount: pendingReceipts.length,
-      pendingReceiptsLatest: pendingReceipts.slice(0, 5).map((r) => ({
+      pendingReceiptsLatest: pendingReceipts.slice(0, 8).map((r) => ({
         id: r.id,
         studentName: r.snapshotStudentName || "طالب",
         phone: r.snapshotStudentPhone || "",
         createdAt: new Date(r.createdAt).toISOString(),
       })),
       pendingBookingsCount: pendingBookings.length,
-      pendingBookingsLatest: pendingBookings.slice(0, 5).map((b) => ({
+      pendingBookingsLatest: pendingBookings.slice(0, 8).map((b) => ({
         id: b.id,
         name: b.name,
         phone: b.phone,
+        message: (b.message || "").slice(0, 120),
         createdAt: new Date(b.createdAt).toISOString(),
       })),
       pendingRecoveryRequests: pendingRecoveryRows[0]?.count || 0,
       pendingSummaries: pendingSummaryRows[0]?.count || 0,
       pendingEssaySubmissions: pendingEssayRows[0]?.count || 0,
       pendingMonthlySubscriptions: pendingSubsRows[0]?.count || 0,
-      expiringSubscriptionsNext3Days: expiringSubsRows[0]?.count || 0,
+      expiringSubscriptionsNext3Days: expiringSubsRows.length,
+      expiringStudentsPreview: expiringSubsRows.slice(0, 8).map((x) => ({
+        name: x.studentName,
+        phone: x.studentPhone,
+        endsAt: getCairoDateString(new Date(x.monthEndDate)),
+      })),
     },
     academics: {
       publishedQuizzesCount: publishedQuizRows.length,
@@ -707,8 +801,10 @@ export function buildDeterministicSummary(pulse: PlatformPulseSnapshot): string 
   const lines: string[] = [
     `📊 التقرير التشغيلي لمنصة د. محمود المهدي (${pulse.cairoTimeLabel})`,
     "",
+    `🖥️ السيرفر وقاعدة البيانات: ${pulse.systemHealth.dbOk ? "متصل" : "عطل"} (${pulse.systemHealth.dbLatencyMs}ms) | RAM ${pulse.systemHealth.processRssMb}MB | أخطاء 24 ساعة: ${pulse.systemHealth.errorsLast24hCount}`,
+    "",
     `👥 الطلاب: إجمالي ${pulse.students.total} | مفعل ${pulse.students.activeApproved} | مدفوع ${pulse.students.paid} | بانتظار المراجعة ${pulse.students.pendingReview}`,
-    `🆕 تسجيلات اليوم: ${pulse.students.newToday} | آخر 7 أيام: ${pulse.students.newLast7Days} | طلاب لم يؤكدوا السنتر: ${pulse.students.unconfirmedCenterCount}`,
+    `🆕 تسجيلات اليوم: ${pulse.students.newToday} | آخر 7 أيام: ${pulse.students.newLast7Days} | لم يؤكدوا السنتر: ${pulse.students.unconfirmedCenterCount}`,
     "",
     `🏫 حضور اليوم (${pulse.attendanceToday.date}): حاضر ${pulse.attendanceToday.present} | متأخر ${pulse.attendanceToday.late} | غائب ${pulse.attendanceToday.absent}`,
   ];
@@ -742,7 +838,7 @@ export function buildDeterministicSummary(pulse: PlatformPulseSnapshot): string 
 
   if (pulse.academics.lowestAvgQuiz7Days) {
     lines.push(
-      `📉 أصعب اختبار مؤخراً: "${pulse.academics.lowestAvgQuiz7Days.title}" بمتوسط ${pulse.academics.lowestAvgQuiz7Days.avgScore}%`,
+      `📉 أقل اختبار في المتوسط: "${pulse.academics.lowestAvgQuiz7Days.title}" بمتوسط ${pulse.academics.lowestAvgQuiz7Days.avgScore}%`,
     );
   }
   if (pulse.operations.googleSheetConfigured) {
@@ -754,10 +850,152 @@ export function buildDeterministicSummary(pulse: PlatformPulseSnapshot): string 
   return lines.join("\n");
 }
 
+function normalizeArabicVariants(word: string): string[] {
+  const variants = new Set<string>([word]);
+  const base = word
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه");
+  variants.add(base);
+  if (word.startsWith("ا")) variants.add("أ" + word.slice(1));
+  if (word.startsWith("أ") || word.startsWith("إ")) variants.add("ا" + word.slice(1));
+  return Array.from(variants).filter((w) => w.length >= 2);
+}
+
+async function gatherTargetedQueryContext(question: string): Promise<string> {
+  const clean = question.trim();
+  if (!clean) return "";
+
+  const snippets: string[] = [];
+  const stopWords = new Set([
+    "ما", "من", "في", "على", "عن", "هل", "كم", "اليوم", "الطلاب", "الطالب",
+    "سنتر", "تقرير", "حالة", "اخر", "أخر", "اعرض", "طالب", "كود", "درجات",
+    "اختبار", "امتحان", "حضور", "غياب", "ايه", "إيه", "فين", "مين",
+  ]);
+  const rawWords = clean
+    .replace(/[؟?!.,،"':;/\\]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !stopWords.has(w))
+    .slice(0, 5);
+
+  const searchTerms = Array.from(new Set(rawWords.flatMap(normalizeArabicVariants))).slice(0, 10);
+
+  if (searchTerms.length > 0) {
+    const studentConditions = searchTerms.flatMap((w) => [
+      ilike(studentsTable.name, `%${w}%`),
+      ilike(studentsTable.phone, `%${w}%`),
+      ilike(studentsTable.accessCode, `%${w}%`),
+      ilike(studentsTable.centerName, `%${w}%`),
+    ]);
+
+    const matchedStudents = await db
+      .select({
+        id: studentsTable.id,
+        name: studentsTable.name,
+        phone: studentsTable.phone,
+        parentPhone: studentsTable.parentPhone,
+        accessCode: studentsTable.accessCode,
+        grade: studentsTable.grade,
+        centerName: studentsTable.centerName,
+        appointmentSlot: studentsTable.appointmentSlot,
+        paymentStatus: studentsTable.paymentStatus,
+        status: studentsTable.status,
+        centerConfirmed: studentsTable.centerConfirmed,
+        learningMode: studentsTable.learningMode,
+        lastActiveAt: studentsTable.lastActiveAt,
+      })
+      .from(studentsTable)
+      .where(or(...studentConditions))
+      .limit(10);
+
+    if (matchedStudents.length > 0) {
+      // For focused queries (<= 5 matched students), enrich with their recent quizzes & attendance
+      if (matchedStudents.length <= 5) {
+        const ids = matchedStudents.map((s) => s.id);
+        const [attempts, attendance] = await Promise.all([
+          db
+            .select({
+              studentId: quizAttemptsTable.studentId,
+              quizTitle: quizzesTable.title,
+              score: quizAttemptsTable.score,
+              passed: quizAttemptsTable.passed,
+              createdAt: quizAttemptsTable.createdAt,
+            })
+            .from(quizAttemptsTable)
+            .leftJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id))
+            .where(inArray(quizAttemptsTable.studentId, ids))
+            .orderBy(desc(quizAttemptsTable.createdAt))
+            .limit(20),
+          db
+            .select({
+              studentId: studentAttendanceTable.studentId,
+              date: studentAttendanceTable.date,
+              status: studentAttendanceTable.status,
+              centerName: studentAttendanceTable.centerName,
+            })
+            .from(studentAttendanceTable)
+            .where(inArray(studentAttendanceTable.studentId, ids))
+            .orderBy(desc(studentAttendanceTable.date))
+            .limit(20),
+        ]);
+
+        const enriched = matchedStudents.map((s) => ({
+          ...s,
+          recentQuizzes: attempts.filter((a) => a.studentId === s.id).slice(0, 5),
+          recentAttendance: attendance.filter((a) => a.studentId === s.id).slice(0, 5),
+        }));
+        snippets.push(`بيانات الطلاب المطابقة وسجلهم الدراسي والحضور:\n${JSON.stringify(enriched, null, 2)}`);
+      } else {
+        snippets.push(`نتائج مطابقة من جدول الطلاب (أول 10):\n${JSON.stringify(matchedStudents, null, 2)}`);
+      }
+    }
+
+    // Quiz search if asking about exams/quizzes
+    const quizConditions = searchTerms.map((w) => ilike(quizzesTable.title, `%${w}%`));
+    const matchedQuizzes = await db
+      .select({ id: quizzesTable.id, title: quizzesTable.title, stage: quizzesTable.stage, isPublished: quizzesTable.isPublished })
+      .from(quizzesTable)
+      .where(or(...quizConditions))
+      .limit(5);
+
+    if (matchedQuizzes.length > 0) {
+      const qIds = matchedQuizzes.map((q) => q.id);
+      const qAttempts = await db
+        .select({
+          quizId: quizAttemptsTable.quizId,
+          score: quizAttemptsTable.score,
+          passed: quizAttemptsTable.passed,
+          studentName: studentsTable.name,
+        })
+        .from(quizAttemptsTable)
+        .leftJoin(studentsTable, eq(quizAttemptsTable.studentId, studentsTable.id))
+        .where(inArray(quizAttemptsTable.quizId, qIds))
+        .orderBy(desc(quizAttemptsTable.score))
+        .limit(40);
+
+      const quizDetails = matchedQuizzes.map((q) => {
+        const list = qAttempts.filter((a) => a.quizId === q.id);
+        const avg = list.length > 0 ? Math.round(list.reduce((sum, a) => sum + a.score, 0) / list.length) : 0;
+        const passCount = list.filter((a) => a.passed).length;
+        return {
+          ...q,
+          sampledAttempts: list.length,
+          avgScore: avg,
+          passedCount: passCount,
+          topScores: list.slice(0, 5),
+        };
+      });
+      snippets.push(`تفاصيل الاختبارات المطابقة:\n${JSON.stringify(quizDetails, null, 2)}`);
+    }
+  }
+
+  return snippets.join("\n\n");
+}
+
 async function callGeminiWithFallback(
   apiKey: string,
   systemInstruction: string,
-  userPrompt: string,
+  contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }>,
 ): Promise<{ text: string; modelUsed: string } | null> {
   if (!apiKey) return null;
 
@@ -775,15 +1013,10 @@ async function callGeminiWithFallback(
           systemInstruction: {
             parts: [{ text: systemInstruction }],
           },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: userPrompt }],
-            },
-          ],
+          contents,
           generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1600,
+            temperature: 0.25,
+            maxOutputTokens: 2048,
           },
         }),
       });
@@ -799,6 +1032,8 @@ async function callGeminiWithFallback(
             .filter((p: any) => !p?.thought && typeof p?.text === "string")
             .map((p: any) => p.text)
             .join("\n")
+            .replace(/\*\*/g, "")
+            .replace(/^#{1,4}\s*/gm, "")
             .trim()
         : "";
       if (text) {
@@ -809,53 +1044,6 @@ async function callGeminiWithFallback(
     }
   }
   return null;
-}
-
-async function gatherTargetedQueryContext(question: string): Promise<string> {
-  const clean = question.trim();
-  if (!clean) return "";
-
-  const snippets: string[] = [];
-  // Extract Arabic/Latin keywords > 2 chars (excluding common words)
-  const stopWords = new Set(["ما", "من", "في", "على", "عن", "هل", "كم", "اليوم", "الطلاب", "الطالب", "سنتر", "تقرير", "حالة", "اخر", "أخر"]);
-  const words = clean
-    .replace(/[؟?!.,،"']/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length >= 2 && !stopWords.has(w))
-    .slice(0, 4);
-
-  if (words.length > 0) {
-    const conditions = words.flatMap((w) => [
-      ilike(studentsTable.name, `%${w}%`),
-      ilike(studentsTable.phone, `%${w}%`),
-      ilike(studentsTable.accessCode, `%${w}%`),
-      ilike(studentsTable.centerName, `%${w}%`),
-    ]);
-
-    const matchedStudents = await db
-      .select({
-        id: studentsTable.id,
-        name: studentsTable.name,
-        phone: studentsTable.phone,
-        accessCode: studentsTable.accessCode,
-        grade: studentsTable.grade,
-        centerName: studentsTable.centerName,
-        appointmentSlot: studentsTable.appointmentSlot,
-        paymentStatus: studentsTable.paymentStatus,
-        status: studentsTable.status,
-        centerConfirmed: studentsTable.centerConfirmed,
-        lastActiveAt: studentsTable.lastActiveAt,
-      })
-      .from(studentsTable)
-      .where(or(...conditions))
-      .limit(12);
-
-    if (matchedStudents.length > 0) {
-      snippets.push(`نتائج مطابقة من جدول الطلاب:\n${JSON.stringify(matchedStudents, null, 2)}`);
-    }
-  }
-
-  return snippets.join("\n\n");
 }
 
 export async function generatePlatformReport(options: {
@@ -869,19 +1057,22 @@ export async function generatePlatformReport(options: {
 
   const systemInstruction = [
     "أنت المساعد التنفيذي الذكي ومراقب التشغيل لمنصة د. محمود المهدي التعليمية.",
-    "اكتب تقرير متابعة احترافي ومباشر باللغة العربية الواضحة (مناسب للقراءة السريعة على الموبايل وتليجرام).",
+    "اكتب تقرير متابعة احترافي وواضح باللغة العربية مناسب للقراءة السريعة على الموبايل وتليجرام.",
+    "تجنب علامات الماركداون مثل ** أو ### واستخدم الرموز التعبيرية والشرطات المرتبة فقط.",
     "اعتمد حصراً على الأرقام والأسماء الموجودة في البيانات المرفقة، ولا تخترع أي أرقام.",
-    "قسّم التقرير بوضوح إلى: 1) ملخص سريع 2) أهم ما يحتاج تدخل فوري من د. محمود 3) حالة السناتر والحضور 4) حالة الاختبارات والمحتوى 5) توصيات عملية لليوم.",
+    "قسّم التقرير بوضوح إلى: 1) ملخص سريع 2) ما يحتاج تدخل فوري من د. محمود 3) السناتر والحضور 4) الاختبارات والأكاديمي 5) صحة السيرفر والملاحظات.",
   ].join(" ");
 
   const prompt = [
     options.customFocus ? `تركيز مطلوب: ${options.customFocus}` : "أعد التقرير التشغيلي الشامل الحالي للمنصة.",
     "",
-    "البيانات اللحظية الدقيقة من قاعدة البيانات:",
+    "البيانات اللحظية الدقيقة من قاعدة البيانات والسيرفر:",
     JSON.stringify(pulse),
   ].join("\n");
 
-  const aiResult = await callGeminiWithFallback(apiKey, systemInstruction, prompt);
+  const aiResult = await callGeminiWithFallback(apiKey, systemInstruction, [
+    { role: "user", parts: [{ text: prompt }] },
+  ]);
   const summary = aiResult?.text || buildDeterministicSummary(pulse);
 
   let sentToTelegram = false;
@@ -889,7 +1080,7 @@ export async function generatePlatformReport(options: {
   if (options.sendToTelegram) {
     const tg = await resolveTelegramCredentials(cfg);
     if (tg.enabled) {
-      const tgRes = await sendTelegramMonitorMessage(tg.botToken, tg.chatId, summary);
+      const tgRes = await sendTelegramMonitorMessage(tg.botToken, tg.chatId, summary, DEFAULT_TELEGRAM_KEYBOARD);
       sentToTelegram = tgRes.success;
       telegramError = tgRes.error || null;
     } else {
@@ -917,6 +1108,7 @@ export async function generatePlatformReport(options: {
       pendingReceipts: pulse.financeAndActions.pendingReceiptsCount,
       pendingBookings: pulse.financeAndActions.pendingBookingsCount,
       attemptsToday: pulse.academics.attemptsToday,
+      errors24h: pulse.systemHealth.errorsLast24hCount,
     },
   };
 
@@ -937,30 +1129,36 @@ export async function askMonitorAgent(
 
   const systemInstruction = [
     "أنت الوكيل الذكي ومساعد الإدارة الرسمي لدكتور محمود المهدي على منصته التعليمية (drelmahdy.com).",
-    "تجاوب باللغة العربية بشكل دقيق ومختصر ومفيد، وتعتمد فقط على بيانات قاعدة البيانات الفعلية المقدمة لك.",
-    "إذا سألك الدكتور عن مشكلة أو طالب أو سنتر أو حسابات، اعرض الأرقام والأسماء الحقيقية، واذكر الخطوة العملية التالية.",
-    "تجنب إطالة المقدمات، وركز على الإجابة الدقيقة.",
+    "تجاوب باللغة العربية بشكل دقيق ومختصر ومفيد، وتعتمد فقط على بيانات قاعدة البيانات والسيرفر الفعلية المقدمة لك.",
+    "إذا سألك الدكتور عن طالب أو اختبار أو سنتر أو حسابات أو أخطاء سيرفر، اعرض الأرقام والأسماء الحقيقية، واذكر الخطوة العملية التالية.",
+    "تجنب علامات ** و ### حتى يكون النص نظيفاً في الشات وتليجرام.",
   ].join(" ");
 
-  const historyText = Array.isArray(history) && history.length > 0
-    ? history
-        .slice(-6)
-        .map((m) => `${m.role === "user" ? "د. محمود" : "المساعد"}: ${m.text}`)
-        .join("\n")
-    : "";
+  const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+  if (Array.isArray(history) && history.length > 0) {
+    for (const m of history.slice(-6)) {
+      if (m.text?.trim()) {
+        contents.push({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.text.trim().slice(0, 1500) }],
+        });
+      }
+    }
+  }
 
-  const prompt = [
-    historyText ? `سياق الحوار السابق:\n${historyText}\n` : "",
+  const currentUserMsg = [
     `سؤال د. محمود الآن: ${question}`,
     "",
-    "ملخص قاعدة البيانات الحالي:",
+    "نبض المنصة والسيرفر الآن:",
     JSON.stringify(pulse),
-    extraContext ? `\nبيانات تفصيلية مطابقة للسؤال:\n${extraContext}` : "",
+    extraContext ? `\nبيانات تفصيلية مطابقة للاستعلام:\n${extraContext}` : "",
   ]
     .filter(Boolean)
     .join("\n");
 
-  const aiResult = await callGeminiWithFallback(apiKey, systemInstruction, prompt);
+  contents.push({ role: "user", parts: [{ text: currentUserMsg }] });
+
+  const aiResult = await callGeminiWithFallback(apiKey, systemInstruction, contents);
   if (aiResult) {
     return {
       answer: aiResult.text,
@@ -1018,9 +1216,9 @@ let isMonitorTickRunning = false;
 
 /**
  * Runs every 60s from server scheduler:
- * 1) Watches for new receipts, bookings, new student signups, recovery requests, and essay submissions
- * 2) Fires instant real-time alerts to Admin Monitor feed & Telegram Bot
- * 3) Sends scheduled daily executive AI report at configured Cairo time
+ * 1) Watches for new receipts, bookings, new students, recovery requests, essay submissions, sheet sync errors, and server 5xx errors
+ * 2) Runs daily proactive checks for expiring subscriptions & repeat absences (non-spam, once/day)
+ * 3) Dispatches scheduled daily executive AI report at configured Cairo time
  */
 export async function runMonitorAgentSchedulerTick(): Promise<void> {
   if (isMonitorTickRunning) return;
@@ -1031,8 +1229,9 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
     if (!cfg.enabled) return;
 
     const tg = await resolveTelegramCredentials(cfg);
+    const todayCairo = getCairoDateString();
+    const nowHHMM = getCairoTimeHHMM();
 
-    // 1. Real-time Delta Alerts
     const [
       latestReceiptRows,
       latestBookingRows,
@@ -1070,7 +1269,7 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
         .orderBy(desc(studentsTable.id))
         .limit(1),
       db
-        .select({ id: codeRecoveryRequestsTable.id, studentId: codeRecoveryRequestsTable.studentId })
+        .select({ id: codeRecoveryRequestsTable.id })
         .from(codeRecoveryRequestsTable)
         .orderBy(desc(codeRecoveryRequestsTable.id))
         .limit(1),
@@ -1107,20 +1306,28 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
       // ignore
     }
 
-    const wm = await getWatermark();
+    const runtimeStats = getProcessRuntimeStats();
+    const latestServerErr = runtimeStats.recentErrors[0];
+
+    let wm = await getWatermark();
     if (!wm) {
-      await saveWatermark({
+      wm = {
         lastReceiptId: curMaxReceiptId,
         lastBookingId: curMaxBookingId,
         lastStudentId: curMaxStudentId,
         lastRecoveryId: curMaxRecoveryId,
         lastEssaySubmissionId: curMaxEssayId,
         lastSheetErrorSignature: currentSheetError,
+        lastServerErrorId: latestServerErr?.id || "",
+        lastDailyReportDate: "",
         alertedExpiringDate: "",
+        alertedAbsenceDate: "",
         initializedAt: new Date().toISOString(),
-      });
+      };
+      await saveWatermark(wm);
     } else {
       const alertLines: string[] = [];
+      const alertButtons: TelegramInlineKeyboard = [];
 
       if (cfg.alertOnNewReceipt && curMaxReceiptId > wm.lastReceiptId) {
         const diff = curMaxReceiptId - wm.lastReceiptId;
@@ -1128,11 +1335,13 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
         alertLines.push(
           `💳 إيصال دفع جديد (${diff > 1 ? `${diff} إيصالات، آخرهم` : "الطالب"}: ${r?.name || "طالب"} - ${r?.phone || ""})`,
         );
+        alertButtons.push([{ text: "💳 مراجعة الإيصالات", url: "https://drelmahdy.com/admin/payments" }]);
       }
 
       if (cfg.alertOnNewBooking && curMaxBookingId > wm.lastBookingId) {
         const b = latestBookingRows[0];
         alertLines.push(`📅 طلب حجز جديد من الموقع: ${b?.name || ""} (${b?.phone || ""})`);
+        alertButtons.push([{ text: "📅 فتح الحجوزات", url: "https://drelmahdy.com/admin/center-bookings" }]);
       }
 
       if (cfg.alertOnNewStudent && curMaxStudentId > wm.lastStudentId) {
@@ -1149,32 +1358,100 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
       }
 
       if (currentSheetError && currentSheetError !== wm.lastSheetErrorSignature) {
-        alertLines.push(`⚠️ تنبيه مزامنة Google Sheets: ${currentSheetError}`);
+        alertLines.push(`⚠️ فشل مزامنة Google Sheets: ${currentSheetError}`);
       }
 
-      const nextWm: MonitorWatermark = {
-        ...wm,
-        lastReceiptId: Math.max(wm.lastReceiptId, curMaxReceiptId),
-        lastBookingId: Math.max(wm.lastBookingId, curMaxBookingId),
-        lastStudentId: Math.max(wm.lastStudentId, curMaxStudentId),
-        lastRecoveryId: Math.max(wm.lastRecoveryId, curMaxRecoveryId),
-        lastEssaySubmissionId: Math.max(wm.lastEssaySubmissionId, curMaxEssayId),
-        lastSheetErrorSignature: currentSheetError || wm.lastSheetErrorSignature,
-      };
+      if (latestServerErr && latestServerErr.id !== wm.lastServerErrorId && runtimeStats.errorsLast24hCount >= 3) {
+        alertLines.push(
+          `🚨 خطأ سيرفر 500 في (${latestServerErr.method} ${latestServerErr.path}): ${latestServerErr.message}`,
+        );
+      }
+
+      // Daily proactive subscription expiry check (after 13:00 Cairo time)
+      if (cfg.alertOnExpiringSubscriptions && wm.alertedExpiringDate !== todayCairo && nowHHMM >= "13:00") {
+        wm.alertedExpiringDate = todayCairo;
+        const now = new Date();
+        const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+        const expiringRows = await db
+          .select({ name: studentsTable.name, phone: studentsTable.phone })
+          .from(monthlySubscriptionsTable)
+          .innerJoin(studentsTable, eq(monthlySubscriptionsTable.studentId, studentsTable.id))
+          .where(
+            and(
+              eq(monthlySubscriptionsTable.paymentStatus, "paid"),
+              gte(monthlySubscriptionsTable.monthEndDate, now),
+              lte(monthlySubscriptionsTable.monthEndDate, threeDaysLater),
+            ),
+          )
+          .limit(10);
+        if (expiringRows.length > 0) {
+          alertLines.push(
+            `⏳ تنبيه الاشتراكات: ${expiringRows.length} طلاب ينتهي اشتراكهم خلال 3 أيام (${expiringRows
+              .slice(0, 4)
+              .map((x) => x.name)
+              .join("، ")})`,
+          );
+        }
+      }
+
+      // Daily proactive repeat absence check (after 21:00 Cairo time)
+      if (cfg.alertOnRepeatAbsence && wm.alertedAbsenceDate !== todayCairo && nowHHMM >= "21:00") {
+        wm.alertedAbsenceDate = todayCairo;
+        const sevenDaysAgoDate = getCairoDateString(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+        const absRows = await db
+          .select({
+            studentId: studentAttendanceTable.studentId,
+            name: studentsTable.name,
+            centerName: studentAttendanceTable.centerName,
+          })
+          .from(studentAttendanceTable)
+          .leftJoin(studentsTable, eq(studentAttendanceTable.studentId, studentsTable.id))
+          .where(and(gte(studentAttendanceTable.date, sevenDaysAgoDate), eq(studentAttendanceTable.status, "absent")));
+
+        const counts = new Map<number, { name: string; center: string; n: number }>();
+        for (const r of absRows) {
+          const item = counts.get(r.studentId) || {
+            name: r.name || `#${r.studentId}`,
+            center: r.centerName || "سنتر",
+            n: 0,
+          };
+          item.n++;
+          counts.set(r.studentId, item);
+        }
+        const repeaters = Array.from(counts.values()).filter((x) => x.n >= 2);
+        if (repeaters.length > 0) {
+          alertLines.push(
+            `⚠️ متابعة الغياب: ${repeaters.length} طلاب غابوا مرتين فأكثر هذا الأسبوع (${repeaters
+              .slice(0, 4)
+              .map((x) => `${x.name} [${x.center}]`)
+              .join("، ")})`,
+          );
+        }
+      }
+
+      wm.lastReceiptId = Math.max(wm.lastReceiptId, curMaxReceiptId);
+      wm.lastBookingId = Math.max(wm.lastBookingId, curMaxBookingId);
+      wm.lastStudentId = Math.max(wm.lastStudentId, curMaxStudentId);
+      wm.lastRecoveryId = Math.max(wm.lastRecoveryId, curMaxRecoveryId);
+      wm.lastEssaySubmissionId = Math.max(wm.lastEssaySubmissionId, curMaxEssayId);
+      if (currentSheetError) wm.lastSheetErrorSignature = currentSheetError;
+      if (latestServerErr) wm.lastServerErrorId = latestServerErr.id;
 
       if (alertLines.length > 0) {
-        const msg = `🔔 تنبيه فوري من مراقب المنصة (${getCairoHumanTime()}):\n\n${alertLines.join("\n")}\n\n🔗 لوحة الإدارة: https://drelmahdy.com/admin`;
+        const msg = `🔔 تنبيه فوري من مراقب المنصة (${getCairoHumanTime()}):\n\n${alertLines.join("\n")}`;
+        alertButtons.push([{ text: "📊 تقرير الآن", callback_data: "cmd:/today" }]);
+
         let sent = false;
         let tgErr: string | null = null;
         if (tg.enabled) {
-          const res = await sendTelegramMonitorMessage(tg.botToken, tg.chatId, msg);
+          const res = await sendTelegramMonitorMessage(tg.botToken, tg.chatId, msg, alertButtons);
           sent = res.success;
           tgErr = res.error || null;
         }
         await appendMonitorReport({
           id: `alert_${Date.now()}_${randomBytes(3).toString("hex")}`,
           kind: "alert",
-          title: alertLines[0].slice(0, 70),
+          title: alertLines[0].slice(0, 75),
           summary: msg,
           createdAt: new Date().toISOString(),
           sentToTelegram: sent,
@@ -1183,23 +1460,17 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
         });
       }
 
-      await saveWatermark(nextWm);
-    }
-
-    // 2. Scheduled Daily Executive Report (Africa/Cairo)
-    if (cfg.dailyReportEnabled) {
-      const todayCairo = getCairoDateString();
-      const nowHHMM = getCairoTimeHHMM();
-      const targetHHMM = cfg.dailyReportTime || "22:00";
-
-      if (cfg.lastDailyReportDate !== todayCairo && nowHHMM >= targetHHMM) {
-        // Reserve today first so concurrent ticks cannot duplicate
-        await saveMonitorConfig({ ...cfg, lastDailyReportDate: todayCairo });
+      // Scheduled Daily Executive Report stored inside watermark (avoids racing with config saves)
+      if (cfg.dailyReportEnabled && wm.lastDailyReportDate !== todayCairo && nowHHMM >= (cfg.dailyReportTime || "22:00")) {
+        wm.lastDailyReportDate = todayCairo;
+        await saveWatermark(wm);
         await generatePlatformReport({
           kind: "daily",
           sendToTelegram: tg.enabled,
         });
         logger.info({ todayCairo }, "[AI_MONITOR] Daily executive report generated & dispatched");
+      } else {
+        await saveWatermark(wm);
       }
     }
   } catch (err) {
@@ -1209,6 +1480,11 @@ export async function runMonitorAgentSchedulerTick(): Promise<void> {
   }
 }
 
+export async function getLastDailyReportTimestamp(): Promise<string | null> {
+  const wm = await getWatermark();
+  return wm?.lastDailyReportDate || null;
+}
+
 export function verifyWebhookSecret(supplied: string, expected: string): boolean {
   if (!supplied || !expected) return false;
   const a = Buffer.from(supplied);
@@ -1216,23 +1492,181 @@ export function verifyWebhookSecret(supplied: string, expected: string): boolean
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+async function executeTelegramCommand(text: string, chatId: string, botToken: string): Promise<void> {
+  let reply = "";
+  let keyboard: TelegramInlineKeyboard | undefined = DEFAULT_TELEGRAM_KEYBOARD;
+  const cmd = text.split(/\s+/)[0].toLowerCase();
+
+  try {
+    if (cmd === "/start" || cmd === "/help" || cmd === "/menu") {
+      reply = [
+        "🤖 أهلاً بك د. محمود — لوحة التحكم السريعة للوكيل الذكي:",
+        "",
+        "• /today — تقرير شامل بالذكاء الاصطناعي لحالة المنصة الآن",
+        "• /pending — الإيصالات والحجوزات والتلخيصات والمقالي المعلقة",
+        "• /absent — غياب اليوم والمتغيبون بشكل متكرر",
+        "• /exams — إحصائيات الاختبارات وأعلى الطلاب آخر 7 أيام",
+        "• /health — صحة السيرفر وقاعدة البيانات والأخطاء",
+        "• /audit — آخر تحركات المساعدين والإدارة (24 ساعة)",
+        "• /student الاسم — بحث فوري عن طالب ودرجاته وحضوره",
+        "",
+        "💬 أو اكتب أي سؤال مباشر بالعربي وسأبحث في قاعدة البيانات وأرد عليك.",
+      ].join("\n");
+    } else if (cmd === "/today" || cmd === "/report") {
+      const rep = await generatePlatformReport({ kind: "manual", sendToTelegram: false });
+      reply = rep.summary;
+    } else if (cmd === "/absent") {
+      const pulse = await collectPlatformPulse();
+      const lines = [
+        `🏫 حالة الحضور اليوم (${pulse.attendanceToday.date}):`,
+        `حاضر: ${pulse.attendanceToday.present} | متأخر: ${pulse.attendanceToday.late} | غائب: ${pulse.attendanceToday.absent}`,
+        "",
+        ...(pulse.attendanceToday.byCenter.length > 0
+          ? [
+              "توزيع السناتر اليوم:",
+              ...pulse.attendanceToday.byCenter.map(
+                (c) => `• ${c.centerName}: حضور ${c.present} | تأخير ${c.late} | غياب ${c.absent}`,
+              ),
+              "",
+            ]
+          : []),
+        ...(pulse.attendanceToday.absentNamesToday.length > 0
+          ? [`غائبون اليوم (أول 20):`, ...pulse.attendanceToday.absentNamesToday.map((n) => `• ${n}`), ""]
+          : ["لا توجد حالات غياب مسجلة اليوم حتى الآن.", ""]),
+        ...(pulse.attendanceToday.repeatAbsentees7Days.length > 0
+          ? [
+              `⚠️ غياب متكرر آخر 7 أيام:`,
+              ...pulse.attendanceToday.repeatAbsentees7Days.map(
+                (x) => `• ${x.name} (${x.centerName}) — ${x.absentDays} مرات`,
+              ),
+            ]
+          : []),
+      ];
+      reply = lines.join("\n");
+    } else if (cmd === "/pending") {
+      const pulse = await collectPlatformPulse();
+      reply = [
+        `📌 الإجراءات المعلقة الآن:`,
+        `• إيصالات دفع منتظرة: ${pulse.financeAndActions.pendingReceiptsCount}`,
+        ...pulse.financeAndActions.pendingReceiptsLatest.map((r) => `   - ${r.studentName} (${r.phone})`),
+        `• طلبات حجز جديدة: ${pulse.financeAndActions.pendingBookingsCount}`,
+        ...pulse.financeAndActions.pendingBookingsLatest.map((b) => `   - ${b.name} (${b.phone})`),
+        `• طلبات استعادة كود: ${pulse.financeAndActions.pendingRecoveryRequests}`,
+        `• تلخيصات بانتظار المراجعة: ${pulse.financeAndActions.pendingSummaries}`,
+        `• مقالي بانتظار التصحيح: ${pulse.financeAndActions.pendingEssaySubmissions}`,
+        `• اشتراكات تنتهي خلال 3 أيام: ${pulse.financeAndActions.expiringSubscriptionsNext3Days}`,
+      ].join("\n");
+      keyboard = [
+        [
+          { text: "💳 مراجعة الإيصالات", url: "https://drelmahdy.com/admin/payments" },
+          { text: "📅 فتح الحجوزات", url: "https://drelmahdy.com/admin/center-bookings" },
+        ],
+        [{ text: "📊 التقرير الكامل", callback_data: "cmd:/today" }],
+      ];
+    } else if (cmd === "/exams") {
+      const pulse = await collectPlatformPulse();
+      reply = [
+        `📝 أداء الاختبارات (آخر 7 أيام):`,
+        `• الاختبارات المنشورة: ${pulse.academics.publishedQuizzesCount}`,
+        `• محاولات اليوم: ${pulse.academics.attemptsToday} | إجمالي 7 أيام: ${pulse.academics.attemptsLast7Days}`,
+        `• متوسط الدرجات: ${pulse.academics.avgScoreLast7Days}% | نسبة النجاح: ${pulse.academics.passRateLast7Days}%`,
+        ...(pulse.academics.lowestAvgQuiz7Days
+          ? [`• أقل اختبار في المتوسط: ${pulse.academics.lowestAvgQuiz7Days.title} (${pulse.academics.lowestAvgQuiz7Days.avgScore}%)`]
+          : []),
+        ...(pulse.academics.topStudentsLast7Days.length > 0
+          ? [
+              "",
+              "🏆 الأعلى متوسطاً هذا الأسبوع:",
+              ...pulse.academics.topStudentsLast7Days.map((s) => `• ${s.name}: ${s.avgScore}% (${s.attempts} محاولات)`),
+            ]
+          : []),
+      ].join("\n");
+    } else if (cmd === "/health") {
+      const pulse = await collectPlatformPulse();
+      const uptimeH = Math.floor(pulse.systemHealth.uptimeSeconds / 3600);
+      const uptimeM = Math.floor((pulse.systemHealth.uptimeSeconds % 3600) / 60);
+      reply = [
+        `🖥️ صحة السيرفر وقاعدة البيانات (${pulse.cairoTimeLabel}):`,
+        `• قاعدة البيانات: ${pulse.systemHealth.dbOk ? "متصلة ✅" : "غير متصلة ❌"} (${pulse.systemHealth.dbLatencyMs}ms)`,
+        `• مدة التشغيل المستمر: ${uptimeH} ساعة و ${uptimeM} دقيقة`,
+        `• ذاكرة Node: ${pulse.systemHealth.processRssMb}MB | ذاكرة السيرفر المستخدمة: ${pulse.systemHealth.osMemUsedPercent}% (متاح ${pulse.systemHealth.osFreeMemMb}MB)`,
+        `• معدل الحمل: ${pulse.systemHealth.loadAvg1m}`,
+        `• مزامنة Google Sheets: ${pulse.operations.googleSheetConfigured ? (pulse.operations.googleSheetLastSyncStatus || "مفعلة ✅") : "غير مربوطة"}`,
+        `• أخطاء السيرفر (500) آخر 24 ساعة: ${pulse.systemHealth.errorsLast24hCount}`,
+        ...(pulse.systemHealth.recentErrors.length > 0
+          ? pulse.systemHealth.recentErrors.slice(0, 4).map((e) => `   ⚠️ ${e.method} ${e.path}: ${e.message}`)
+          : []),
+      ].join("\n");
+    } else if (cmd === "/audit") {
+      const pulse = await collectPlatformPulse();
+      reply = [
+        `🛡️ سجل نشاط الإدارة والمساعدين (آخر 24 ساعة - إجمالي ${pulse.operations.auditLogsLast24hCount}):`,
+        ...(pulse.operations.recentAuditActions.length > 0
+          ? pulse.operations.recentAuditActions.map(
+              (a) => `• [${a.actorName}] ${a.action}${a.details ? `: ${a.details}` : ""}`,
+            )
+          : ["لا توجد عمليات مسجلة خلال آخر 24 ساعة."]),
+      ].join("\n");
+    } else {
+      const cleanQuestion = text.replace(/^\/(ask|student)\s*/i, "").trim() || text;
+      const res = await askMonitorAgent(cleanQuestion);
+      reply = res.answer;
+
+      await appendMonitorReport({
+        id: `tg_${Date.now()}_${randomBytes(3).toString("hex")}`,
+        kind: "telegram_query",
+        title: `سؤال تليجرام: ${cleanQuestion.slice(0, 60)}`,
+        summary: `السؤال: ${cleanQuestion}\n\nالإجابة:\n${reply}`,
+        createdAt: new Date().toISOString(),
+        sentToTelegram: true,
+        modelUsed: res.modelUsed,
+      });
+    }
+  } catch (err: any) {
+    logger.error({ err, text }, "[AI_MONITOR] Telegram command execution failed");
+    reply = `⚠️ حدث خطأ أثناء تنفيذ الأمر (${cmd}): ${err?.message || "خطأ غير متوقع"}. جرب مرة أخرى أو راجع لوحة الأدمن.`;
+  }
+
+  if (reply) {
+    await sendTelegramMonitorMessage(botToken, chatId, reply, keyboard);
+  }
+}
+
 export async function handleTelegramWebhookUpdate(update: any): Promise<void> {
+  const cfg = await getMonitorConfig();
+  const tg = await resolveTelegramCredentials(cfg);
+  if (!tg.botToken) return;
+
+  // Handle Inline Keyboard Button callbacks
+  if (update?.callback_query) {
+    const cb = update.callback_query;
+    const cbId = cb.id;
+    const cbChatId = cb.message?.chat?.id ? String(cb.message.chat.id) : "";
+    const cbData = typeof cb.data === "string" ? cb.data : "";
+
+    await fetch(`https://api.telegram.org/bot${tg.botToken}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: cbId, text: "جاري التحميل..." }),
+    }).catch(() => {});
+
+    if (!tg.chatId || cbChatId !== tg.chatId) {
+      logger.warn({ incomingChatId: cbChatId }, "[AI_MONITOR] Rejected unauthorized Telegram callback");
+      return;
+    }
+    if (cbData.startsWith("cmd:")) {
+      await executeTelegramCommand(cbData.slice(4), cbChatId, tg.botToken);
+    }
+    return;
+  }
+
   const msg = update?.message || update?.edited_message;
   const chatId = msg?.chat?.id ? String(msg.chat.id) : "";
   const text = typeof msg?.text === "string" ? msg.text.trim() : "";
   if (!chatId || !text) return;
 
-  const cfg = await getMonitorConfig();
-  const tg = await resolveTelegramCredentials(cfg);
-  if (!tg.botToken) return;
-
-  // Strict authorization: only allow messages from the configured admin chatId (or allow /myid diagnostic reply with ID only)
   if (text === "/myid" || text === "/id") {
-    await sendTelegramMonitorMessage(
-      tg.botToken,
-      chatId,
-      `معرف الشات الخاص بك (Chat ID):\n${chatId}`,
-    );
+    await sendTelegramMonitorMessage(tg.botToken, chatId, `معرف الشات الخاص بك (Chat ID):\n${chatId}`);
     return;
   }
 
@@ -1241,107 +1675,5 @@ export async function handleTelegramWebhookUpdate(update: any): Promise<void> {
     return;
   }
 
-  let reply = "";
-  const cmd = text.split(/\s+/)[0].toLowerCase();
-
-  if (cmd === "/start" || cmd === "/help") {
-    reply = [
-      "🤖 مرحباً د. محمود — أنا الوكيل الذكي لمراقبة منصتك.",
-      "",
-      "الأوامر السريعة:",
-      "/today — التقرير الفوري لليوم بالذكاء الاصطناعي",
-      "/absent — كشف غياب اليوم والغياب المتكرر",
-      "/pending — الإيصالات والحجوزات والتلخيصات المعلقة",
-      "/exams — أداء الاختبارات خلال 7 أيام",
-      "/audit — آخر تحركات المساعدين خلال 24 ساعة",
-      "",
-      "💬 كما يمكنك كتابة أي سؤال مباشر بالعربي وسأبحث في قاعدة البيانات وأرد عليك فوراً.",
-    ].join("\n");
-  } else if (cmd === "/today" || cmd === "/report") {
-    const rep = await generatePlatformReport({ kind: "manual", sendToTelegram: false });
-    reply = rep.summary;
-  } else if (cmd === "/absent") {
-    const pulse = await collectPlatformPulse();
-    const lines = [
-      `🏫 حالة الحضور اليوم (${pulse.attendanceToday.date}):`,
-      `حاضر: ${pulse.attendanceToday.present} | متأخر: ${pulse.attendanceToday.late} | غائب: ${pulse.attendanceToday.absent}`,
-      "",
-      ...(pulse.attendanceToday.absentNamesToday.length > 0
-        ? [`قائمة غياب اليوم (أول 20):`, ...pulse.attendanceToday.absentNamesToday.map((n) => `• ${n}`)]
-        : ["لا توجد حالات غياب مسجلة اليوم حتى الآن."]),
-      "",
-      ...(pulse.attendanceToday.repeatAbsentees7Days.length > 0
-        ? [
-            `⚠️ غياب متكرر آخر 7 أيام:`,
-            ...pulse.attendanceToday.repeatAbsentees7Days.map(
-              (x) => `• ${x.name} (${x.centerName}) — ${x.absentDays} مرات`,
-            ),
-          ]
-        : []),
-    ];
-    reply = lines.join("\n");
-  } else if (cmd === "/pending") {
-    const pulse = await collectPlatformPulse();
-    reply = [
-      `📌 الإجراءات المعلقة الآن:`,
-      `• إيصالات دفع منتظرة: ${pulse.financeAndActions.pendingReceiptsCount}`,
-      ...pulse.financeAndActions.pendingReceiptsLatest.map(
-        (r) => `   - ${r.studentName} (${r.phone})`,
-      ),
-      `• طلبات حجز جديدة: ${pulse.financeAndActions.pendingBookingsCount}`,
-      ...pulse.financeAndActions.pendingBookingsLatest.map(
-        (b) => `   - ${b.name} (${b.phone})`,
-      ),
-      `• طلبات استعادة كود: ${pulse.financeAndActions.pendingRecoveryRequests}`,
-      `• تلخيصات بانتظار المراجعة: ${pulse.financeAndActions.pendingSummaries}`,
-      `• امتحانات مقالية بانتظار التصحيح: ${pulse.financeAndActions.pendingEssaySubmissions}`,
-      `• اشتراكات تنتهي خلال 3 أيام: ${pulse.financeAndActions.expiringSubscriptionsNext3Days}`,
-    ].join("\n");
-  } else if (cmd === "/exams") {
-    const pulse = await collectPlatformPulse();
-    reply = [
-      `📝 أداء الاختبارات (آخر 7 أيام):`,
-      `• الاختبارات المنشورة: ${pulse.academics.publishedQuizzesCount}`,
-      `• محاولات اليوم: ${pulse.academics.attemptsToday} | إجمالي 7 أيام: ${pulse.academics.attemptsLast7Days}`,
-      `• متوسط الدرجات: ${pulse.academics.avgScoreLast7Days}% | نسبة النجاح: ${pulse.academics.passRateLast7Days}%`,
-      ...(pulse.academics.lowestAvgQuiz7Days
-        ? [`• أقل اختبار في المتوسط: ${pulse.academics.lowestAvgQuiz7Days.title} (${pulse.academics.lowestAvgQuiz7Days.avgScore}%)`]
-        : []),
-      ...(pulse.academics.topStudentsLast7Days.length > 0
-        ? [
-            "",
-            "🏆 الأعلى متوسطاً هذا الأسبوع:",
-            ...pulse.academics.topStudentsLast7Days.map((s) => `• ${s.name}: ${s.avgScore}% (${s.attempts} محاولات)`),
-          ]
-        : []),
-    ].join("\n");
-  } else if (cmd === "/audit") {
-    const pulse = await collectPlatformPulse();
-    reply = [
-      `🛡️ سجل نشاط الإدارة والمساعدين (آخر 24 ساعة - إجمالي ${pulse.operations.auditLogsLast24hCount}):`,
-      ...(pulse.operations.recentAuditActions.length > 0
-        ? pulse.operations.recentAuditActions.map(
-            (a) => `• [${a.actorName}] ${a.action}${a.details ? `: ${a.details}` : ""}`,
-          )
-        : ["لا توجد عمليات مسجلة خلال آخر 24 ساعة."]),
-    ].join("\n");
-  } else {
-    const cleanQuestion = text.replace(/^\/ask\s+/i, "").trim();
-    const res = await askMonitorAgent(cleanQuestion);
-    reply = res.answer;
-
-    await appendMonitorReport({
-      id: `tg_${Date.now()}_${randomBytes(3).toString("hex")}`,
-      kind: "telegram_query",
-      title: `سؤال تليجرام: ${cleanQuestion.slice(0, 60)}`,
-      summary: `السؤال: ${cleanQuestion}\n\nالإجابة:\n${reply}`,
-      createdAt: new Date().toISOString(),
-      sentToTelegram: true,
-      modelUsed: res.modelUsed,
-    });
-  }
-
-  if (reply) {
-    await sendTelegramMonitorMessage(tg.botToken, chatId, reply);
-  }
+  await executeTelegramCommand(text, chatId, tg.botToken);
 }

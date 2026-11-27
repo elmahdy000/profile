@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { logger } from "../lib/logger";
+import { recordServerError } from "../lib/runtime-health";
 
 /**
  * Structural check for a ZodError. We avoid `instanceof` because zod reaches
@@ -59,5 +60,6 @@ export function errorHandler(
   }
 
   logger.error({ err }, "Unhandled request error");
+  recordServerError(_req.method, _req.originalUrl?.split("?")[0] || _req.path, err);
   res.status(500).json({ error: "Internal server error" });
 }
