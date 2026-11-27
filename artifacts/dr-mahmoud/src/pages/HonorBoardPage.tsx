@@ -217,60 +217,90 @@ export default function HonorBoardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir="rtl">
-      {/* Top Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+      {/* Top Header (Crisp Single-Line on Mobile & Desktop) */}
+      <header className="border-b border-border bg-card/95 backdrop-blur-sm sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <Link
               href="/platform"
-              className="flex items-center gap-1.5 text-xs font-bold text-foreground bg-muted hover:bg-muted/80 border border-border px-3 py-1.5 rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-muted hover:bg-muted/80 border border-border px-2.5 sm:px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap shrink-0"
             >
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 shrink-0" />
               <span>بوابة الطالب</span>
             </Link>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2 font-black text-sm sm:text-base">
-              <Trophy className="w-4.5 h-4.5 text-amber-500" />
-              <span>لوحة الشرف والتميز</span>
+            <div className="h-4 w-px bg-border shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2 font-black text-xs sm:text-base whitespace-nowrap truncate">
+              <Trophy className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-500 shrink-0" />
+              <span>لوحة الشرف</span>
+              <span className="hidden sm:inline text-muted-foreground font-bold text-xs">• طلبة الدكتور</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/"
-              className="text-xs font-bold text-muted-foreground hover:text-foreground hidden sm:inline-block transition-colors"
+              className="text-xs font-bold text-muted-foreground hover:text-foreground hidden sm:inline-block transition-colors px-2 py-1"
             >
               الرئيسية
             </Link>
-            <ThemeToggle className="relative static bottom-0 left-0" />
+            <ThemeToggle className="relative static bottom-0 left-0 h-9 w-9 sm:h-10 sm:w-10" />
           </div>
         </div>
       </header>
 
-      {/* Hero & Track Switcher (Crisp, Compact, Readable) */}
-      <section className="bg-card border-b border-border py-6 sm:py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:text-blue-300 text-[11px] sm:text-xs font-bold">
-            <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>الترتيب العادل: مجموع درجات أول محاولة · الأول والأول مكرر · سرعة الإنجاز</span>
-          </div>
+      {/* Hero Showcase with Dr. Mahmoud Portrait & "طلبة الدكتور" */}
+      <section className="bg-card border-b border-border py-5 sm:py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-5">
+          {/* Featured Doctor + Honor Identity Card */}
+          <div className="rounded-2xl border border-amber-500/30 bg-muted/35 p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-right">
+            {/* Doctor Portrait with Gold Honor Ring */}
+            <div className="relative shrink-0">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl p-1 bg-amber-500/20 border-2 border-amber-500/60 shadow-sm">
+                <img
+                  src="/dr-mahmoud-honor.jpg"
+                  alt="د. محمود المهدي"
+                  className="w-full h-full rounded-xl object-cover object-top"
+                />
+              </div>
+              <span
+                aria-hidden="true"
+                className="absolute -bottom-2 -left-2 w-8 h-8 rounded-xl bg-amber-500 text-slate-950 border-2 border-card shadow-sm grid place-items-center"
+              >
+                <Crown className="w-4 h-4" />
+              </span>
+            </div>
 
-          <div className="space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-              لوحة شرف أوائل الاختبارات
-            </h1>
-            <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
-              يُحتسب الترتيب العام بمجموع درجات أول محاولة عبر جميع اختبارات القسم حتى يتقدم من أتمّ كل الامتحانات، ويتشارك أصحاب المجموع الواحد نفس المركز (الأول، الأول مكرر...).
-            </p>
+            {/* Honor Board Headline & Rules */}
+            <div className="flex-1 min-w-0 space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-800 dark:text-amber-300 text-[11px] sm:text-xs font-black">
+                <Trophy className="w-3.5 h-3.5 shrink-0" />
+                <span>طلبة الدكتور محمود المهدي • نخبة المتفوقين</span>
+              </div>
+
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-snug">
+                  لوحة شرف{" "}
+                  <span className="text-blue-600 dark:text-blue-400">طلبة الدكتور</span>
+                </h1>
+                <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl leading-relaxed">
+                  تكريم أوائل طلاب البرمجة والذكاء الاصطناعي في العام واللغات — الترتيب بمجموع درجات أول محاولة مع تكرار المراكز لأصحاب المجموع الواحد.
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-500/10 border border-blue-500/25 px-3 py-1 rounded-xl">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>مجموع أول محاولة · الأول والأول مكرر · سرعة الإنجاز</span>
+              </div>
+            </div>
           </div>
 
           {/* Segmented Track Switcher */}
-          <div className="flex items-center justify-center pt-1">
-            <div className="inline-flex p-1 rounded-2xl bg-muted border border-border">
+          <div className="flex items-center justify-center">
+            <div className="inline-flex p-1 rounded-2xl bg-muted border border-border w-full sm:w-auto max-w-md">
               <button
                 type="button"
                 onClick={() => setActiveTrack("general")}
-                className={`px-6 sm:px-8 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`flex-1 sm:flex-initial px-4 sm:px-8 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTrack === "general"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -281,7 +311,7 @@ export default function HonorBoardPage() {
               <button
                 type="button"
                 onClick={() => setActiveTrack("languages")}
-                className={`px-6 sm:px-8 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                className={`flex-1 sm:flex-initial px-4 sm:px-8 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                   activeTrack === "languages"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-muted-foreground hover:text-foreground"

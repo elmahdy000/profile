@@ -78,7 +78,11 @@ function PageLoader() {
 
 function App() {
   const [location] = useLocation();
-  const pageAlreadyHasThemeToggle = location === "/" || location.startsWith("/platform");
+  const pageAlreadyHasThemeToggle =
+    location === "/" ||
+    location.startsWith("/platform") ||
+    location.startsWith("/honor-board") ||
+    location.startsWith("/leaderboard");
 
   useEffect(() => {
     sessionStorage.removeItem("chunk_reload_retry");
