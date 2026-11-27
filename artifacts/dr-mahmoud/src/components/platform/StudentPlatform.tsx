@@ -2759,17 +2759,29 @@ export function StudentPlatform() {
                       size="sm"
                       onClick={() => {
                         if (!quizResult && !isHomework) {
+                          let resumeIdx = lastQuestionIndexRef.current;
+                          const container = quizScrollContainerRef.current;
+                          if (container) {
+                            const containerTop = container.getBoundingClientRect().top;
+                            for (let idx = 0; idx < activeQuiz.questions.length; idx++) {
+                              const el = document.getElementById(`quiz-q-${idx}`);
+                              if (el && el.getBoundingClientRect().bottom >= containerTop + 80) {
+                                resumeIdx = Math.max(resumeIdx, idx);
+                                break;
+                              }
+                            }
+                          }
                           persistQuizDraft(
                             activeQuiz,
                             quizAnswers,
                             essayTextAnswers,
                             flaggedQuestions,
-                            lastQuestionIndexRef.current,
+                            resumeIdx,
                             true,
                           );
                           toast({
                             title: "تم حفظ تقدمك بنجاح 💾",
-                            description: `حفظنا ${answeredQ} من ${totalQ} إجابة — عند العودة ستكمل من السؤال #${lastQuestionIndexRef.current + 1}.`,
+                            description: `حفظنا ${answeredQ} من ${totalQ} إجابة — عند العودة ستكمل من السؤال #${resumeIdx + 1}.`,
                           });
                         }
                         setResumedNotice("");

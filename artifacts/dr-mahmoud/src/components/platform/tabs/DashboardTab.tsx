@@ -935,15 +935,15 @@ export function DashboardTab({
       />
 
       {/* Conditional Actionable Alerts */}
-      {student.learningMode === "offline" && !student.centerConfirmed && (
+      {!student.centerConfirmed && (
         <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black text-sm">
               <MapPin className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>تأكيد السنتر والميعاد مطلوب لتثبيت مقعدك</span>
+              <span>مطلوب تأكيد السنتر والميعاد لتسجيل الحضور بالـ QR Code بدقة</span>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-              ادخل على صفحة حسابي واختار السنتر والميعاد المناسب ليك علشان نثبت قيدك.
+              ادخل على صفحة «حسابي» وأكّد السنتر والميعاد الصحيح الخاص بك لضمان دقة مسح كود الحضور بالحصة.
             </p>
           </div>
           <Button
@@ -951,7 +951,7 @@ export function DashboardTab({
             onClick={() => onOpen("profile")}
             className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer"
           >
-            تأكيد السنتر
+            تأكيد السنتر الآن
           </Button>
         </div>
       )}

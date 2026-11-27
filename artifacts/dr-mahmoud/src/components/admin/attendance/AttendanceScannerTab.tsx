@@ -30,6 +30,9 @@ import {
   ShieldCheck,
   Wifi,
   WifiOff,
+  Download,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName, normalizeCenterName } from "../learning/StudentDrawer";
@@ -1070,9 +1073,171 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     });
   }, [records, searchQuery, statusFilter, gradeFilter, centerFilter, slotFilter]);
 
-  // Export / Print
+  // Export / Print / Google Sheets
   const handlePrintSheet = () => {
     window.print();
+  };
+
+  const getActiveScannerScopeRecords = useCallback(() => {
+    return records.filter((r) => {
+      if (selectedCenter !== "all") {
+        const normFilter = normalizeCenterName(selectedCenter);
+        const normActual = normalizeCenterName(r.center);
+        const normEnrolled = normalizeCenterName(r.enrolledCenter);
+        const centerMatch =
+          r.center === selectedCenter ||
+          r.enrolledCenter === selectedCenter ||
+          normActual === normFilter ||
+          normEnrolled === normFilter ||
+          (r.center && r.center.includes(selectedCenter)) ||
+          (r.enrolledCenter && r.enrolledCenter.includes(selectedCenter));
+        if (!centerMatch) return false;
+      }
+      if (selectedSlot !== "all") {
+        const targetSlot = normalizeSlotName(selectedSlot);
+        const slotMatch =
+          normalizeSlotName(r.appointmentSlot) === targetSlot ||
+          normalizeSlotName(r.enrolledSlot) === targetSlot;
+        if (!slotMatch) return false;
+      }
+      // In scanner quick-export, prioritize students who scanned or belong to active center
+      return selectedCenter !== "all" || selectedSlot !== "all"
+        ? r.status === "present" || r.status === "late" || r.status === "absent" || r.status === "unmarked"
+        : r.status === "present" || r.status === "late";
+    });
+  }, [records, selectedCenter, selectedSlot]);
+
+  const exportAttendanceToGoogleSheets = async (
+    rowsToExport: AttendanceRecord[],
+    mode: "google_sheets" | "csv" | "copy",
+    scopeLabel?: string,
+  ) => {
+    if (!rowsToExport.length) {
+      toast({
+        variant: "destructive",
+        title: "لا توجد بيانات للتصدير",
+        description: "قم بمسح كود طالب واحد على الأقل أو اختر سنتر لعرض السجلات.",
+      });
+      return;
+    }
+
+    const statusOrder: Record<string, number> = { present: 0, late: 1, absent: 2, unmarked: 3 };
+    const statusLabelAr: Record<string, string> = {
+      present: "حاضر",
+      late: "متأخر",
+      absent: "غائب",
+      unmarked: "لم يُسجل",
+    };
+
+    const sortedRows = [...rowsToExport].sort((a, b) => {
+      const sa = statusOrder[a.status] ?? 9;
+      const sb = statusOrder[b.status] ?? 9;
+      if (sa !== sb) return sa - sb;
+      return (a.name || "").localeCompare(b.name || "", "ar");
+    });
+
+    const headers = [
+      "م",
+      "اسم الطالب",
+      "كود الطالب",
+      "رقم الهاتف",
+      "هاتف ولي الأمر",
+      "المرحلة / الصف",
+      "السنتر",
+      "الموعد / المجموعة",
+      "حالة الحضور",
+      "وقت الحضور",
+      "ملاحظات",
+      "التاريخ",
+    ];
+
+    const dataRows = sortedRows.map((r, idx) => {
+      const noteParts: string[] = [];
+      if (r.isCrossGroup && r.enrolledSlot) noteParts.push(`تعويض (الأصل: ${r.enrolledSlot})`);
+      if (r.notes) noteParts.push(r.notes);
+      return [
+        String(idx + 1),
+        r.name || "",
+        r.accessCode || "",
+        r.phone || "",
+        r.parentPhone || "",
+        r.grade || "",
+        r.center || r.enrolledCenter || "أونلاين",
+        r.appointmentSlot || r.enrolledSlot || "",
+        statusLabelAr[r.status] || r.status,
+        r.checkInTime || "",
+        noteParts.join(" | "),
+        selectedDate,
+      ];
+    });
+
+    const toTsvCell = (v: string) => String(v ?? "").replace(/[\t\r\n]+/g, " ").trim();
+    const toCsvCell = (v: string) => {
+      const s = String(v ?? "");
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+
+    const tsvContent = [headers, ...dataRows].map((row) => row.map(toTsvCell).join("\t")).join("\n");
+    const csvContent =
+      "\uFEFF" + [headers, ...dataRows].map((row) => row.map(toCsvCell).join(",")).join("\r\n");
+
+    const triggerCsvDownload = () => {
+      const cleanLabel = (scopeLabel || "الحضور")
+        .replace(/[^\w\u0600-\u06FF-]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `attendance_${cleanLabel}_${selectedDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    if (mode === "csv") {
+      triggerCsvDownload();
+      toast({
+        title: "تم تحميل ملف الحضور (CSV / Excel) ✅",
+        description: `تم تصدير ${sortedRows.length} سجل متوافق مع Google Sheets و Excel.`,
+      });
+      return;
+    }
+
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(tsvContent);
+      copied = true;
+    } catch {
+      copied = false;
+    }
+
+    if (mode === "copy") {
+      if (copied) {
+        toast({
+          title: "تم نسخ الجدول لـ Google Sheets 📋",
+          description: `تم نسخ ${sortedRows.length} طالب — افتح Google Sheets واضغط Ctrl+V للصق الأعمدة فوراً.`,
+        });
+      } else {
+        triggerCsvDownload();
+        toast({
+          title: "تم تحميل ملف CSV بدلاً من النسخ",
+          description: "يمكنك استيراد الملف مباشرة داخل Google Sheets من File → Import.",
+        });
+      }
+      return;
+    }
+
+    // google_sheets mode: copy TSV + download CSV backup + open sheets.new
+    triggerCsvDownload();
+    window.open("https://sheets.new", "_blank", "noopener,noreferrer");
+    toast({
+      title: "تم فتح Google Sheets وتجهيز البيانات 📊",
+      description: copied
+        ? `تم نسخ ${sortedRows.length} طالب — في الصفحة الجديدة اضغط Ctrl+V للصق الكشف فوراً (وتم تحميل نسخة CSV).`
+        : `تم تحميل ملف CSV لـ ${sortedRows.length} طالب — في Google Sheets اختر File → Import لرفعه فوراً.`,
+    });
   };
 
   return (
@@ -1902,11 +2067,44 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
 
             {/* Recent Scans History */}
             <div className="bg-white rounded-3xl border border-slate-200 p-4 shadow-xs">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-2">
                 <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-blue-600" />
                   <span>آخر الطلاب الحاضرين اليوم ({recentScans.length})</span>
                 </h4>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void exportAttendanceToGoogleSheets(
+                        getActiveScannerScopeRecords(),
+                        "google_sheets",
+                        selectedCenter !== "all" ? selectedCenter : "scanned_today",
+                      )
+                    }
+                    className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                    title="نسخ الجدول وتحميل CSV وفتح Google Sheets فوراً"
+                  >
+                    <FileSpreadsheet className="h-3 w-3" />
+                    <span>تصدير Google Sheets</span>
+                    <ExternalLink className="h-2.5 w-2.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void exportAttendanceToGoogleSheets(
+                        getActiveScannerScopeRecords(),
+                        "csv",
+                        selectedCenter !== "all" ? selectedCenter : "scanned_today",
+                      )
+                    }
+                    className="px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer"
+                    title="تحميل ملف CSV / Excel"
+                  >
+                    <Download className="h-3 w-3" />
+                    <span>CSV</span>
+                  </button>
+                </div>
               </div>
 
               {recentScans.length === 0 ? (
@@ -2161,8 +2359,56 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
               )}
             </div>
 
-            {/* Print & Bulk Actions */}
-            <div className="flex items-center gap-2">
+            {/* Export, Print & Bulk Actions */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  void exportAttendanceToGoogleSheets(
+                    filteredRecords,
+                    "google_sheets",
+                    centerFilter !== "all" ? centerFilter : "daily_sheet",
+                  )
+                }
+                className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                title="فتح Google Sheets ونسخ الكشف وتحميل نسخة CSV"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <span>تصدير لـ Google Sheets</span>
+                <ExternalLink className="h-3 w-3" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void exportAttendanceToGoogleSheets(
+                    filteredRecords,
+                    "copy",
+                    centerFilter !== "all" ? centerFilter : "daily_sheet",
+                  )
+                }
+                className="px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-800 flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                title="نسخ الأعمدة للصق المباشر داخل Google Sheets"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span>نسخ للـ Sheet</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void exportAttendanceToGoogleSheets(
+                    filteredRecords,
+                    "csv",
+                    centerFilter !== "all" ? centerFilter : "daily_sheet",
+                  )
+                }
+                className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5 text-slate-500" />
+                <span>CSV</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handlePrintSheet}
