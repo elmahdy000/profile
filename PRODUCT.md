@@ -38,7 +38,7 @@ Dr. Mahmoud holds a Master's in Information Systems and brings academic rigor wi
 - **Delivery modes:** Online (recorded video + live sessions + platform) and offline (in-person at the academy)
 - **School types served:** Arabic-track schools (عربي) and language schools (لغات)
 - **Booking flow:** Parent submits a booking request (not a payment) → team contacts to confirm program and schedule
-- **Communication:** WhatsApp is the primary contact channel (201044348610), plus phone lines (01066711545, 01272047933)
+- **Communication:** WhatsApp is the primary contact channel (201066711545), plus phone lines (01066711545, 01272047933)
 - **Student platform:** Authenticated access with lessons, exercises, tests, progress tracking, and parent monitoring dashboard
 
 ## Capabilities and Constraints

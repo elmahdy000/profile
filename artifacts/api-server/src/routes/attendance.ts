@@ -6,6 +6,7 @@ import {
   studentsTable,
   parentsTable,
   studentNotificationsTable,
+  siteSettingsTable,
 } from "@workspace/db";
 import { requireAdmin, getAdminIdentity } from "../middleware/auth";
 import { requireStudent } from "../middleware/student-auth";
@@ -96,6 +97,261 @@ function matchesCenterQuery(centerValue: string | null | undefined, query: strin
     .filter((w) => w.length >= 3 && w !== "سنتر" && w !== "لغات" && w !== "عربي");
   if (queryKeywords.length > 0 && queryKeywords.some((kw) => c.includes(kw))) return true;
   return false;
+}
+
+const GOOGLE_SHEET_SETTINGS_KEY = "attendance_google_sheet_config";
+
+interface AttendanceGoogleSheetConfig {
+  webhookUrl: string;
+  secretToken?: string;
+  autoSyncOnScan: boolean;
+  lastSyncedAt?: string | null;
+  lastSyncStatus?: string | null;
+}
+
+const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
+  try {
+    var payload = JSON.parse((e && e.postData && e.postData.contents) || "{}");
+    if (payload.action === "ping") {
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: true, message: "Connected to Google Sheet successfully" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheetName = String(payload.sheetTitle || payload.date || "الحضور").slice(0, 90);
+    var sheet = ss.getSheetByName(sheetName);
+
+    var headers = [
+      "معرف الطالب",
+      "كود الطالب",
+      "اسم الطالب",
+      "رقم الهاتف",
+      "هاتف ولي الأمر",
+      "المرحلة",
+      "السنتر",
+      "الموعد / المجموعة",
+      "حالة الحضور",
+      "وقت الحضور",
+      "ملاحظات",
+      "بواسطة",
+      "التاريخ"
+    ];
+
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      sheet.setRightToLeft(true);
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length)
+        .setFontWeight("bold")
+        .setBackground("#1e3a8a")
+        .setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    } else if (sheet.getLastRow() === 0) {
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    }
+
+    var rows = Array.isArray(payload.rows) ? payload.rows : [];
+    var existingLastRow = sheet.getLastRow();
+    var rowIndexByKey = {};
+    if (existingLastRow > 1) {
+      var existingData = sheet.getRange(2, 1, existingLastRow - 1, headers.length).getValues();
+      for (var i = 0; i < existingData.length; i++) {
+        var key = String(existingData[i][0]) + "|" + String(existingData[i][12]);
+        rowIndexByKey[key] = i + 2;
+      }
+    }
+
+    var updated = 0;
+    var inserted = 0;
+    for (var r = 0; r < rows.length; r++) {
+      var item = rows[r];
+      var rowValues = [
+        item.studentId || "",
+        item.accessCode || "",
+        item.name || "",
+        item.phone || "",
+        item.parentPhone || "",
+        item.grade || "",
+        item.centerName || "",
+        item.appointmentSlot || "",
+        item.statusAr || item.status || "",
+        item.checkInTime || "",
+        item.notes || "",
+        item.recordedBy || "",
+        item.date || payload.date || ""
+      ];
+      var rowKey = String(item.studentId || "") + "|" + String(item.date || payload.date || "");
+      if (rowIndexByKey[rowKey]) {
+        sheet.getRange(rowIndexByKey[rowKey], 1, 1, headers.length).setValues([rowValues]);
+        updated++;
+      } else {
+        sheet.appendRow(rowValues);
+        inserted++;
+      }
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, sheetName: sheetName, inserted: inserted, updated: updated }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+let cachedSheetConfig: { data: AttendanceGoogleSheetConfig; fetchedAt: number } | null = null;
+
+async function getGoogleSheetConfig(): Promise<AttendanceGoogleSheetConfig> {
+  const now = Date.now();
+  if (cachedSheetConfig && now - cachedSheetConfig.fetchedAt < 10_000) {
+    return cachedSheetConfig.data;
+  }
+  const fallback: AttendanceGoogleSheetConfig = {
+    webhookUrl: "",
+    secretToken: "",
+    autoSyncOnScan: true,
+    lastSyncedAt: null,
+    lastSyncStatus: null,
+  };
+  try {
+    const [row] = await db
+      .select({ value: siteSettingsTable.value })
+      .from(siteSettingsTable)
+      .where(eq(siteSettingsTable.key, GOOGLE_SHEET_SETTINGS_KEY))
+      .limit(1);
+    if (row?.value) {
+      const parsed = JSON.parse(row.value);
+      const data: AttendanceGoogleSheetConfig = {
+        webhookUrl: String(parsed.webhookUrl || "").trim(),
+        secretToken: String(parsed.secretToken || "").trim(),
+        autoSyncOnScan: parsed.autoSyncOnScan !== false,
+        lastSyncedAt: parsed.lastSyncedAt || null,
+        lastSyncStatus: parsed.lastSyncStatus || null,
+      };
+      cachedSheetConfig = { data, fetchedAt: now };
+      return data;
+    }
+  } catch {
+    // ignore parse error
+  }
+  cachedSheetConfig = { data: fallback, fetchedAt: now };
+  return fallback;
+}
+
+async function saveGoogleSheetConfig(config: AttendanceGoogleSheetConfig): Promise<void> {
+  cachedSheetConfig = { data: config, fetchedAt: Date.now() };
+  await db
+    .insert(siteSettingsTable)
+    .values({
+      key: GOOGLE_SHEET_SETTINGS_KEY,
+      value: JSON.stringify(config),
+      type: "json",
+    })
+    .onConflictDoUpdate({
+      target: siteSettingsTable.key,
+      set: {
+        value: JSON.stringify(config),
+        type: "json",
+        updatedAt: new Date(),
+      },
+    });
+}
+
+function isValidAppsScriptUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname === "script.google.com" || parsed.hostname === "script.googleusercontent.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function postToGoogleSheetWebhook(
+  config: AttendanceGoogleSheetConfig,
+  payload: Record<string, unknown>,
+): Promise<{ ok: boolean; data?: any; error?: string }> {
+  if (!config.webhookUrl || !isValidAppsScriptUrl(config.webhookUrl)) {
+    return { ok: false, error: "رابط Google Apps Script غير مضبوط أو غير صالح" };
+  }
+  try {
+    const resp = await fetch(config.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...payload,
+        ...(config.secretToken ? { secret: config.secretToken } : {}),
+      }),
+      redirect: "follow",
+      signal: AbortSignal.timeout(15_000),
+    });
+    const text = await resp.text();
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = { raw: text.slice(0, 200) };
+    }
+    if (!resp.ok || (parsed && parsed.ok === false)) {
+      return { ok: false, error: parsed?.error || `HTTP ${resp.status}` };
+    }
+    return { ok: true, data: parsed };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || "تعذر الاتصال بـ Google Apps Script" };
+  }
+}
+
+function formatStatusAr(status: string): string {
+  if (status === "present") return "حاضر";
+  if (status === "late") return "متأخر";
+  if (status === "absent") return "غائب";
+  return "لم يُسجل";
+}
+
+function triggerBackgroundSheetSyncRow(row: {
+  studentId: number;
+  accessCode?: string | null;
+  name: string;
+  phone?: string | null;
+  parentPhone?: string | null;
+  grade?: string | null;
+  centerName?: string | null;
+  appointmentSlot?: string | null;
+  status: string;
+  checkInTime: string;
+  notes?: string | null;
+  recordedBy?: string | null;
+  date: string;
+}) {
+  void (async () => {
+    try {
+      const cfg = await getGoogleSheetConfig();
+      if (!cfg.webhookUrl || !cfg.autoSyncOnScan) return;
+      const result = await postToGoogleSheetWebhook(cfg, {
+        sheetTitle: row.date,
+        date: row.date,
+        rows: [
+          {
+            ...row,
+            statusAr: formatStatusAr(row.status),
+          },
+        ],
+      });
+      await saveGoogleSheetConfig({
+        ...cfg,
+        lastSyncedAt: new Date().toISOString(),
+        lastSyncStatus: result.ok ? "ok" : `error: ${result.error}`,
+      });
+    } catch {
+      // Never block QR scan response
+    }
+  })();
 }
 
 // ─── 1. POST /api/admin/attendance/scan ───────────────────────────────────────
@@ -341,6 +597,28 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       student.id,
       `تسجيل حضور الطالب ${student.name} (كود: ${student.accessCode || student.id}) في تاريخ ${date}`
     );
+
+    const checkInTimeDisplay = attendanceRecord?.attendedAt
+      ? new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", hour: "numeric", minute: "numeric", hour12: true }).format(new Date(attendanceRecord.attendedAt))
+      : getCairoTimeFormatted();
+
+    if (!alreadyRecorded) {
+      triggerBackgroundSheetSyncRow({
+        studentId: student.id,
+        accessCode: student.accessCode,
+        name: student.name,
+        phone: student.phone,
+        parentPhone: student.parentPhone,
+        grade: student.grade,
+        centerName,
+        appointmentSlot: (student as any).appointmentSlot || appointmentSlot,
+        status: requestedStatus,
+        checkInTime: checkInTimeDisplay,
+        notes: attendanceRecord?.notes || (isCrossGroup ? `تعويض (${enrolledSlot})` : ""),
+        recordedBy,
+        date,
+      });
+    }
 
     let scanMessage = `تم تسجيل حضور (${student.name}) بنجاح!`;
     if (alreadyRecorded) {
@@ -1043,6 +1321,24 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
       }
     }
 
+    triggerBackgroundSheetSyncRow({
+      studentId: student.id,
+      accessCode: student.accessCode,
+      name: student.name,
+      phone: student.phone,
+      parentPhone: student.parentPhone,
+      grade: student.grade,
+      centerName,
+      appointmentSlot,
+      status,
+      checkInTime: updatedAttendance?.attendedAt
+        ? new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", hour: "numeric", minute: "numeric", hour12: true }).format(new Date(updatedAttendance.attendedAt))
+        : "",
+      notes: notes || "",
+      recordedBy,
+      date,
+    });
+
     res.json({
       success: true,
       attendance: updatedAttendance,
@@ -1368,6 +1664,190 @@ router.post("/learning/daily-checkin", requireStudent, async (_req, res, next) =
 
     const status = await buildDailyCheckinStatus(student);
     res.json({ success: true, ...status });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Google Apps Script Webhook Sync Endpoints ────────────────────────────────
+
+router.get("/admin/attendance/google-sheet-config", requireAdmin, async (_req: Request, res, next) => {
+  try {
+    const cfg = await getGoogleSheetConfig();
+    res.json({
+      success: true,
+      webhookUrl: cfg.webhookUrl,
+      hasSecret: Boolean(cfg.secretToken),
+      autoSyncOnScan: cfg.autoSyncOnScan,
+      lastSyncedAt: cfg.lastSyncedAt || null,
+      lastSyncStatus: cfg.lastSyncStatus || null,
+      appsScriptCode: APPS_SCRIPT_TEMPLATE,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/admin/attendance/google-sheet-config", requireAdmin, async (req: Request, res, next) => {
+  try {
+    const webhookUrl = String(req.body?.webhookUrl || "").trim();
+    const secretToken = String(req.body?.secretToken || "").trim();
+    const autoSyncOnScan = req.body?.autoSyncOnScan !== false;
+
+    if (webhookUrl && !isValidAppsScriptUrl(webhookUrl)) {
+      res.status(400).json({
+        error: "يجب أن يبدأ الرابط بـ https://script.google.com/ أو https://script.googleusercontent.com/",
+      });
+      return;
+    }
+
+    const current = await getGoogleSheetConfig();
+    const nextConfig: AttendanceGoogleSheetConfig = {
+      webhookUrl,
+      secretToken: secretToken || (webhookUrl ? current.secretToken : ""),
+      autoSyncOnScan,
+      lastSyncedAt: current.lastSyncedAt || null,
+      lastSyncStatus: webhookUrl ? current.lastSyncStatus || null : null,
+    };
+
+    await saveGoogleSheetConfig(nextConfig);
+    res.json({
+      success: true,
+      webhookUrl: nextConfig.webhookUrl,
+      autoSyncOnScan: nextConfig.autoSyncOnScan,
+      lastSyncedAt: nextConfig.lastSyncedAt,
+      lastSyncStatus: nextConfig.lastSyncStatus,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/attendance/google-sheet-test", requireAdmin, async (req: Request, res, next) => {
+  try {
+    const suppliedUrl = typeof req.body?.webhookUrl === "string" ? req.body.webhookUrl.trim() : "";
+    const current = await getGoogleSheetConfig();
+    const targetConfig: AttendanceGoogleSheetConfig = {
+      ...current,
+      webhookUrl: suppliedUrl || current.webhookUrl,
+    };
+
+    const result = await postToGoogleSheetWebhook(targetConfig, { action: "ping" });
+    if (!result.ok) {
+      res.status(400).json({ error: result.error || "فشل اختبار الاتصال بـ Google Sheets" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: "تم الاتصال بملف Google Sheets بنجاح ✓",
+      remote: result.data,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/attendance/sync-google-sheet", requireAdmin, async (req: Request, res, next) => {
+  try {
+    const cfg = await getGoogleSheetConfig();
+    if (!cfg.webhookUrl || !isValidAppsScriptUrl(cfg.webhookUrl)) {
+      res.status(400).json({ error: "يرجى ربط رابط Google Apps Script أولاً من إعدادات Google Sheets" });
+      return;
+    }
+
+    const date = String(req.body?.date || getTodayCairoDate()).trim();
+    const sheetTitle = String(req.body?.sheetTitle || date).trim().slice(0, 90);
+    const adminIdentity = getAdminIdentity(req);
+    const recordedBy = adminIdentity?.username || "المشرف";
+    const incomingRows = Array.isArray(req.body?.rows) ? req.body.rows : null;
+
+    let rowsToSend: Array<Record<string, unknown>> = [];
+    if (incomingRows && incomingRows.length > 0) {
+      rowsToSend = incomingRows.map((r: any) => ({
+        studentId: Number(r.studentId) || "",
+        accessCode: r.accessCode || "",
+        name: r.name || "",
+        phone: r.phone || "",
+        parentPhone: r.parentPhone || "",
+        grade: r.grade || "",
+        centerName: r.centerName || r.center || r.enrolledCenter || "أونلاين",
+        appointmentSlot: r.appointmentSlot || r.enrolledSlot || "",
+        status: r.status || "unmarked",
+        statusAr: formatStatusAr(String(r.status || "unmarked")),
+        checkInTime: r.checkInTime || "",
+        notes: r.notes || (r.isCrossGroup && r.enrolledSlot ? `تعويض (${r.enrolledSlot})` : ""),
+        recordedBy: r.recordedBy || recordedBy,
+        date,
+      }));
+    } else {
+      const dbRows = await db
+        .select({
+          studentId: studentsTable.id,
+          accessCode: studentsTable.accessCode,
+          name: studentsTable.name,
+          phone: studentsTable.phone,
+          parentPhone: studentsTable.parentPhone,
+          grade: studentsTable.grade,
+          centerName: studentAttendanceTable.centerName,
+          appointmentSlot: studentAttendanceTable.appointmentSlot,
+          status: studentAttendanceTable.status,
+          attendedAt: studentAttendanceTable.attendedAt,
+          notes: studentAttendanceTable.notes,
+          recordedBy: studentAttendanceTable.recordedBy,
+        })
+        .from(studentAttendanceTable)
+        .innerJoin(studentsTable, eq(studentAttendanceTable.studentId, studentsTable.id))
+        .where(eq(studentAttendanceTable.date, date));
+
+      rowsToSend = dbRows.map((r) => ({
+        studentId: r.studentId,
+        accessCode: r.accessCode || "",
+        name: r.name || "",
+        phone: r.phone || "",
+        parentPhone: r.parentPhone || "",
+        grade: r.grade || "",
+        centerName: r.centerName || "بدون سنتر محدد",
+        appointmentSlot: r.appointmentSlot || "",
+        status: r.status,
+        statusAr: formatStatusAr(r.status),
+        checkInTime: r.attendedAt
+          ? new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", hour: "numeric", minute: "numeric", hour12: true }).format(new Date(r.attendedAt))
+          : "",
+        notes: r.notes || "",
+        recordedBy: r.recordedBy || recordedBy,
+        date,
+      }));
+    }
+
+    if (rowsToSend.length === 0) {
+      res.status(400).json({ error: "لا توجد سجلات حضور مسجلة لليوم لترحيلها" });
+      return;
+    }
+
+    const pushRes = await postToGoogleSheetWebhook(cfg, {
+      sheetTitle,
+      date,
+      rows: rowsToSend,
+    });
+
+    await saveGoogleSheetConfig({
+      ...cfg,
+      lastSyncedAt: new Date().toISOString(),
+      lastSyncStatus: pushRes.ok ? `ok (${rowsToSend.length})` : `error: ${pushRes.error}`,
+    });
+
+    if (!pushRes.ok) {
+      res.status(502).json({ error: pushRes.error || "تعذر إرسال البيانات إلى Google Sheets" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      syncedCount: rowsToSend.length,
+      sheetTitle,
+      remote: pushRes.data,
+    });
   } catch (error) {
     next(error);
   }

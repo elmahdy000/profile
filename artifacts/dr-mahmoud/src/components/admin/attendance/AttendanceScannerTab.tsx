@@ -33,6 +33,8 @@ import {
   Download,
   Copy,
   ExternalLink,
+  Settings,
+  Link2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName, normalizeCenterName } from "../learning/StudentDrawer";
@@ -244,12 +246,200 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   const [centerFilter, setCenterFilter] = useState<string>("all");
   const [slotFilter, setSlotFilter] = useState<string>("all");
 
+  // Google Apps Script Webhook Integration State
+  const [sheetWebhookUrl, setSheetWebhookUrl] = useState<string>("");
+  const [sheetSecretToken, setSheetSecretToken] = useState<string>("");
+  const [hasSheetSecret, setHasSheetSecret] = useState<boolean>(false);
+  const [sheetAutoSync, setSheetAutoSync] = useState<boolean>(true);
+  const [sheetLastSyncedAt, setSheetLastSyncedAt] = useState<string | null>(null);
+  const [sheetLastSyncStatus, setSheetLastSyncStatus] = useState<string | null>(null);
+  const [appsScriptCode, setAppsScriptCode] = useState<string>("");
+  const [showSheetSetupModal, setShowSheetSetupModal] = useState<boolean>(false);
+  const [isLoadingSheetConfig, setIsLoadingSheetConfig] = useState<boolean>(false);
+  const [isSavingSheetConfig, setIsSavingSheetConfig] = useState<boolean>(false);
+  const [isTestingSheetConfig, setIsTestingSheetConfig] = useState<boolean>(false);
+  const [isSyncingSheet, setIsSyncingSheet] = useState<boolean>(false);
+  const [copiedAppsScript, setCopiedAppsScript] = useState<boolean>(false);
+
   // Refs for video & canvas loop
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastScannedCodeRef = useRef<{ code: string; time: number } | null>(null);
+
+  const loadGoogleSheetConfig = useCallback(async () => {
+    setIsLoadingSheetConfig(true);
+    try {
+      const res = await fetch("/api/admin/attendance/google-sheet-config", {
+        credentials: "include",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setSheetWebhookUrl(data.webhookUrl || "");
+      setHasSheetSecret(Boolean(data.hasSecret));
+      setSheetAutoSync(data.autoSyncOnScan !== false);
+      setSheetLastSyncedAt(data.lastSyncedAt || null);
+      setSheetLastSyncStatus(data.lastSyncStatus || null);
+      if (data.appsScriptCode) {
+        setAppsScriptCode(data.appsScriptCode);
+      }
+    } catch {
+      // Ignore offline/network errors on initial config load
+    } finally {
+      setIsLoadingSheetConfig(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadGoogleSheetConfig();
+  }, [loadGoogleSheetConfig]);
+
+  const handleSaveSheetConfig = async () => {
+    setIsSavingSheetConfig(true);
+    try {
+      const res = await fetch("/api/admin/attendance/google-sheet-config", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl: sheetWebhookUrl.trim(),
+          ...(sheetSecretToken.trim() ? { secretToken: sheetSecretToken.trim() } : {}),
+          autoSyncOnScan: sheetAutoSync,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "تعذر حفظ إعدادات ربط Google Sheet");
+      }
+      setSheetWebhookUrl(data.webhookUrl || "");
+      setSheetAutoSync(data.autoSyncOnScan !== false);
+      if (sheetSecretToken.trim()) {
+        setHasSheetSecret(true);
+        setSheetSecretToken("");
+      }
+      toast({
+        title: "تم حفظ ربط Google Sheet بنجاح ✅",
+        description: data.webhookUrl
+          ? data.autoSyncOnScan
+            ? "سيتم ترحيل كل طالب يتم مسحه بالباركود تلقائياً إلى الشيت فوراً."
+            : "تم حفظ الرابط بنجاح (المزامنة التلقائية متوقفة، يمكنك الترحيل يدوياً بالضغط على زر المزامنة)."
+          : "تم مسح رابط المزامنة.",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في حفظ الإعدادات",
+        description: err.message,
+      });
+    } finally {
+      setIsSavingSheetConfig(false);
+    }
+  };
+
+  const handleTestSheetConfig = async () => {
+    if (!sheetWebhookUrl.trim()) {
+      toast({
+        variant: "destructive",
+        title: "أدخل رابط Web App أولاً",
+        description: "قم بلصق رابط النشر (https://script.google.com/macros/s/.../exec) ثم اضغط اختبار.",
+      });
+      return;
+    }
+    setIsTestingSheetConfig(true);
+    try {
+      const res = await fetch("/api/admin/attendance/google-sheet-test", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhookUrl: sheetWebhookUrl.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "فشل اختبار الاتصال مع Google Apps Script");
+      }
+      toast({
+        title: "تم الاتصال بـ Google Sheet بنجاح 🟢",
+        description: data.message || "الـ Webhook يعمل بشكل سليم وتم إرسال صف تجريبي.",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "تعذر الاتصال بـ Google Sheet",
+        description: err.message,
+      });
+    } finally {
+      setIsTestingSheetConfig(false);
+    }
+  };
+
+  const handleSyncToGoogleSheetWebhook = async (
+    targetRecords: Array<Record<string, any>>,
+    sheetLabel?: string,
+  ) => {
+    if (!sheetWebhookUrl.trim()) {
+      setShowSheetSetupModal(true);
+      toast({
+        title: "إعداد ربط Google Sheet مطلوب ⚙️",
+        description: "انسخ كود Apps Script وضع رابط النشر لمرة واحدة فقط، وبعدها يتم الترحيل بضغطة زر وتلقائياً مع كل Scan.",
+      });
+      return;
+    }
+
+    setIsSyncingSheet(true);
+    try {
+      const scopeCenter = sheetLabel && sheetLabel !== "all" ? sheetLabel : selectedDate;
+      const sheetTitle = `${selectedDate}${sheetLabel && sheetLabel !== "all" ? ` - ${sheetLabel}` : ""}`;
+      const res = await fetch("/api/admin/attendance/sync-google-sheet", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: selectedDate,
+          sheetTitle: scopeCenter === selectedDate ? selectedDate : sheetTitle,
+          rows: targetRecords.length > 0 ? targetRecords : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "فشل إرسال البيانات إلى Google Sheet");
+      }
+      const nowIso = new Date().toISOString();
+      setSheetLastSyncedAt(nowIso);
+      setSheetLastSyncStatus(`ok (${data.syncedCount || 0})`);
+      toast({
+        title: "تم الترحيل إلى Google Sheet بنجاح 📊✅",
+        description: `تمت مزامنة ${data.syncedCount || 0} سجل في ورقة (${data.sheetTitle || sheetTitle}) بدون تكرار.`,
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "تعذر الترحيل إلى Google Sheet",
+        description: err.message,
+      });
+    } finally {
+      setIsSyncingSheet(false);
+    }
+  };
+
+  const handleCopyAppsScriptCode = async () => {
+    if (!appsScriptCode) return;
+    try {
+      await navigator.clipboard.writeText(appsScriptCode);
+      setCopiedAppsScript(true);
+      setTimeout(() => setCopiedAppsScript(false), 2500);
+      toast({
+        title: "تم نسخ كود Google Apps Script ✅",
+        description: "الصقه الآن في Extensions → Apps Script داخل ملف Google Sheets ثم انشره كـ Web App.",
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "تعذر النسخ التلقائي",
+        description: "حدد الكود من المربع وانسخه يدوياً.",
+      });
+    }
+  };
 
   // Available grades for dropdown filters
   const availableGrades = useMemo(() => {
@@ -2072,7 +2262,46 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                   <Clock className="h-3.5 w-3.5 text-blue-600" />
                   <span>آخر الطلاب الحاضرين اليوم ({recentScans.length})</span>
                 </h4>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={isSyncingSheet}
+                    onClick={() =>
+                      void handleSyncToGoogleSheetWebhook(
+                        getActiveScannerScopeRecords(),
+                        selectedCenter !== "all" ? selectedCenter : undefined,
+                      )
+                    }
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black inline-flex items-center gap-1 shadow-2xs transition cursor-pointer disabled:opacity-60 ${
+                      sheetWebhookUrl
+                        ? "bg-emerald-700 hover:bg-emerald-800 text-white"
+                        : "bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200"
+                    }`}
+                    title={
+                      sheetWebhookUrl
+                        ? "ترحيل السجل الحالي مباشرة إلى Google Sheet عبر Webhook"
+                        : "إعداد ربط Google Sheet المباشر (Webhook)"
+                    }
+                  >
+                    {isSyncingSheet ? (
+                      <RefreshCw className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Link2 className="h-3 w-3" />
+                    )}
+                    <span>{sheetWebhookUrl ? "مزامنة للشيت مباشرة" : "ربط Google Sheet"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSheetSetupModal(true)}
+                    className={`p-1.5 rounded-lg border text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer ${
+                      sheetWebhookUrl
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                    }`}
+                    title="إعدادات ربط Google Apps Script Webhook"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={() =>
@@ -2086,7 +2315,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                     title="نسخ الجدول وتحميل CSV وفتح Google Sheets فوراً"
                   >
                     <FileSpreadsheet className="h-3 w-3" />
-                    <span>تصدير Google Sheets</span>
+                    <span>تصدير يدوي</span>
                     <ExternalLink className="h-2.5 w-2.5" />
                   </button>
                   <button
@@ -2363,6 +2592,44 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
+                disabled={isSyncingSheet}
+                onClick={() =>
+                  void handleSyncToGoogleSheetWebhook(
+                    filteredRecords,
+                    centerFilter !== "all" ? centerFilter : undefined,
+                  )
+                }
+                className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-60 ${
+                  sheetWebhookUrl
+                    ? "bg-emerald-700 hover:bg-emerald-800 text-white"
+                    : "bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200"
+                }`}
+                title="مزامنة الكشف المعروض مباشرة داخل ملف Google Sheet عبر Webhook"
+              >
+                {isSyncingSheet ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" />
+                )}
+                <span>{sheetWebhookUrl ? "مزامنة مباشرة لـ Google Sheet" : "ربط Google Sheet التلقائي"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowSheetSetupModal(true)}
+                className={`px-2.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  sheetWebhookUrl
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+                title="إعدادات كود ورابط Google Apps Script"
+              >
+                <Settings className="h-3.5 w-3.5" />
+                <span>{sheetWebhookUrl ? (sheetAutoSync ? "مفعل تلقائياً" : "إعداد الربط") : "إعداد الربط"}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() =>
                   void exportAttendanceToGoogleSheets(
                     filteredRecords,
@@ -2374,7 +2641,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                 title="فتح Google Sheets ونسخ الكشف وتحميل نسخة CSV"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span>تصدير لـ Google Sheets</span>
+                <span>تصدير يدوي Sheets</span>
                 <ExternalLink className="h-3 w-3" />
               </button>
 
@@ -2633,6 +2900,208 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Google Apps Script Webhook Setup Modal */}
+      {showSheetSetupModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4"
+          dir="rtl"
+          onClick={() => setShowSheetSetupModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    ربط الحضور والغياب المباشر مع Google Sheets
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    ترحيل تلقائي فور مسح الـ QR أو بضغطة زر — دون تكرار وبورقة منظمة لكل تاريخ
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSheetSetupModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                aria-label="إغلاق"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            {sheetLastSyncedAt && (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-bold text-emerald-800 flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span>
+                    آخر مزامنة:{" "}
+                    {new Intl.DateTimeFormat("ar-EG", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    }).format(new Date(sheetLastSyncedAt))}
+                  </span>
+                </span>
+                {sheetLastSyncStatus && (
+                  <span className="px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-emerald-200 font-mono text-[11px]">
+                    {sheetLastSyncStatus}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 text-xs text-slate-700">
+              <p className="font-black text-slate-900">خطوات الإعداد (تُعمل مرة واحدة فقط خلال دقيقتين):</p>
+              <ol className="list-decimal list-inside space-y-1.5 font-medium leading-relaxed">
+                <li>
+                  افتح ملف Google Sheet الخاص بالحضور ثم اضغط من القائمة على{" "}
+                  <span className="font-bold text-slate-900">Extensions ← Apps Script</span>.
+                </li>
+                <li>
+                  امسح أي كود افتراضي والصق الكود الجاهز بالأسفل ثم اضغط{" "}
+                  <span className="font-bold text-slate-900">Save (حفظ)</span>.
+                </li>
+                <li>
+                  اضغط <span className="font-bold text-slate-900">Deploy ← New deployment ← Web app</span>{" "}
+                  واجعل <span className="font-bold text-slate-900">Execute as: Me</span> و{" "}
+                  <span className="font-bold text-slate-900">Who has access: Anyone</span>.
+                </li>
+                <li>
+                  انسخ رابط <span className="font-mono text-[11px] bg-white px-1.5 py-0.5 rounded border">/exec</span>{" "}
+                  والصقه في الحقل التالي ثم اضغط حفظ.
+                </li>
+              </ol>
+
+              <div className="pt-1 space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-black text-slate-600">كود Google Apps Script الجاهز:</span>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyAppsScriptCode()}
+                    disabled={!appsScriptCode || isLoadingSheetConfig}
+                    className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <Copy className="h-3 w-3" />
+                    <span>{copiedAppsScript ? "تم النسخ ✓" : "نسخ كود Apps Script"}</span>
+                  </button>
+                </div>
+                <pre
+                  dir="ltr"
+                  className="max-h-40 overflow-auto rounded-xl bg-slate-950 text-emerald-300 p-3 text-[11px] font-mono leading-relaxed border border-slate-800"
+                >
+                  {isLoadingSheetConfig
+                    ? "Loading script template..."
+                    : appsScriptCode || "// Refresh page to load Apps Script template"}
+                </pre>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-black text-slate-800 mb-1">
+                  رابط Web App (Google Apps Script URL)
+                </label>
+                <input
+                  type="url"
+                  dir="ltr"
+                  value={sheetWebhookUrl}
+                  onChange={(e) => setSheetWebhookUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-800 mb-1">
+                  كلمة مرور Webhook اختيارية (إذا فعلت SECRET_TOKEN في الكود)
+                </label>
+                <input
+                  type="password"
+                  dir="ltr"
+                  value={sheetSecretToken}
+                  onChange={(e) => setSheetSecretToken(e.target.value)}
+                  placeholder={hasSheetSecret ? "•••••••• (محفوظ — اتركه فارغاً للإبقاء عليه)" : "اختياري (اتركه فارغاً إذا لم تضعه في الكود)"}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <label className="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sheetAutoSync}
+                  onChange={(e) => setSheetAutoSync(e.target.checked)}
+                  className="h-4 w-4 accent-emerald-600 rounded"
+                />
+                <div className="text-xs">
+                  <div className="font-black text-slate-900">مزامنة تلقائية فورية عند كل مسح QR أو تسجيل حضور</div>
+                  <div className="text-slate-500">يرسل سجل الطالب مباشرة في الخلفية فور تسجيله بدون تأخير على الماسح</div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isTestingSheetConfig || !sheetWebhookUrl.trim()}
+                  onClick={() => void handleTestSheetConfig()}
+                  className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                >
+                  {isTestingSheetConfig ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  )}
+                  <span>اختبار الاتصال</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isSyncingSheet || !sheetWebhookUrl.trim()}
+                  onClick={() =>
+                    void handleSyncToGoogleSheetWebhook(
+                      activeTab === "scanner" ? getActiveScannerScopeRecords() : filteredRecords,
+                      activeTab === "scanner"
+                        ? selectedCenter !== "all"
+                          ? selectedCenter
+                          : undefined
+                        : centerFilter !== "all"
+                          ? centerFilter
+                          : undefined,
+                    )
+                  }
+                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                >
+                  {isSyncingSheet ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Link2 className="h-3.5 w-3.5" />
+                  )}
+                  <span>ترحيل السجل الحالي الآن</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                disabled={isSavingSheetConfig}
+                onClick={() => void handleSaveSheetConfig()}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-60"
+              >
+                {isSavingSheetConfig ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                )}
+                <span>حفظ الإعدادات</span>
+              </button>
             </div>
           </div>
         </div>
