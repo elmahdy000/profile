@@ -794,9 +794,7 @@ router.post("/admin/attendance/bulk-sync", requireAdmin, async (req: Request, re
           centerOverride &&
             centerOverride !== "all" &&
             enrolledCenter &&
-            centerOverride.trim() !== enrolledCenter.trim() &&
-            !centerOverride.includes(enrolledCenter.trim()) &&
-            !enrolledCenter.includes(centerOverride.trim())
+            canonicalizeCenterName(centerOverride) !== canonicalizeCenterName(enrolledCenter)
         );
 
         // Check if attendance already recorded today
@@ -853,6 +851,31 @@ router.post("/admin/attendance/bulk-sync", requireAdmin, async (req: Request, re
             attendanceRecord = inserted;
           }
           syncedCount++;
+        }
+
+        // Match live scan behavior: only auto-assign permanent center if student had none yet
+        const studentHasCenter = Boolean(enrolledCenter && String(enrolledCenter).trim());
+        if (
+          centerName &&
+          centerName !== "all" &&
+          centerName !== "بدون سنتر محدد" &&
+          centerName !== "السنتر الرئيسي" &&
+          !studentHasCenter
+        ) {
+          try {
+            await db
+              .update(studentsTable)
+              .set({
+                centerName,
+                appointmentSlot: appointmentSlot && appointmentSlot !== "all" ? appointmentSlot : enrolledSlot,
+                centerConfirmed: true,
+                centerConfirmedAt: now,
+                learningMode: "offline",
+              })
+              .where(eq(studentsTable.id, student.id));
+          } catch (err) {
+            console.error("Failed to update student center during bulk sync:", err);
+          }
         }
 
         // Notify parent if requested and not notified yet

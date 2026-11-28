@@ -195,31 +195,39 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   const [lastScanned, setLastScanned] = useState<LastScannedStudent | null>(null);
   const [recentScans, setRecentScans] = useState<LastScannedStudent[]>([]);
 
-  // Active Session Selection for Scanner (persisted across reloads)
+  // Active Session Selection for Scanner (only persisted for the SAME Cairo day so yesterday's center never leaks into today's scans)
   const [selectedCenter, setSelectedCenter] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return window.localStorage.getItem("dr_mahmoud_att_center") || "all";
+      const savedDate = window.localStorage.getItem("dr_mahmoud_att_session_date");
+      if (savedDate === todayStr) {
+        return window.localStorage.getItem("dr_mahmoud_att_center") || "all";
+      }
     }
     return "all";
   });
   const [selectedSlot, setSelectedSlot] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return window.localStorage.getItem("dr_mahmoud_att_slot") || "all";
+      const savedDate = window.localStorage.getItem("dr_mahmoud_att_session_date");
+      if (savedDate === todayStr) {
+        return window.localStorage.getItem("dr_mahmoud_att_slot") || "all";
+      }
     }
     return "all";
   });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      window.localStorage.setItem("dr_mahmoud_att_session_date", todayStr);
       window.localStorage.setItem("dr_mahmoud_att_center", selectedCenter);
     }
-  }, [selectedCenter]);
+  }, [selectedCenter, todayStr]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      window.localStorage.setItem("dr_mahmoud_att_session_date", todayStr);
       window.localStorage.setItem("dr_mahmoud_att_slot", selectedSlot);
     }
-  }, [selectedSlot]);
+  }, [selectedSlot, todayStr]);
 
   // Offline & Synchronization State
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
@@ -1913,19 +1921,31 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
             </div>
 
             {/* Active Mode Notice */}
-            <div className="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap items-center justify-between text-[11px] text-slate-300">
-              <span className="flex items-center gap-1.5 font-medium">
+            <div className="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
+              <span className="flex items-center gap-1.5 font-medium flex-wrap">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 {selectedCenter !== "all" || selectedSlot !== "all" ? (
-                  <span>
-                    الماسح نشط حالياً لمجموعة: <b>{selectedCenter !== "all" ? selectedCenter : "كل السناتر"}</b> — <b>{selectedSlot !== "all" ? selectedSlot : "كل المواعيد"}</b>
-                  </span>
+                  <>
+                    <span>
+                      الماسح نشط حالياً لمجموعة: <b className="text-amber-300">{selectedCenter !== "all" ? selectedCenter : "كل السناتر"}</b> — <b className="text-amber-300">{selectedSlot !== "all" ? selectedSlot : "كل المواعيد"}</b>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCenter("all");
+                        setSelectedSlot("all");
+                      }}
+                      className="rounded-lg bg-white/15 hover:bg-white/25 px-2 py-0.5 text-[10px] font-bold text-white cursor-pointer transition"
+                    >
+                      تحويل لتلقائي حسب قيد كل طالب
+                    </button>
+                  </>
                 ) : (
-                  <span>الماسح نشط لكافة المجموعات والسناتر مع تسجيل المجموعة تلقائياً بحسب قيد الطالب</span>
+                  <span>الماسح نشط لكل السناتر: كل طالب يُسجل تلقائياً في سنتره المسجل ومجموعته</span>
                 )}
               </span>
               <span className="text-slate-400">
-                أي طالب من مجموعة أخرى يتم مسحه يُسجل كحضور تعويضي وينبهك النظام فوراً ⚠️
+                أي طالب من سنتر أو موعد آخر يتم مسحه يُسجل حسب سنتر وموعد السكان الحالي للمساعد
               </span>
             </div>
           </div>
