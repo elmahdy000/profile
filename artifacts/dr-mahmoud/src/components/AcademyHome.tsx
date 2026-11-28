@@ -159,6 +159,35 @@ export function AcademyHome() {
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [previewVideo, setPreviewVideo] = useState<{
+    videoUrl: string;
+    thumbnailUrl?: string;
+    title?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/videos/featured")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((serverVideos) => {
+        if (!active || !Array.isArray(serverVideos) || serverVideos.length === 0) return;
+        const picked =
+          serverVideos.find((v: any) => v.id === 10) ||
+          serverVideos.find((v: any) => v.category === "cpp") ||
+          serverVideos[0];
+        if (picked?.videoUrl) {
+          setPreviewVideo({
+            videoUrl: picked.videoUrl,
+            thumbnailUrl: picked.thumbnailUrl,
+            title: picked.title,
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const hasVisited = localStorage.getItem("dr_mahmoud_visited_before");
@@ -677,17 +706,26 @@ export function AcademyHome() {
             <div className="mx-auto max-w-4xl">
               <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl shadow-blue-600/10">
                 <div className="aspect-video w-full bg-black flex items-center justify-center">
-                  <video
-                    src="/preview/cpp-intro.mp4"
-                    controls
-                    controlsList="nodownload noremoteplayback"
-                    disablePictureInPicture
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="w-full h-full object-contain select-none"
-                    poster="/dr-mahmoud-hero-classroom.webp"
-                  >
-                    متصفحك لا يدعم تشغيل الفيديو المباشر.
-                  </video>
+                  {previewVideo?.videoUrl ? (
+                    <video
+                      src={previewVideo.videoUrl}
+                      controls
+                      preload="metadata"
+                      controlsList="nodownload noremoteplayback"
+                      disablePictureInPicture
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="w-full h-full object-contain select-none"
+                      poster={previewVideo.thumbnailUrl || "/dr-mahmoud-hero-classroom.webp"}
+                    >
+                      متصفحك لا يدعم تشغيل الفيديو المباشر.
+                    </video>
+                  ) : (
+                    <img
+                      src="/dr-mahmoud-hero-classroom.webp"
+                      alt="معاينة المحاضرة التمهيدية في لغة C++"
+                      className="w-full h-full object-cover opacity-80"
+                    />
+                  )}
                 </div>
                 <div className="p-5 md:p-6 bg-slate-950/90 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-right">

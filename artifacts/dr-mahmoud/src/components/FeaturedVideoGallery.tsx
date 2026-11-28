@@ -55,7 +55,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     stage: "البكالوريا · أولى وتانية ثانوي وحاسبات",
     durationText: "15 دقيقة",
     thumbnailUrl: "/uploads/1784750571407-339603285.png",
-    videoUrl: "/preview/cpp-intro.mp4",
+    videoUrl: "",
     isVideoFile: true,
     badge: "نموذج الوحدة 1: الأساسيات 💻",
     description:
@@ -333,7 +333,7 @@ export function FeaturedVideoGallery() {
             stage: sv.stage || preset?.stage || "جميع المراحل",
             durationText: sv.durationText || preset?.durationText || "15 دقيقة",
             thumbnailUrl: sv.thumbnailUrl || preset?.thumbnailUrl || "/dr-mahmoud-hero-classroom.webp",
-            videoUrl: sv.videoUrl || preset?.videoUrl || `/preview/cpp-intro.mp4`,
+            videoUrl: sv.videoUrl || preset?.videoUrl || "",
             isVideoFile: sv.isVideoFile ?? true,
             badge: preset?.badge || "نموذج استعراضي للوحدة 🌟",
             description: sv.description || preset?.description || `محاضرة تفاعلية من منصة د. محمود المهدي في ${sv.unitName || sv.categoryLabel}.`,
@@ -737,21 +737,29 @@ export function FeaturedVideoGallery() {
               </div>
 
               {/* Video Player Display */}
-              <div className="relative aspect-video w-full bg-black">
+              <div className="relative aspect-video w-full bg-black flex items-center justify-center">
                 {selectedVideo.isVideoFile ? (
-                  <video
-                    key={selectedVideo.videoUrl}
-                    src={selectedVideo.videoUrl}
-                    controls
-                    autoPlay
-                    controlsList="nodownload noremoteplayback"
-                    disablePictureInPicture
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="h-full w-full object-contain select-none"
-                    poster={selectedVideo.thumbnailUrl}
-                  >
-                    متصفحك لا يدعم تشغيل الفيديو المباشر.
-                  </video>
+                  selectedVideo.videoUrl ? (
+                    <video
+                      key={selectedVideo.videoUrl}
+                      src={selectedVideo.videoUrl}
+                      controls
+                      autoPlay
+                      controlsList="nodownload noremoteplayback"
+                      disablePictureInPicture
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="h-full w-full object-contain select-none"
+                      poster={selectedVideo.thumbnailUrl}
+                    >
+                      متصفحك لا يدعم تشغيل الفيديو المباشر.
+                    </video>
+                  ) : (
+                    <img
+                      src={selectedVideo.thumbnailUrl || "/dr-mahmoud-hero-classroom.webp"}
+                      alt={selectedVideo.title}
+                      className="h-full w-full object-cover opacity-80"
+                    />
+                  )
                 ) : (
                   <iframe
                     key={selectedVideo.videoUrl}
